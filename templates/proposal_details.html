@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Proposal Details</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-4">
+
+    <div class="card shadow p-4">
+
+        <h2 class="text-center mb-4">
+
+            Proposal Details
+
+        </h2>
+
+        <table class="table table-bordered">
+
+            <tr>
+                <th>Reference No</th>
+                <td>{{ proposal.reference_no }}</td>
+            </tr>
+
+            <tr>
+                <th>Name</th>
+                <td>{{ proposal.name }}</td>
+            </tr>
+
+            <tr>
+                <th>Phone No Client</th>
+                <td>{{ proposal.phone_no_client }}</td>
+            </tr>
+
+            <tr>
+                <th>Email</th>
+                <td>{{ proposal.email }}</td>
+            </tr>
+
+            <tr>
+                <th>Site Address</th>
+                <td>{{ proposal.site_address }}</td>
+            </tr>
+
+            <tr>
+                <th>State</th>
+                <td>{{ proposal.state }}</td>
+            </tr>
+
+        </table>
+
+    </div>
+
+    <br>
+
+    <div class="card shadow p-4">
+
+        <h4 class="mb-3">
+
+            Source Details
+
+        </h4>
+
+        <table class="table table-bordered">
+
+            <tr>
+                <th>Source</th>
+                <td>{{ proposal.source }}</td>
+            </tr>
+
+            <tr>
+                <th>Reference Source Details</th>
+                <td>{{ proposal.reference_source_details }}</td>
+            </tr>
+
+            <tr>
+                <th>Phone No Source</th>
+                <td>{{ proposal.phone_no_source }}</td>
+            </tr>
+
+            <tr>
+                <th>Contact Person</th>
+                <td>{{ proposal.contact_person }}</td>
+            </tr>
+
+            <tr>
+                <th>Phone No Contact Person</th>
+                <td>{{ proposal.phone_no_contact_person }}</td>
+            </tr>
+
+        </table>
+
+    </div>
+
+    <br>
+
+    <div class="card shadow p-4">
+
+        <h4 class="mb-3">
+
+            Project Details
+
+        </h4>
+
+        <table class="table table-bordered">
+
+            <tr>
+                <th>Type</th>
+                <td>{{ proposal.type }}</td>
+            </tr>
+
+            <tr>
+                <th>Total Area Sq Ft</th>
+                <td>{{ proposal.total_area_sqft }}</td>
+            </tr>
+
+            <tr>
+                <th>Type Of Units</th>
+                <td>{{ proposal.type_of_units }}</td>
+            </tr>
+
+            <tr>
+                <th>No Of MVD Units</th>
+                <td>{{ proposal.no_of_mvd_units }}</td>
+            </tr>
+
+            <tr>
+                <th>No Of MVD Max Units</th>
+                <td>{{ proposal.no_of_mvd_max_units }}</td>
+            </tr>
+
+            <tr>
+                <th>Total No Of Units</th>
+                <td>{{ proposal.total_no_of_units }}</td>
+            </tr>
+
+            <tr>
+                <th>Product</th>
+                <td>{{ proposal.product }}</td>
+            </tr>
+
+            <tr>
+                <th>No Of Monitors</th>
+                <td>{{ proposal.no_of_monitors }}</td>
+            </tr>
+
+            <tr>
+                <th>CMC</th>
+                <td>{{ proposal.cmc }}</td>
+            </tr>
+
+        </table>
+
+    </div>
+        <br>
+
+    <div class="card shadow p-4">
+
+        <h4 class="mb-3">
+
+            Costing Details
+
+        </h4>
+
+        <table class="table table-bordered">
+
+            <tr>
+                <th>Cost Total Per Unit</th>
+                <td>{{ proposal.cost_total_per_unit }}</td>
+            </tr>
+
+            <tr>
+                <th>Per Unit Cost</th>
+                <td>{{ proposal.per_unit_cost }}</td>
+            </tr>
+
+            <tr>
+                <th>Per Unit Cost Max Unit</th>
+                <td>{{ proposal.per_unit_cost_max_unit }}</td>
+            </tr>
+
+            <tr>
+                <th>CMC Cost</th>
+                <td>{{ proposal.cmc_cost }}</td>
+            </tr>
+
+            <tr>
+                <th>Monitor Cost</th>
+                <td>{{ proposal.monitor_cost }}</td>
+            </tr>
+
+            <tr>
+                <th>Installation Cost</th>
+                <td>{{ proposal.installation_cost }}</td>
+            </tr>
+
+            <tr>
+                <th>Total Amount</th>
+                <td>{{ proposal.total_amount }}</td>
+            </tr>
+
+            <tr>
+                <th>Discount</th>
+                <td>{{ proposal.discount }}</td>
+            </tr>
+
+            <tr>
+                <th>Final Amount</th>
+                <td>{{ proposal.final_amount }}</td>
+            </tr>
+
+            <tr>
+                <th>CMC Starting Period</th>
+                <td>{{ proposal.cmc_starting_period }}</td>
+            </tr>
+
+        </table>
+
+    </div>
+
+    <br>
+
+    <div class="card shadow p-4">
+
+        <h4 class="mb-3">
+
+            Tracking Details
+
+        </h4>
+
+        <table class="table table-bordered">
+
+            <tr>
+                <th>Date Of Proposal Sent</th>
+                <td>{{ proposal.date_of_proposal_sent }}</td>
+            </tr>
+
+            <tr>
+                <th>Proposal Prepared By</th>
+                <td>{{ proposal.proposal_prepared_by }}</td>
+            </tr>
+
+            <tr>
+                <th>Proposal Shared By</th>
+                <td>{{ proposal.proposal_shared_by }}</td>
+            </tr>
+
+            <tr>
+                <th>Status</th>
+                <td>{{ proposal.status }}</td>
+            </tr>
+
+            <tr>
+                <th>Date Of Last Followup</th>
+                <td>{{ proposal.date_of_last_followup }}</td>
+            </tr>
+
+            <tr>
+                <th>Next To Call</th>
+                <td>{{ proposal.next_to_call }}</td>
+            </tr>
+
+            <tr>
+                <th>Remarks</th>
+                <td>{{ proposal.remarks }}</td>
+            </tr>
+
+        </table>
+
+    </div>
+
+    <br>
+
+    <div class="card shadow p-4">
+
+        <h4 class="mb-3">
+
+            Documents
+
+        </h4>
+
+        {% if proposal.proposal_pdf %}
+
+        <a href="{{ url_for('static',
+                            filename=proposal.proposal_pdf) }}"
+           target="_blank"
+           class="btn btn-dark">
+
+            View Proposal PDF
+
+        </a>
+
+        {% else %}
+
+        <p>
+
+            No PDF Uploaded
+
+        </p>
+
+        {% endif %}
+
+    </div>
+
+    <br>
+
+    <a href="/add-proposal"
+       class="btn btn-secondary">
+
+        Back
+
+    </a>
+
+</div>
+
+</body>
+
+</html>

@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>CRM System</title>
+
+    <!-- Bootstrap -->
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-5">
+
+    <div class="card shadow p-4">
+
+        <h2 class="mb-4 text-center">
+            Add Client Service
+        </h2>
+
+        <form method="POST">
+
+            <!-- CLIENT DETAILS -->
+
+            <h4 class="mb-3">
+                Client Details
+            </h4>
+
+            <h4 class="mb-3">
+
+                Select Proposal
+
+            </h4>
+
+            <select name="proposal_id"
+                    class="form-select">
+
+                <option value="">
+
+                    Select Proposal
+
+                </option>
+
+                {% for proposal in proposals %}
+
+                <option value="{{ proposal.proposal_id }}">
+
+                    {{ proposal.name }}
+
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+            <br>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        Client Name
+                    </label>
+
+                    <input type="text"
+                           name="client_name"
+                           class="form-control"
+                           required>
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        Property Type
+                    </label>
+
+                    <select name="property_type"
+                            class="form-select">
+
+                        <option>
+                            Residence
+                        </option>
+
+                        <option>
+                            Office/Commercial Space
+                        </option>
+
+                        <option>
+                            Farmhouse
+                        </option>
+
+                        <option>
+                            Gym
+                        </option>
+
+                        <option>
+                            School/University
+                        </option>
+
+                        <option>
+                            Others
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+            <!-- CONTACT DETAILS -->
+
+            <h4 class="mt-4 mb-3">
+                Contact Details
+            </h4>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        Mobile Number
+                    </label>
+
+                    <input type="text"
+                           name="mobile_no"
+                           class="form-control">
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        Email
+                    </label>
+
+                    <input type="email"
+                           name="mail_id"
+                           class="form-control">
+
+                </div>
+
+            </div>
+
+            <div class="mb-3">
+
+                <label class="form-label">
+                    Address
+                </label>
+
+                <textarea name="address"
+                          class="form-control"></textarea>
+
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        Google Map Link
+                    </label>
+
+                    <input type="text"
+                           name="location_link"
+                           class="form-control">
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        Nearest Metro Station
+                    </label>
+
+                    <input type="text"
+                           name="nearest_metrostation"
+                           class="form-control">
+
+                </div>
+
+            </div>
+
+            <div class="mb-3">
+
+                <label class="form-label">
+                    State
+                </label>
+
+                <input type="text"
+                       name="state"
+                       class="form-control">
+
+            </div>
+
+            <!-- PRODUCT DETAILS -->
+
+            <h4 class="mt-4 mb-3">
+                Product Details
+            </h4>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        Product
+                    </label>
+
+                    <input type="text"
+                           name="product"
+                           class="form-control">
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        Monitor Present
+                    </label>
+
+                    <select name="monitor_present"
+                            class="form-select">
+
+                        <option>
+                            YES
+                        </option>
+
+                        <option>
+                            NO
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label">
+                        Filter Colour
+                    </label>
+
+                    <select name="filter_colour"
+                            class="form-select">
+
+                        <option>
+                            MERV 15-BLACK
+                        </option>
+
+                        <option>
+                            MERV 16-WHITE
+                        </option>
+
+                        
+
+                    </select>
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label">
+                        Units Installed
+                    </label>
+
+                    <input type="number"
+                           name="no_of_units_installed"
+                           class="form-control">
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label">
+                        Solution Working
+                    </label>
+
+                    <select name="solution_working"
+                            class="form-select">
+
+                        <option>
+                            ACTIVE
+                        </option>
+
+                        <option>
+                            NOT WORKING
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+            <!-- DATE DETAILS -->
+
+            <h4 class="mt-4 mb-3">
+                Installation & Service Dates
+            </h4>
+
+            <div class="row">
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label">
+                        Installation Date
+                    </label>
+
+                    <input type="date"
+                           name="installation_date"
+                           class="form-control">
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label">
+                        Activation Date
+                    </label>
+
+                    <input type="date"
+                           name="activation_date"
+                           class="form-control">
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label">
+                        Last Service Date
+                    </label>
+
+                    <input type="date"
+                           name="last_service_date"
+                           class="form-control">
+
+                </div>
+
+            </div>
+
+            <!-- CMC DETAILS -->
+
+            <h4 class="mt-4 mb-3">
+                CMC Details
+            </h4>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        CMC Applicable
+                    </label>
+
+                    <select name="cmc_applicable"
+                            class="form-select">
+
+                        <option>
+                            YES
+                        </option>
+
+                        <option>
+                            NO
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        CMC Amount
+                    </label>
+
+                    <input type="number"
+                           step="0.01"
+                           name="cmc_amount"
+                           class="form-control">
+
+                </div>
+
+            </div>
+
+            <!-- SERVICE DETAILS -->
+
+            <h4 class="mt-4 mb-3">
+                Service Details
+            </h4>
+
+            <div class="row">
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label">
+                        Service Interval Days
+                    </label>
+
+                    <input type="number"
+                           name="service_interval_days"
+                           value="30"
+                           class="form-control">
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label">
+                        Service For
+                    </label>
+
+                    <input type="text"
+                           name="service_for"
+                           class="form-control">
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label">
+                        Filters Replaced
+                    </label>
+
+                    <input type="number"
+                           name="no_of_filters_replaced"
+                           class="form-control">
+
+                </div>
+
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label">
+                        Filter Clean
+                    </label>
+
+                    <select name="filter_clean"
+                            class="form-select">
+
+                        <option>
+                            YES
+                        </option>
+
+                        <option>
+                            NO
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label">
+                        Pre Service Message
+                    </label>
+
+                    <select name="pre_service_msg"
+                            class="form-select">
+
+                        <option>
+                            YES
+                        </option>
+
+                        <option>
+                            NO
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label">
+                        Post Service Message
+                    </label>
+
+                    <select name="post_service_msg"
+                            class="form-select">
+
+                        <option>
+                            YES
+                        </option>
+
+                        <option>
+                            NO
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+            <!-- REMARK -->
+
+            <div class="mb-3">
+
+                <label class="form-label">
+                    Remark
+                </label>
+
+                <textarea name="remark"
+                          class="form-control"></textarea>
+
+            </div>
+
+            <!-- BUTTON -->
+
+            <div class="text-center mt-4">
+
+                <button type="submit"
+                        class="btn btn-primary btn-lg">
+
+                    Save Client
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<br><br>
+
+<div class="container mt-5">
+
+    <div class="card shadow p-4">
+
+        <h3 class="mb-3">
+
+            All Clients
+
+        </h3>
+
+        <table class="table table-bordered table-striped">
+
+            <thead>
+
+                <tr>
+                    <th>ID</th>
+                    <th>Client Name</th>
+                    <th>Phone</th>
+                    <th>Product</th>
+                    <th>Service Due</th>
+                    <th>CMC Due</th>
+                    <th>Action</th>
+
+
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for client in clients %}
+
+                <tr>
+
+                    <td>{{ client.client_id }}</td>
+
+                    <td>
+
+                        <a href="/client-services/{{ client.client_id }}">
+
+                            {{ client.client_name }}
+
+                        </a>
+
+                    </td>
+
+                    <td>{{ client.mobile_no }}</td>
+
+                    <td>{{ client.product }}</td>
+
+                    <td>{{ client.service_due }}</td>
+
+                    <td>{{ client.cmc_due }}</td>
+
+                    <td>
+
+                        <a href="/client/{{ client.client_id }}"
+                            class="btn btn-dark btn-sm">
+
+                            View
+
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

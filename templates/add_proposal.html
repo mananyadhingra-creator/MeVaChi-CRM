@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Proposal Management</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-4">
+
+    <div class="card shadow p-4">
+
+        <h2 class="text-center mb-4">
+
+            Proposal Management
+
+        </h2>
+
+        <form method="POST"
+              enctype="multipart/form-data">
+
+        <div class="card shadow-sm p-4 mb-4">
+
+            <h4>
+
+                Select Meeting
+
+            </h4>
+
+            <select name="meeting_id"
+                    id="meeting_id"
+                    class="form-select">
+
+                <option value="">
+
+                    Select Meeting
+
+                </option>
+
+                {% for meeting in meetings %}
+
+                    <option
+                        value="{{ meeting.meeting_id }}"
+                        data-name="{{ meeting.name }}"
+                        data-phone="{{ meeting.contact_no }}"
+                        data-email="{{ meeting.email }}"
+                        data-address="{{ meeting.address }}"
+                        data-source="{{ meeting.source }}"
+                        data-state="{{ meeting.state }}">
+
+                    {{ meeting.name }}
+
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+            <!-- CLIENT DETAILS -->
+
+            <div class="card shadow-sm p-4 mb-4">
+
+                <h4 class="mb-3">
+
+                    Client Details
+
+                </h4>
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Reference No
+
+                        </label>
+
+                        <input type="text"
+                               name="reference_no"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Name
+
+                        </label>
+
+                        <input type="text"
+                               id="name"
+                               name="name"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Phone No Client
+
+                        </label>
+
+                        <input type="text"
+                               id="phone_no_client"
+                               name="phone_no_client"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Email
+
+                        </label>
+
+                        <input type="email"
+                               id="email"
+                               name="email"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Site Address
+
+                    </label>
+
+                    <textarea id="site_address"
+                              name="site_address"
+                              class="form-control"
+                              rows="3"></textarea>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        State
+
+                    </label>
+
+                    <input type="text"
+                           id="state"
+                           name="state"
+                           class="form-control">
+
+                </div>
+
+            </div>
+
+            <!-- SOURCE DETAILS -->
+
+            <div class="card shadow-sm p-4 mb-4">
+
+                <h4 class="mb-3">
+
+                    Source Details
+
+                </h4>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Source
+
+                    </label>
+
+                    <input type="text"
+                           id="source"
+                           name="source"
+                           class="form-control">
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Reference Source Details
+
+                    </label>
+
+                    <textarea name="reference_source_details"
+                              class="form-control"
+                              rows="3"></textarea>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Phone No Source
+
+                        </label>
+
+                        <input type="text"
+                               name="phone_no_source"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Contact Person
+
+                        </label>
+
+                        <input type="text"
+                               name="contact_person"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Phone No Contact Person
+
+                    </label>
+
+                    <input type="text"
+                           name="phone_no_contact_person"
+                           class="form-control">
+
+                </div>
+
+            </div>
+
+            <!-- PROJECT DETAILS -->
+
+            <div class="card shadow-sm p-4 mb-4">
+
+                <h4 class="mb-3">
+
+                    Project Details
+
+                </h4>
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Type
+
+                        </label>
+
+                        <input type="text"
+                               name="type"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Total Area Sq Ft
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               name="total_area_sqft"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Type Of Units
+
+                        </label>
+
+                        <input type="text"
+                               name="type_of_units"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            No Of MVD Units
+
+                        </label>
+
+                        <input type="number"
+                               name="no_of_mvd_units"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            No Of MVD Max Units
+
+                        </label>
+
+                        <input type="number"
+                               name="no_of_mvd_max_units"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Total No Of Units
+
+                        </label>
+
+                        <input type="number"
+                               name="total_no_of_units"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Product
+
+                        </label>
+
+                        <input type="text"
+                               name="product"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            No Of Monitors
+
+                        </label>
+
+                        <input type="number"
+                               name="no_of_monitors"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        CMC
+
+                    </label>
+
+                    <select name="cmc"
+                            class="form-select">
+
+                        <option value="YES">
+                            YES
+                        </option>
+
+                        <option value="NO">
+                            NO
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+                        <!-- COSTING DETAILS -->
+
+            <div class="card shadow-sm p-4 mb-4">
+
+                <h4 class="mb-3">
+
+                    Costing Details
+
+                </h4>
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Cost Total Per Unit
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               name="cost_total_per_unit"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Per Unit Cost
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               name="per_unit_cost"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Per Unit Cost Max Unit
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               name="per_unit_cost_max_unit"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            CMC Cost
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               name="cmc_cost"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Monitor Cost
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               name="monitor_cost"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Installation Cost
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               name="installation_cost"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Total Amount
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               name="total_amount"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Discount
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               name="discount"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Final Amount
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               name="final_amount"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        CMC Starting Period
+
+                    </label>
+
+                    <input type="text"
+                           name="cmc_starting_period"
+                           class="form-control">
+
+                </div>
+
+            </div>
+
+            <!-- TRACKING DETAILS -->
+
+            <div class="card shadow-sm p-4 mb-4">
+
+                <h4 class="mb-3">
+
+                    Tracking Details
+
+                </h4>
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Date Of Proposal Sent
+
+                        </label>
+
+                        <input type="date"
+                               name="date_of_proposal_sent"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Date Of Last Followup
+
+                        </label>
+
+                        <input type="date"
+                               name="date_of_last_followup"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Next To Call
+
+                        </label>
+
+                        <input type="date"
+                               name="next_to_call"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Proposal Prepared By
+
+                        </label>
+
+                        <input type="text"
+                               name="proposal_prepared_by"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Proposal Shared By
+
+                        </label>
+
+                        <input type="text"
+                               name="proposal_shared_by"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Status
+
+                    </label>
+
+                    <input type="text"
+                           name="status"
+                           class="form-control">
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Remarks
+
+                    </label>
+
+                    <textarea name="remarks"
+                              rows="3"
+                              class="form-control"></textarea>
+
+                </div>
+
+            </div>
+
+            <!-- DOCUMENTS -->
+
+            <div class="card shadow-sm p-4 mb-4">
+
+                <h4 class="mb-3">
+
+                    Documents
+
+                </h4>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Proposal PDF
+
+                    </label>
+
+                    <input type="file"
+                           name="proposal_pdf"
+                           class="form-control">
+
+                </div>
+
+            </div>
+
+            <button type="submit"
+                    class="btn btn-dark">
+
+                Save Proposal
+
+            </button>
+
+        </form>
+
+    </div>
+
+    <br>
+
+    <div class="card shadow p-4">
+
+        <h3 class="mb-3">
+
+            All Proposals
+
+        </h3>
+
+        <table class="table table-bordered table-striped">
+
+            <thead>
+
+                <tr>
+
+                    <th>ID</th>
+                    <th>Reference</th>
+                    <th>Name</th>
+                    <th>Product</th>
+                    <th>Final Amount</th>
+                    <th>Status</th>
+                    <th>PDF</th>
+                    <th>Action</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for proposal in proposals %}
+
+                <tr>
+
+                    <td>{{ proposal.proposal_id }}</td>
+
+                    <td>{{ proposal.reference_no }}</td>
+
+                    <td>{{ proposal.name }}</td>
+
+                    <td>{{ proposal.product }}</td>
+
+                    <td>{{ proposal.final_amount }}</td>
+
+                    <td>{{ proposal.status }}</td>
+
+                    <td>
+
+                        {% if proposal.proposal_pdf %}
+
+                        <a href="{{ url_for('static',
+                                            filename=proposal.proposal_pdf) }}"
+                           target="_blank"
+                           class="btn btn-dark btn-sm">
+
+                            View PDF
+
+                        </a>
+
+                        {% else %}
+
+                            No PDF
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+
+                        <a href="/proposal/{{ proposal.proposal_id }}"
+                           class="btn btn-dark btn-sm">
+
+                            View
+
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<script>
+
+document.getElementById(
+    'meeting_id'
+).addEventListener(
+    'change',
+    function () {
+
+        let selected =
+            this.options[
+                this.selectedIndex
+            ];
+
+        document.getElementById(
+            'name'
+        ).value =
+            selected.dataset.name || '';
+
+        document.getElementById(
+            'phone_no_client'
+        ).value =
+            selected.dataset.phone || '';
+
+        document.getElementById(
+            'email'
+        ).value =
+            selected.dataset.email || '';
+
+        document.getElementById(
+            'site_address'
+        ).value =
+            selected.dataset.address || '';
+
+        document.getElementById(
+            'source'
+        ).value =
+            selected.dataset.source || '';
+
+        document.getElementById(
+            'state'
+        ).value =
+            selected.dataset.state || '';
+
+    }
+);
+
+</script>
+
+</body>
+
+</html>

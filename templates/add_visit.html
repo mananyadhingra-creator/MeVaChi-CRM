@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Visit Management</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-4">
+
+    <div class="card shadow p-4">
+
+        <h2 class="text-center mb-4">
+
+            Visit Management
+
+        </h2>
+
+        <form method="POST">
+
+            <!-- SELECT MEETING -->
+
+            <div class="card shadow-sm p-4 mb-4">
+
+                <h4>
+
+                    Select Meeting
+
+                </h4>
+
+                <select name="meeting_id"
+                        id="meeting_id"
+                        class="form-select">
+
+                    <option value="">
+
+                        Select Meeting
+
+                    </option>
+
+                    {% for meeting in meetings %}
+
+                    <option
+
+                        value="{{ meeting.meeting_id }}"
+
+                        data-company="{{ meeting.firm_name }}"
+
+                        data-person="{{ meeting.name }}"
+
+                        data-designation="{{ meeting.designation }}"
+
+                        data-contact="{{ meeting.contact_no }}"
+
+                        data-address="{{ meeting.address }}"
+
+                        data-state="{{ meeting.state }}">
+
+                        {{ meeting.name }}
+
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+            <!-- VISIT DETAILS -->
+
+            <div class="card shadow-sm p-4 mb-4">
+
+                <h4>
+
+                    Visit Details
+
+                </h4>
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Company Name
+
+                        </label>
+
+                        <input type="text"
+                               id="company_name"
+                               name="company_name"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Person Name
+
+                        </label>
+
+                        <input type="text"
+                               id="person_name"
+                               name="person_name"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Designation
+
+                        </label>
+
+                        <input type="text"
+                               id="designation"
+                               name="designation"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Contact No
+
+                        </label>
+
+                        <input type="text"
+                               id="contact_no"
+                               name="contact_no"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Address
+
+                    </label>
+
+                    <textarea id="address"
+                              name="address"
+                              rows="3"
+                              class="form-control"></textarea>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            State
+
+                        </label>
+
+                        <input type="text"
+                               id="state"
+                               name="state"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Region
+
+                        </label>
+
+                        <input type="text"
+                               name="region"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            ABC
+
+                        </label>
+
+                        <input type="text"
+                               name="abc"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Visit Date
+
+                        </label>
+
+                        <input type="date"
+                               name="visit_date"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Leads Generated
+
+                        </label>
+
+                        <input type="number"
+                               name="leads_generated"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Brief
+
+                    </label>
+
+                    <textarea name="brief"
+                              rows="3"
+                              class="form-control"></textarea>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        M2
+
+                    </label>
+
+                    <textarea name="m2"
+                              rows="3"
+                              class="form-control"></textarea>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        M3
+
+                    </label>
+
+                    <textarea name="m3"
+                              rows="3"
+                              class="form-control"></textarea>
+
+                </div>
+
+            </div>
+                        <div class="text-center">
+
+                <button type="submit"
+                        class="btn btn-dark">
+
+                    Save Visit
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+    <br>
+
+    <div class="card shadow p-4">
+
+        <h3 class="mb-3">
+
+            All Visits
+
+        </h3>
+
+        <table class="table table-bordered table-striped">
+
+            <thead>
+
+                <tr>
+
+                    <th>ID</th>
+
+                    <th>Company</th>
+
+                    <th>Person</th>
+
+                    <th>Contact</th>
+
+                    <th>State</th>
+
+                    <th>Visit Date</th>
+
+                    <th>Action</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for visit in visits %}
+
+                <tr>
+
+                    <td>{{ visit.visit_id }}</td>
+
+                    <td>{{ visit.company_name }}</td>
+
+                    <td>{{ visit.person_name }}</td>
+
+                    <td>{{ visit.contact_no }}</td>
+
+                    <td>{{ visit.state }}</td>
+
+                    <td>{{ visit.visit_date }}</td>
+
+                    <td>
+
+                        <a href="/visit/{{ visit.visit_id }}"
+                           class="btn btn-dark btn-sm">
+
+                            View
+
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<script>
+
+document.getElementById(
+    'meeting_id'
+).addEventListener(
+    'change',
+    function () {
+
+        let selected =
+            this.options[
+                this.selectedIndex
+            ];
+
+        document.getElementById(
+            'company_name'
+        ).value =
+            selected.dataset.company || '';
+
+        document.getElementById(
+            'person_name'
+        ).value =
+            selected.dataset.person || '';
+
+        document.getElementById(
+            'designation'
+        ).value =
+            selected.dataset.designation || '';
+
+        document.getElementById(
+            'contact_no'
+        ).value =
+            selected.dataset.contact || '';
+
+        document.getElementById(
+            'address'
+        ).value =
+            selected.dataset.address || '';
+
+        document.getElementById(
+            'state'
+        ).value =
+            selected.dataset.state || '';
+
+    }
+);
+
+</script>
+
+</body>
+
+</html>

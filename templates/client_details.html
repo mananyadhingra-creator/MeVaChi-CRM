@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Client Details</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-5">
+
+    <div class="card shadow p-4">
+
+        <h2>{{ client.client_name }}</h2>
+
+        <hr>
+
+        <h4>Contact Details</h4>
+
+        <p><b>Phone:</b> {{ client.mobile_no }}</p>
+
+        <p><b>Email:</b> {{ client.mail_id }}</p>
+
+        <p><b>Address:</b> {{ client.address }}</p>
+
+        <p><b>State:</b> {{ client.state }}</p>
+
+        <p><b>Nearest Metro:</b> {{ client.nearest_metrostation }}</p>
+
+        <p><b>Location Link:</b> {{ client.location_link }}</p>
+
+        <hr>
+
+        <h4>Product Details</h4>
+
+        <p><b>Product:</b> {{ client.product }}</p>
+
+        <p><b>Units Installed:</b> {{ client.no_of_units_installed }}</p>
+
+        <p><b>Filter Colour:</b> {{ client.filter_colour }}</p>
+
+        <p><b>Monitor Present:</b> {{ client.monitor_present }}</p>
+
+        <hr>
+
+        <h4>Installation Details</h4>
+
+        <p><b>Installation Date:</b> {{ client.installation_date }}</p>
+
+        <p><b>Activation Date:</b> {{ client.activation_date }}</p>
+
+        <hr>
+
+        <h4>CMC Details</h4>
+
+        <p><b>CMC Applicable:</b> {{ client.cmc_applicable }}</p>
+
+        <p><b>CMC Amount:</b> {{ client.cmc_amount }}</p>
+
+        <p><b>CMC Due:</b> {{ client.cmc_due }}</p>
+
+        <p><b>Next Renewal Date:</b> {{ client.next_cmc_renewal_date }}</p>
+
+        <hr>
+
+        <h4>Service Details</h4>
+
+        <p><b>Last Service Date:</b> {{ client.last_service_date }}</p>
+
+        <p><b>Service Due:</b> {{ client.service_due }}</p>
+
+        <p><b>Service For:</b> {{ client.service_for }}</p>
+
+        <p><b>Filters Replaced:</b> {{ client.no_of_filters_replaced }}</p>
+
+        <p><b>Filter Clean:</b> {{ client.filter_clean }}</p>
+
+        <hr>
+
+        <h4>Remarks</h4>
+
+        <p>{{ client.remark }}</p>
+
+        <a href="/add-client"
+           class="btn btn-dark">
+
+            Back
+
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

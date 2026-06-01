@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Visit Details</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-4">
+
+    <div class="card shadow p-4">
+
+        <h2 class="text-center mb-4">
+
+            Visit Details
+
+        </h2>
+
+        <table class="table table-bordered">
+
+            <tr>
+
+                <th>Visit ID</th>
+
+                <td>{{ visit.visit_id }}</td>
+
+            </tr>
+
+            <tr>
+
+                <th>Company Name</th>
+
+                <td>{{ visit.company_name }}</td>
+
+            </tr>
+
+            <tr>
+
+                <th>Person Name</th>
+
+                <td>{{ visit.person_name }}</td>
+
+            </tr>
+
+            <tr>
+
+                <th>Designation</th>
+
+                <td>{{ visit.designation }}</td>
+
+            </tr>
+
+            <tr>
+
+                <th>Contact No</th>
+
+                <td>{{ visit.contact_no }}</td>
+
+            </tr>
+
+            <tr>
+
+                <th>Address</th>
+
+                <td>{{ visit.address }}</td>
+
+            </tr>
+
+            <tr>
+
+                <th>State</th>
+
+                <td>{{ visit.state }}</td>
+
+            </tr>
+
+            <tr>
+
+                <th>Region</th>
+
+                <td>{{ visit.region }}</td>
+
+            </tr>
+
+            <tr>
+
+                <th>ABC</th>
+
+                <td>{{ visit.abc }}</td>
+
+            </tr>
+
+            <tr>
+
+                <th>Visit Date</th>
+
+                <td>{{ visit.visit_date }}</td>
+
+            </tr>
+
+            <tr>
+
+                <th>Leads Generated</th>
+
+                <td>{{ visit.leads_generated }}</td>
+
+            </tr>
+
+            <tr>
+
+                <th>Brief</th>
+
+                <td>{{ visit.brief }}</td>
+
+            </tr>
+
+            <tr>
+
+                <th>M2</th>
+
+                <td>{{ visit.m2 }}</td>
+
+            </tr>
+
+            <tr>
+
+                <th>M3</th>
+
+                <td>{{ visit.m3 }}</td>
+
+            </tr>
+
+        </table>
+
+        <a href="/add-visit"
+           class="btn btn-secondary">
+
+            Back
+
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
