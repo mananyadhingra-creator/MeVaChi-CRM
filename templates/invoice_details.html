@@ -3,7 +3,7 @@
 
 <head>
 
-    <title>Service Details</title>
+    <title>Invoice Details</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
           rel="stylesheet">
@@ -16,17 +16,17 @@
 
     <h2 class="text-center mb-4">
 
-        Service Details
+        Invoice Details
 
     </h2>
 
-    <!-- SERVICE INFORMATION -->
+    <!-- BASIC INFORMATION -->
 
     <div class="card shadow p-4 mb-4">
 
         <h4 class="mb-3">
 
-            Service Information
+            Basic Information
 
         </h4>
 
@@ -36,13 +36,13 @@
 
                 <label class="form-label">
 
-                    Service ID
+                    Invoice ID
 
                 </label>
 
                 <input type="text"
                        class="form-control"
-                       value="{{ service.card_id }}"
+                       value="{{ invoice.invoice_id }}"
                        readonly>
 
             </div>
@@ -51,13 +51,13 @@
 
                 <label class="form-label">
 
-                    Service Date
+                    Invoice Number
 
                 </label>
 
                 <input type="text"
                        class="form-control"
-                       value="{{ service.service_date }}"
+                       value="{{ invoice.invoice_no }}"
                        readonly>
 
             </div>
@@ -66,13 +66,13 @@
 
                 <label class="form-label">
 
-                    Serviced By
+                    Date Of Invoice
 
                 </label>
 
                 <input type="text"
                        class="form-control"
-                       value="{{ service.serviced_by }}"
+                       value="{{ invoice.doi }}"
                        readonly>
 
             </div>
@@ -85,13 +85,13 @@
 
                 <label class="form-label">
 
-                    Service Of
+                    Client Name
 
                 </label>
 
                 <input type="text"
                        class="form-control"
-                       value="{{ service.service_of }}"
+                       value="{{ invoice.name }}"
                        readonly>
 
             </div>
@@ -100,137 +100,16 @@
 
                 <label class="form-label">
 
-                    No Of Filters
+                    GST Number
 
                 </label>
 
                 <input type="text"
                        class="form-control"
-                       value="{{ service.no_of_filters }}"
+                       value="{{ invoice.gst_no }}"
                        readonly>
 
             </div>
-
-        </div>
-
-        <div class="row">
-
-            <div class="col-md-6 mb-3">
-
-                <label class="form-label">
-
-                    Controller Changed
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ service.controller_changed }}"
-                       readonly>
-
-            </div>
-
-            <div class="col-md-6 mb-3">
-
-                <label class="form-label">
-
-                    Fan Changed
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ service.fan_changed }}"
-                       readonly>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    <!-- COMMUNICATION -->
-
-    <div class="card shadow p-4 mb-4">
-
-        <h4 class="mb-3">
-
-            Communication
-
-        </h4>
-
-        <div class="row">
-
-            <div class="col-md-4 mb-3">
-
-                <label class="form-label">
-
-                    Pre Service Message
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ service.pre_service_msgd }}"
-                       readonly>
-
-            </div>
-
-            <div class="col-md-4 mb-3">
-
-                <label class="form-label">
-
-                    Post Service Report Sent
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ service.post_service_report_sent }}"
-                       readonly>
-
-            </div>
-
-            <div class="col-md-4 mb-3">
-
-                <label class="form-label">
-
-                    Communication Date
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ service.communication_date }}"
-                       readonly>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    <!-- CUSTOMER ENGAGEMENT -->
-
-    <div class="card shadow p-4 mb-4">
-
-        <h4 class="mb-3">
-
-            Customer Engagement
-
-        </h4>
-
-        <div class="mb-3">
-
-            <label class="form-label">
-
-                Miscellaneous Messages
-
-            </label>
-
-            <textarea class="form-control"
-                      rows="3"
-                      readonly>{{ service.miscellaneous_messages }}</textarea>
 
         </div>
 
@@ -238,29 +117,139 @@
 
             <label class="form-label">
 
-                Tips And Tricks
+                Product Sold
 
             </label>
 
-            <textarea class="form-control"
-                      rows="3"
-                      readonly>{{ service.tips_and_tricks }}</textarea>
+            <input type="text"
+                   class="form-control"
+                   value="{{ invoice.product_sold }}"
+                   readonly>
 
         </div>
 
+    </div>
+
+    <!-- PRODUCT INFORMATION -->
+
+    <div class="card shadow p-4 mb-4">
+
+        <h4 class="mb-3">
+
+            Product Information
+
+        </h4>
+
         <div class="row">
 
-            <div class="col-md-6 mb-3">
+            <div class="col-md-4 mb-3">
 
                 <label class="form-label">
 
-                    Referrals Program
+                    Total Units
 
                 </label>
 
                 <input type="text"
                        class="form-control"
-                       value="{{ service.referrals_program }}"
+                       value="{{ invoice.total_units }}"
+                       readonly>
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    Price Of Units
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ invoice.price_of_units }}"
+                       readonly>
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    First Year CMC
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ invoice.first_year_cmc }}"
+                       readonly>
+
+            </div>
+
+        </div>
+
+        <div class="row">
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    Installation
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ invoice.installation }}"
+                       readonly>
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    Total Sensor
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ invoice.total_sensor }}"
+                       readonly>
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    Sensor Cost
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ invoice.sensor_cost }}"
+                       readonly>
+
+            </div>
+
+        </div>
+                <div class="row">
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">
+
+                    Revenue
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ invoice.revenue }}"
                        readonly>
 
             </div>
@@ -269,13 +258,13 @@
 
                 <label class="form-label">
 
-                    News Sent
+                    Total Revenue
 
                 </label>
 
                 <input type="text"
                        class="form-control"
-                       value="{{ service.news_sent }}"
+                       value="{{ invoice.total_revenue }}"
                        readonly>
 
             </div>
@@ -284,28 +273,91 @@
 
     </div>
 
-    <!-- REMARK -->
+    <!-- REVENUE INFORMATION -->
 
     <div class="card shadow p-4 mb-4">
 
         <h4 class="mb-3">
 
-            Remark
+            Revenue Summary
 
         </h4>
 
-        <textarea class="form-control"
-                  rows="4"
-                  readonly>{{ service.remark }}</textarea>
+        <div class="row">
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">
+
+                    Revenue (Without GST)
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ invoice.revenue }}"
+                       readonly>
+
+            </div>
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">
+
+                    Total Revenue (With GST)
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ invoice.total_revenue }}"
+                       readonly>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="card shadow p-4 mb-4">
+
+        <h4>
+
+            Invoice PDF
+
+        </h4>
+
+        {% if invoice.invoice_pdf %}
+
+        <a href="{{ url_for(
+                        'static',
+                        filename=invoice.invoice_pdf
+                    ) }}"
+            target="_blank"
+            class="btn btn-dark">
+
+            View Invoice PDF
+
+        </a>
+
+        {% else %}
+
+            <p>
+
+                No PDF Uploaded
+
+            </p>
+
+        {% endif %}
 
     </div>
 
     <div class="text-center mb-5">
 
-        <a href="/client-services/{{ service.client_id }}"
+        <a href="/add-invoice"
            class="btn btn-dark">
 
-            Back To Service History
+            Back To Invoices
 
         </a>
         <a href="/dashboard"

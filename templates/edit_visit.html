@@ -10,22 +10,6 @@
 
 </head>
 
-{% with messages = get_flashed_messages() %}
-    {% if messages %}
-
-        {% for message in messages %}
-
-            <div class="alert alert-danger">
-
-                {{ message }}
-
-            </div>
-
-        {% endfor %}
-
-    {% endif %}
-{% endwith %}
-
 <body class="bg-light">
 
 <div class="container mt-4">
@@ -34,7 +18,7 @@
 
         <h2 class="text-center mb-4">
 
-            Visit Management
+            Edit Visit
 
         </h2>
 
@@ -50,15 +34,10 @@
 
                 </h4>
 
-                <select name="meeting_id"
-                        id="meeting_id"
-                        class="form-select">
-
-                    <option value="">
-
-                        Select Meeting
-
-                    </option>
+                <select name="meeting_id">
+                        <option value="">
+                            Select Meeting
+                        </option>
 
                     {% for meeting in meetings %}
 
@@ -111,6 +90,7 @@
                         <input type="text"
                                id="company_name"
                                name="company_name"
+                               value="{{ visit.company_name }}"
                                class="form-control">
 
                     </div>
@@ -126,6 +106,7 @@
                         <input type="text"
                                id="person_name"
                                name="person_name"
+                               value="{{ visit.person_name }}"
                                class="form-control">
 
                     </div>
@@ -145,6 +126,7 @@
                         <input type="text"
                                id="designation"
                                name="designation"
+                               value="{{ visit.designation }}"
                                class="form-control">
 
                     </div>
@@ -160,6 +142,7 @@
                         <input type="text"
                                id="contact_no"
                                name="contact_no"
+                               value="{{ visit.contact_no }}"
                                class="form-control">
 
                     </div>
@@ -177,7 +160,7 @@
                     <textarea id="address"
                               name="address"
                               rows="3"
-                              class="form-control"></textarea>
+                              class="form-control">{{ visit.address }}</textarea>
 
                 </div>
 
@@ -194,6 +177,7 @@
                         <input type="text"
                                id="state"
                                name="state"
+                               value="{{ visit.state }}"
                                class="form-control">
 
                     </div>
@@ -208,6 +192,7 @@
 
                         <input type="text"
                                name="region"
+                               value="{{ visit.region }}"
                                class="form-control">
 
                     </div>
@@ -222,6 +207,7 @@
 
                         <input type="text"
                                name="abc"
+                               value="{{ visit.abc }}"
                                class="form-control">
 
                     </div>
@@ -240,6 +226,7 @@
 
                         <input type="date"
                                name="visit_date"
+                               value="{{ visit.visit_date }}"
                                class="form-control">
 
                     </div>
@@ -254,6 +241,7 @@
 
                         <input type="number"
                                name="leads_generated"
+                               value="{{ visit.leads_generated }}"
                                class="form-control">
 
                     </div>
@@ -270,7 +258,7 @@
 
                     <textarea name="brief"
                               rows="3"
-                              class="form-control"></textarea>
+                              class="form-control">{{ visit.brief }}</textarea>
 
                 </div>
 
@@ -284,7 +272,7 @@
 
                     <textarea name="m2"
                               rows="3"
-                              class="form-control"></textarea>
+                              class="form-control">{{ visit.m2 }}</textarea>
 
                 </div>
 
@@ -298,7 +286,7 @@
 
                     <textarea name="m3"
                               rows="3"
-                              class="form-control"></textarea>
+                              class="form-control">{{ visit.m3 }}</textarea>
 
                 </div>
 
@@ -324,138 +312,10 @@
         </form>
 
     </div>
-
-    <br>
-
-    <div class="card shadow p-4">
-
-        <h3 class="mb-3">
-
-            All Visits
-
-        </h3>
-
-        <table class="table table-bordered table-striped">
-
-            <thead>
-
-                <tr>
-
-                    <th>ID</th>
-
-                    <th>Company</th>
-
-                    <th>Person</th>
-
-                    <th>Contact</th>
-
-                    <th>State</th>
-
-                    <th>Visit Date</th>
-
-                    <th>Action</th>
-
-                </tr>
-
-            </thead>
-
-            <tbody>
-
-                {% for visit in visits %}
-
-                <tr>
-
-                    <td>{{ visit.visit_id }}</td>
-
-                    <td>{{ visit.company_name }}</td>
-
-                    <td>{{ visit.person_name }}</td>
-
-                    <td>{{ visit.contact_no }}</td>
-
-                    <td>{{ visit.state }}</td>
-
-                    <td>{{ visit.visit_date }}</td>
-
-                    <td>
-
-                        <a href="/visit/{{ visit.visit_id }}"
-                           class="btn btn-dark btn-sm">
-
-                            View
-
-                        </a>
-                        <a href="/edit-visit/{{ visit.visit_id }}"
-                           class="btn btn-secondary btn-sm">
-
-                            Edit
-                        </a>
-                        <a href="/delete-visit/{{ visit.visit_id }}"
-                           class="btn btn-danger btn-sm"
-                           onclick="return confirm('Are you sure you want to delete this visit?');">
-
-                            Delete
-                        </a>
-
-                    </td>
-
-                </tr>
-
-                {% endfor %}
-
-            </tbody>
-
-        </table>
-
-    </div>
+  
 
 </div>
 
-<script>
-
-document.getElementById(
-    'meeting_id'
-).addEventListener(
-    'change',
-    function () {
-
-        let selected =
-            this.options[
-                this.selectedIndex
-            ];
-
-        document.getElementById(
-            'company_name'
-        ).value =
-            selected.dataset.company || '';
-
-        document.getElementById(
-            'person_name'
-        ).value =
-            selected.dataset.person || '';
-
-        document.getElementById(
-            'designation'
-        ).value =
-            selected.dataset.designation || '';
-
-        document.getElementById(
-            'contact_no'
-        ).value =
-            selected.dataset.contact || '';
-
-        document.getElementById(
-            'address'
-        ).value =
-            selected.dataset.address || '';
-
-        document.getElementById(
-            'state'
-        ).value =
-            selected.dataset.state || '';
-
-    }
-);
 
 </script>
 

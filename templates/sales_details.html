@@ -3,7 +3,7 @@
 
 <head>
 
-    <title>Client Details</title>
+    <title>Sales Details</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
           rel="stylesheet">
@@ -16,17 +16,17 @@
 
     <h2 class="text-center mb-4">
 
-        Client Details
+        Sales Details
 
     </h2>
 
-    <!-- BASIC CLIENT INFORMATION -->
+    <!-- CLIENT DETAILS -->
 
     <div class="card shadow p-4 mb-4">
 
         <h4 class="mb-3">
 
-            Basic Client Information
+            Client Details
 
         </h4>
 
@@ -36,13 +36,13 @@
 
                 <label class="form-label">
 
-                    Client ID
+                    Sales ID
 
                 </label>
 
                 <input type="text"
                        class="form-control"
-                       value="{{ client.client_id }}"
+                       value="{{ sale.sales_id }}"
                        readonly>
 
             </div>
@@ -51,13 +51,13 @@
 
                 <label class="form-label">
 
-                    Client Name
+                    Name
 
                 </label>
 
                 <input type="text"
                        class="form-control"
-                       value="{{ client.client_name }}"
+                       value="{{ sale.name }}"
                        readonly>
 
             </div>
@@ -66,13 +66,13 @@
 
                 <label class="form-label">
 
-                    Monitor Present
+                    Reference No
 
                 </label>
 
                 <input type="text"
                        class="form-control"
-                       value="{{ client.monitor_present }}"
+                       value="{{ sale.reference_no }}"
                        readonly>
 
             </div>
@@ -81,32 +81,47 @@
 
         <div class="row">
 
-            <div class="col-md-6 mb-3">
+            <div class="col-md-4 mb-3">
 
                 <label class="form-label">
 
-                    Property Type
+                    Source
 
                 </label>
 
                 <input type="text"
                        class="form-control"
-                       value="{{ client.property_type }}"
+                       value="{{ sale.source }}"
                        readonly>
 
             </div>
 
-            <div class="col-md-6 mb-3">
+            <div class="col-md-4 mb-3">
 
                 <label class="form-label">
 
-                    State
+                    Contact Number
 
                 </label>
 
                 <input type="text"
                        class="form-control"
-                       value="{{ client.state }}"
+                       value="{{ sale.contact_no }}"
+                       readonly>
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    Email ID
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ sale.email_id }}"
                        readonly>
 
             </div>
@@ -123,7 +138,68 @@
 
             <textarea class="form-control"
                       rows="3"
-                      readonly>{{ client.address }}</textarea>
+                      readonly>{{ sale.address }}</textarea>
+
+        </div>
+
+    </div>
+
+    <!-- PROJECT DETAILS -->
+
+    <div class="card shadow p-4 mb-4">
+
+        <h4 class="mb-3">
+
+            Project Details
+
+        </h4>
+
+        <div class="row">
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    Project Stage
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ sale.project_stage }}"
+                       readonly>
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    MOC
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ sale.moc }}"
+                       readonly>
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    Sales Person
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ sale.sales_person }}"
+                       readonly>
+
+            </div>
 
         </div>
 
@@ -133,13 +209,13 @@
 
                 <label class="form-label">
 
-                    Email ID
+                    Project Type
 
                 </label>
 
                 <input type="text"
                        class="form-control"
-                       value="{{ client.mail_id }}"
+                       value="{{ sale.project_type }}"
                        readonly>
 
             </div>
@@ -148,13 +224,95 @@
 
                 <label class="form-label">
 
-                    Mobile Number
+                    Category
 
                 </label>
 
                 <input type="text"
                        class="form-control"
-                       value="{{ client.mobile_no }}"
+                       value="{{ sale.category }}"
+                       readonly>
+
+            </div>
+
+        </div>
+
+        <div class="row">
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">
+
+                    Site Incharge
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ sale.site_incharge }}"
+                       readonly>
+
+            </div>
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">
+
+                    Site Incharge Contact
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ sale.site_incharge_contact }}"
+                       readonly>
+
+            </div>
+
+        </div>
+                <div class="row">
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    First Contact
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ sale.first_contact }}"
+                       readonly>
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    Last Contact
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ sale.last_contact }}"
+                       readonly>
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    Followup Date
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ sale.followup_date }}"
                        readonly>
 
             </div>
@@ -165,14 +323,269 @@
 
             <label class="form-label">
 
-                Location Link
+                Next Action
 
             </label>
 
-            <input type="text"
-                   class="form-control"
-                   value="{{ client.location_link }}"
-                   readonly>
+            <textarea class="form-control"
+                      rows="3"
+                      readonly>{{ sale.next_action }}</textarea>
+
+        </div>
+
+    </div>
+
+    <!-- REVENUE DETAILS -->
+
+    <div class="card shadow p-4 mb-4">
+
+        <h4 class="mb-3">
+
+            Revenue Details
+
+        </h4>
+
+        <div class="row">
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    No Of Site Visits
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ sale.no_of_site_visits }}"
+                       readonly>
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    Area Covered
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ sale.area_covered }}"
+                       readonly>
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    Total Units
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ sale.total_units }}"
+                       readonly>
+
+            </div>
+
+        </div>
+
+        <div class="row">
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    Price Of Units
+
+                </label>
+                                <input type="text"
+                       class="form-control"
+                       value="{{ sale.price_of_units }}"
+                       readonly>
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    First Year CMC
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ sale.first_year_cmc }}"
+                       readonly>
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    Installation
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ sale.installation }}"
+                       readonly>
+
+            </div>
+
+        </div>
+
+        <div class="row">
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    Total Sensor
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ sale.total_sensor }}"
+                       readonly>
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    Sensor Cost
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ sale.sensor_cost }}"
+                       readonly>
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    Discount
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ sale.discount }}"
+                       readonly>
+
+            </div>
+
+        </div>
+
+        <div class="row">
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    Revenue
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ sale.revenue }}"
+                       readonly>
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    Amount Received
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ sale.amount_received }}"
+                       readonly>
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    Amount Due
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ sale.amount_due }}"
+                       readonly>
+
+            </div>
+
+        </div>
+
+        <div class="row">
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    Total Revenue
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ sale.total_revenue }}"
+                       readonly>
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    GST No
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ sale.gst_no }}"
+                       readonly>
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label">
+
+                    CMC Onwards
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ sale.cmc_onwards }}"
+                       readonly>
+
+            </div>
 
         </div>
 
@@ -180,435 +593,14 @@
 
             <label class="form-label">
 
-                Nearest Metro Station
+                Total CMC
 
             </label>
 
             <input type="text"
                    class="form-control"
-                   value="{{ client.nearest_metrostation }}"
+                   value="{{ sale.total_cmc }}"
                    readonly>
-
-        </div>
-
-    </div>
-
-    <!-- INSTALLATION INFORMATION -->
-
-    <div class="card shadow p-4 mb-4">
-
-        <h4 class="mb-3">
-
-            Installation Information
-
-        </h4>
-
-        <div class="row">
-
-            <div class="col-md-4 mb-3">
-
-                <label class="form-label">
-
-                    Product
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ client.product }}"
-                       readonly>
-
-            </div>
-
-            <div class="col-md-4 mb-3">
-
-                <label class="form-label">
-
-                    Installation Date
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ client.installation_date }}"
-                       readonly>
-
-            </div>
-
-            <div class="col-md-4 mb-3">
-
-                <label class="form-label">
-
-                    Activation Date
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ client.activation_date }}"
-                       readonly>
-
-            </div>
-
-        </div>
-
-        <div class="row">
-
-            <div class="col-md-4 mb-3">
-
-                <label class="form-label">
-
-                    Filter Colour
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ client.filter_colour }}"
-                       readonly>
-
-            </div>
-
-            <div class="col-md-4 mb-3">
-
-                <label class="form-label">
-
-                    No Of Units Installed
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ client.no_of_units_installed }}"
-                       readonly>
-
-            </div>
-
-            <div class="col-md-4 mb-3">
-
-                <label class="form-label">
-
-                    Solution Working
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ client.solution_working }}"
-                       readonly>
-
-            </div>
-
-        </div>
-
-    </div>
-    <!-- CMC INFORMATION -->
-
-    <div class="card shadow p-4 mb-4">
-
-        <h4 class="mb-3">
-
-            CMC Information
-
-        </h4>
-
-        <div class="row">
-
-            <div class="col-md-3 mb-3">
-
-                <label class="form-label">
-
-                    CMC Applicable
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ client.cmc_applicable }}"
-                       readonly>
-
-            </div>
-
-            <div class="col-md-3 mb-3">
-
-                <label class="form-label">
-
-                    CMC Due Days
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ client.cmc_due_days }}"
-                       readonly>
-
-            </div>
-
-            <div class="col-md-3 mb-3">
-
-                <label class="form-label">
-
-                    CMC Due
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ client.cmc_due }}"
-                       readonly>
-
-            </div>
-
-            <div class="col-md-3 mb-3">
-
-                <label class="form-label">
-
-                    CMC Amount
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ client.cmc_amount }}"
-                       readonly>
-
-            </div>
-
-        </div>
-
-        <div class="mb-3">
-
-            <label class="form-label">
-
-                Next CMC Renewal Date
-
-            </label>
-
-            <input type="text"
-                   class="form-control"
-                   value="{{ client.next_cmc_renewal_date }}"
-                   readonly>
-
-        </div>
-
-    </div>
-
-    <!-- SERVICE INFORMATION -->
-
-    <div class="card shadow p-4 mb-4">
-
-        <h4 class="mb-3">
-
-            Service Information
-
-        </h4>
-
-        <div class="row">
-
-            <div class="col-md-3 mb-3">
-
-                <label class="form-label">
-
-                    Last Service Days
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ client.last_service_days }}"
-                       readonly>
-
-            </div>
-
-            <div class="col-md-3 mb-3">
-
-                <label class="form-label">
-
-                    Last Service Date
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ client.last_service_date }}"
-                       readonly>
-
-            </div>
-
-            <div class="col-md-3 mb-3">
-
-                <label class="form-label">
-
-                    Service Interval Days
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ client.service_interval_days }}"
-                       readonly>
-
-            </div>
-
-            <div class="col-md-3 mb-3">
-
-                <label class="form-label">
-
-                    Service Due
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ client.service_due }}"
-                       readonly>
-
-            </div>
-
-        </div>
-
-        <div class="row">
-
-            <div class="col-md-4 mb-3">
-
-                <label class="form-label">
-
-                    Filter Clean
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ client.filter_clean }}"
-                       readonly>
-
-            </div>
-
-            <div class="col-md-4 mb-3">
-
-                <label class="form-label">
-
-                    Service For
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ client.service_for }}"
-                       readonly>
-
-            </div>
-
-            <div class="col-md-4 mb-3">
-
-                <label class="form-label">
-
-                    No Of Filters Replaced
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ client.no_of_filters_replaced }}"
-                       readonly>
-
-            </div>
-
-        </div>
-
-        <div class="row">
-
-            <div class="col-md-6 mb-3">
-
-                <label class="form-label">
-
-                    Pre Service Message
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ client.pre_service_msg }}"
-                       readonly>
-
-            </div>
-
-            <div class="col-md-6 mb-3">
-
-                <label class="form-label">
-
-                    Post Service Message
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ client.post_service_msg }}"
-                       readonly>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    <!-- REMARKS -->
-
-    <div class="card shadow p-4 mb-4">
-
-        <h4 class="mb-3">
-
-            Remarks
-
-        </h4>
-
-        <textarea class="form-control"
-                  rows="4"
-                  readonly>{{ client.remark }}</textarea>
-
-    </div>
-
-    <!-- LINKS -->
-
-    <div class="card shadow p-4 mb-4">
-
-        <h4 class="mb-3">
-
-            Record Links
-
-        </h4>
-
-        <div class="row">
-
-            <div class="col-md-6">
-
-                <label class="form-label">
-
-                    Proposal ID
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ client.proposal_id }}"
-                       readonly>
-
-            </div>
-
-            <div class="col-md-6">
-
-                <label class="form-label">
-
-                    Invoice ID
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ client.invoice_id }}"
-                       readonly>
-
-            </div>
 
         </div>
 
@@ -616,13 +608,12 @@
 
     <div class="text-center mb-5">
 
-        <a href="/add-client"
+        <a href="/add-sales"
            class="btn btn-dark">
 
-            Back To Clients
+            Back To Sales
 
         </a>
-
         <a href="/dashboard"
            class="btn btn-secondary">
 

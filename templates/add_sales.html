@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Sales Pipeline Management</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-5">
+
+    <div class="card shadow p-4">
+
+        <h2 class="text-center mb-4">
+
+            Sales Pipeline Management
+
+        </h2>
+
+        <form method="POST">
+
+            <!-- SELECT PROPOSAL -->
+
+            <div class="card shadow-sm p-4 mb-4">
+
+                <h4>
+
+                    Select Proposal
+
+                </h4>
+
+                <select name="proposal_id"
+                        id="proposal_id"
+                        class="form-select">
+
+                    <option value="">
+
+                        Select Proposal
+
+                    </option>
+
+                    {% for proposal in proposals %}
+
+                    <option
+
+                        value="{{ proposal.proposal_id }}"
+
+                        data-name="{{ proposal.name }}"
+
+                        data-reference="{{ proposal.reference_no }}"
+
+                        data-source="{{ proposal.source }}"
+
+                        data-address="{{ proposal.site_address }}"
+
+                        data-phone="{{ proposal.phone_no_client }}"
+
+                        data-email="{{ proposal.email }}">
+
+                        {{ proposal.reference_no }}
+                        -
+                        {{ proposal.name }}
+
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+            <!-- CLIENT DETAILS -->
+
+            <div class="card shadow-sm p-4 mb-4">
+
+                <h4>
+
+                    Client Details
+
+                </h4>
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Name
+
+                        </label>
+
+                        <input type="text"
+                               id="name"
+                               name="name"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Reference No
+
+                        </label>
+
+                        <input type="text"
+                               id="reference_no"
+                               name="reference_no"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Source
+
+                        </label>
+
+                        <input type="text"
+                               id="source"
+                               name="source"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Contact Number
+
+                        </label>
+
+                        <input type="text"
+                               id="contact_no"
+                               name="contact_no"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Email ID
+
+                    </label>
+
+                    <input type="email"
+                           id="email_id"
+                           name="email_id"
+                           class="form-control">
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Address
+
+                    </label>
+
+                    <textarea id="address"
+                              name="address"
+                              rows="3"
+                              class="form-control"></textarea>
+
+                </div>
+
+            </div>
+
+            <!-- PROJECT DETAILS -->
+
+            <div class="card shadow-sm p-4 mb-4">
+
+                <h4>
+
+                    Project Details
+
+                </h4>
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Project Stage
+
+                        </label>
+
+                        <select name="project_stage"
+                                class="form-select">
+                            <option>Lead Generation</option>
+                            <option>Site Visit</option>
+                            <option>Proposal & Visit</option>
+                            <option>Order Confirmation</option>
+                            <option>Installation</option>
+                            <option>Lost</option>
+                            <option>PO Received</option>
+                            <option>Advance Received</option>
+                            <option>Piping</option>
+                            <option>Cold</option>
+                            <option>Completed</option>
+                            <option>Withdrawn by MVC</option>
+                            <option>Drawings</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            MOC
+
+                        </label>
+
+                        <input type="text"
+                               name="moc"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Sales Person
+
+                        </label>
+
+                        <input type="text"
+                               name="sales_person"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Project Type
+
+                        </label>
+
+                        <input type="text"
+                               name="project_type"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Category
+
+                        </label>
+
+                        <input type="text"
+                               name="category"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Site Incharge
+
+                        </label>
+
+                        <input type="text"
+                               name="site_incharge"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Site Incharge Contact
+
+                        </label>
+
+                        <input type="text"
+                               name="site_incharge_contact"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+                        
+                        <label class="form-label">
+
+                            First Contact
+
+                        </label>
+
+                        <input type="date"
+                               name="first_contact"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Last Contact
+
+                        </label>
+
+                        <input type="date"
+                               name="last_contact"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Followup Date
+
+                        </label>
+
+                        <input type="date"
+                               name="followup_date"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Next Action
+
+                    </label>
+
+                    <textarea name="next_action"
+                              rows="3"
+                              class="form-control"></textarea>
+
+                </div>
+
+            </div>
+                        <!-- REVENUE DETAILS -->
+
+            <div class="card shadow-sm p-4 mb-4">
+
+                <h4>
+
+                    Revenue Details
+
+                </h4>
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            No Of Site Visits
+
+                        </label>
+
+                        <input type="number"
+                               name="no_of_site_visits"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Area Covered
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               name="area_covered"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Total Units
+
+                        </label>
+
+                        <input type="number"
+                               name="total_units"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Price Of Units
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               id="price_of_units"
+                               name="price_of_units"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            First Year CMC
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               id="first_year_cmc"
+                               name="first_year_cmc"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Installation
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               id="installation"
+                               name="installation"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Total Sensor
+
+                        </label>
+
+                        <input type="number"
+                               id="total_sensor"
+                               name="total_sensor"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Sensor Cost
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               id="sensor_cost"
+                               name="sensor_cost"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Discount
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               id="discount"
+                               name="discount"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Revenue
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               id="revenue"
+                               name="revenue"
+                               readonly
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Amount Received
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               id="amount_received"
+                               name="amount_received"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Amount Due
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               id="amount_due"
+                               name="amount_due"
+                               readonly
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Total Revenue
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               id="total_revenue"
+                               name="total_revenue"
+                               readonly
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            GST No
+
+                        </label>
+
+                        <input type="text"
+                               name="gst_no"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            CMC Onwards
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               name="cmc_onwards"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Total CMC
+
+                    </label>
+
+                    <input type="number"
+                           step="0.01"
+                           name="total_cmc"
+                           class="form-control">
+
+                </div>
+
+            </div>
+
+            <div class="text-center">
+
+                <button type="submit"
+                        class="btn btn-dark btn-lg">
+
+                    Save Sales Record
+
+                </button>
+
+                <a href="/dashboard"
+                   class="btn btn-secondary">
+
+                    Back To Dashboard
+
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+    <br>
+
+    <div class="card shadow p-4">
+
+        <h3>
+
+            All Sales Records
+
+        </h3>
+
+        <table class="table table-bordered">
+
+            <thead>
+
+                <tr>
+
+                    <th>ID</th>
+
+                    <th>Name</th>
+
+                    <th>Reference No</th>
+
+                    <th>Project Stage</th>
+
+                    <th>Sales Person</th>
+
+                    <th>Action</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for sale in sales %}
+
+                <tr>
+
+                    <td>{{ sale.sales_id }}</td>
+
+                    <td>{{ sale.name }}</td>
+
+                    <td>{{ sale.reference_no }}</td>
+
+                    <td>{{ sale.project_stage }}</td>
+
+                    <td>{{ sale.sales_person }}</td>
+
+                    <td>
+
+                        <a href="/sales/{{ sale.sales_id }}"
+                           class="btn btn-dark btn-sm">
+
+                            View
+
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<script>
+
+document.getElementById(
+    'proposal_id'
+).addEventListener(
+    'change',
+    function() {
+
+        let selected =
+            this.options[
+                this.selectedIndex
+            ];
+
+        document.getElementById(
+            'name'
+        ).value =
+            selected.dataset.name || '';
+
+        document.getElementById(
+            'reference_no'
+        ).value =
+            selected.dataset.reference || '';
+
+        document.getElementById(
+            'source'
+        ).value =
+            selected.dataset.source || '';
+
+        document.getElementById(
+            'contact_no'
+        ).value =
+            selected.dataset.phone || '';
+
+        document.getElementById(
+            'email_id'
+        ).value =
+            selected.dataset.email || '';
+
+        document.getElementById(
+            'address'
+        ).value =
+            selected.dataset.address || '';
+
+    }
+);
+
+function calculateRevenue() {
+
+    let price =
+        parseFloat(
+            document.getElementById(
+                'price_of_units'
+            ).value
+        ) || 0;
+
+    let cmc =
+        parseFloat(
+            document.getElementById(
+                'first_year_cmc'
+            ).value
+        ) || 0;
+
+    let installation =
+        parseFloat(
+            document.getElementById(
+                'installation'
+            ).value
+        ) || 0;
+
+    let totalSensor =
+        parseFloat(
+            document.getElementById(
+                'total_sensor'
+            ).value
+        ) || 0;
+
+    let sensorCost =
+        parseFloat(
+            document.getElementById(
+                'sensor_cost'
+            ).value
+        ) || 0;
+
+    let discount =
+        parseFloat(
+            document.getElementById(
+                'discount'
+            ).value
+        ) || 0;
+
+    let amountReceived =
+        parseFloat(
+            document.getElementById(
+                'amount_received'
+            ).value
+        ) || 0;
+
+    let revenue =
+        price +
+        cmc +
+        installation +
+        (totalSensor * sensorCost) -
+        discount;
+
+    let totalRevenue =
+        revenue * 1.18;
+
+    let amountDue =
+        totalRevenue -
+        amountReceived;
+
+    document.getElementById(
+        'revenue'
+    ).value =
+        revenue.toFixed(2);
+
+    document.getElementById(
+        'total_revenue'
+    ).value =
+        totalRevenue.toFixed(2);
+
+    document.getElementById(
+        'amount_due'
+    ).value =
+        amountDue.toFixed(2);
+
+}
+
+document.getElementById(
+    'price_of_units'
+).addEventListener(
+    'input',
+    calculateRevenue
+);
+
+document.getElementById(
+    'first_year_cmc'
+).addEventListener(
+    'input',
+    calculateRevenue
+);
+
+document.getElementById(
+    'installation'
+).addEventListener(
+    'input',
+    calculateRevenue
+);
+
+document.getElementById(
+    'total_sensor'
+).addEventListener(
+    'input',
+    calculateRevenue
+);
+
+document.getElementById(
+    'sensor_cost'
+).addEventListener(
+    'input',
+    calculateRevenue
+);
+
+document.getElementById(
+    'discount'
+).addEventListener(
+    'input',
+    calculateRevenue
+);
+
+document.getElementById(
+    'amount_received'
+).addEventListener(
+    'input',
+    calculateRevenue
+);
+
+</script>
+
+</body>
+
+</html>

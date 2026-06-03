@@ -16,211 +16,412 @@
 
     <div class="card shadow p-4">
 
-        <h2>
+        <h2 class="text-center mb-4">
 
             Add Service
 
         </h2>
 
-        <h4>
+        <!-- CLIENT INFO -->
 
-            {{ client.client_name }}
+        <div class="card shadow-sm p-3 mb-4">
 
-        </h4>
+            <h4>
 
-        <hr>
+                Client Information
+
+            </h4>
+
+            <div class="row">
+
+                <div class="col-md-4">
+
+                    <strong>
+
+                        Client Name
+
+                    </strong>
+
+                    <br>
+
+                    {{ client.client_name }}
+
+                </div>
+
+                <div class="col-md-4">
+
+                    <strong>
+
+                        Product
+
+                    </strong>
+
+                    <br>
+
+                    {{ client.product }}
+
+                </div>
+
+                <div class="col-md-4">
+
+                    <strong>
+
+                        Mobile
+
+                    </strong>
+
+                    <br>
+
+                    {{ client.mobile_no }}
+
+                </div>
+
+            </div>
+
+        </div>
 
         <form method="POST">
 
-            <div class="row">
+            <!-- SERVICE DETAILS -->
 
-                <div class="col-md-6 mb-3">
+            <div class="card shadow-sm p-4 mb-4">
 
-                    <label>Service Date</label>
+                <h4>
 
-                    <input type="date"
-                           name="service_date"
-                           class="form-control"
-                           required>
+                    Service Details
 
-                </div>
+                </h4>
 
-                <div class="col-md-6 mb-3">
+                <div class="row">
 
-                    <label>Service Of</label>
+                    <div class="col-md-4 mb-3">
 
-                    <input type="text"
-                           name="service_of"
-                           class="form-control">
+                        <label class="form-label">
 
-                </div>
+                            Service Date
 
-            </div>
+                        </label>
 
-            <div class="row">
+                        <input type="date"
+                               name="service_date"
+                               class="form-control"
+                               required>
 
-                <div class="col-md-6 mb-3">
+                    </div>
 
-                    <label>No Of Filters</label>
+                    <div class="col-md-4 mb-3">
 
-                    <input type="number"
-                           name="no_of_filters"
-                           class="form-control">
+                        <label class="form-label">
 
-                </div>
+                            Service Of
 
-                <div class="col-md-6 mb-3">
+                        </label>
 
-                    <label>Serviced By</label>
+                        <input type="text"
+                               name="service_of"
+                               class="form-control">
 
-                    <input type="text"
-                           name="serviced_by"
-                           class="form-control">
+                    </div>
 
-                </div>
+                    <div class="col-md-4 mb-3">
 
-            </div>
+                        <label class="form-label">
 
-            <div class="row">
+                            Serviced By
 
-                <div class="col-md-6 mb-3">
+                        </label>
 
-                    <label>Controller Changed</label>
+                        <input type="text"
+                               name="serviced_by"
+                               class="form-control">
 
-                    <select name="controller_changed"
-                            class="form-select">
-
-                        <option>YES</option>
-
-                        <option>NO</option>
-
-                    </select>
+                    </div>
 
                 </div>
 
-                <div class="col-md-6 mb-3">
+                <div class="row">
 
-                    <label>Fan Changed</label>
+                    <div class="col-md-4 mb-3">
 
-                    <select name="fan_changed"
-                            class="form-select">
+                        <label class="form-label">
 
-                        <option>YES</option>
+                            No Of Filters
 
-                        <option>NO</option>
+                        </label>
 
-                    </select>
+                        <input type="number"
+                               name="no_of_filters"
+                               class="form-control">
 
-                </div>
+                    </div>
 
-            </div>
+                    <div class="col-md-4 mb-3">
 
-            <div class="row">
+                        <label class="form-label">
 
-                <div class="col-md-6 mb-3">
+                            Controller Changed
 
-                    <label>Pre Service Message</label>
+                        </label>
 
-                    <select name="pre_service_msgd"
-                            class="form-select">
+                        <select name="controller_changed"
+                                class="form-select">
 
-                        <option>YES</option>
+                            <option value="YES">
 
-                        <option>NO</option>
+                                YES
 
-                    </select>
+                            </option>
 
-                </div>
+                            <option value="NO">
 
-                <div class="col-md-6 mb-3">
+                                NO
 
-                    <label>Post Service Report Sent</label>
+                            </option>
 
-                    <select name="post_service_report_sent"
-                            class="form-select">
+                        </select>
 
-                        <option>YES</option>
+                    </div>
 
-                        <option>NO</option>
+                    <div class="col-md-4 mb-3">
 
-                    </select>
+                        <label class="form-label">
 
-                </div>
+                            Fan Changed
 
-            </div>
+                        </label>
 
-            <div class="mb-3">
+                        <select name="fan_changed"
+                                class="form-select">
 
-                <label>Miscellaneous Messages</label>
+                            <option value="YES">
 
-                <textarea name="miscellaneous_messages"
-                          class="form-control"></textarea>
+                                YES
 
-            </div>
+                            </option>
 
-            <div class="mb-3">
+                            <option value="NO">
 
-                <label>Tips And Tricks</label>
+                                NO
 
-                <textarea name="tips_and_tricks"
-                          class="form-control"></textarea>
+                            </option>
 
-            </div>
+                        </select>
 
-            <div class="mb-3">
-
-                <label>Referrals Program</label>
-
-                <input type="text"
-                       name="referrals_program"
-                       class="form-control">
-
-            </div>
-
-            <div class="row">
-
-                <div class="col-md-6 mb-3">
-
-                    <label>News Sent</label>
-
-                    <select name="news_sent"
-                            class="form-select">
-
-                        <option>YES</option>
-
-                        <option>NO</option>
-
-                    </select>
-
-                </div>
-
-                <div class="col-md-6 mb-3">
-
-                    <label>Communication Date</label>
-
-                    <input type="date"
-                           name="communication_date"
-                           class="form-control">
+                    </div>
 
                 </div>
 
             </div>
 
-            <div class="mb-3">
+            <!-- COMMUNICATION -->
 
-                <label>Remark</label>
+            <div class="card shadow-sm p-4 mb-4">
+
+                <h4>
+
+                    Communication
+
+                </h4>
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Pre Service Message
+
+                        </label>
+
+                        <select name="pre_service_msgd"
+                                class="form-select">
+
+                            <option value="YES">
+
+                                YES
+
+                            </option>
+
+                            <option value="NO">
+
+                                NO
+
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Post Service Report Sent
+
+                        </label>
+
+                        <select name="post_service_report_sent"
+                                class="form-select">
+
+                            <option value="YES">
+
+                                YES
+
+                            </option>
+
+                            <option value="NO">
+
+                                NO
+
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Communication Date
+
+                        </label>
+
+                        <input type="date"
+                               name="communication_date"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- CUSTOMER ENGAGEMENT -->
+
+            <div class="card shadow-sm p-4 mb-4">
+
+                <h4>
+
+                    Customer Engagement
+
+                </h4>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Miscellaneous Messages
+
+                    </label>
+
+                    <textarea name="miscellaneous_messages"
+                              rows="3"
+                              class="form-control"></textarea>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Tips And Tricks
+
+                    </label>
+
+                    <textarea name="tips_and_tricks"
+                              rows="3"
+                              class="form-control"></textarea>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Referrals Program
+
+                        </label>
+
+                        <input type="text"
+                               name="referrals_program"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            News Sent
+
+                        </label>
+
+                        <select name="news_sent"
+                                class="form-select">
+
+                            <option value="YES">
+
+                                YES
+
+                            </option>
+
+                            <option value="NO">
+
+                                NO
+
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- REMARK -->
+
+            <div class="card shadow-sm p-4 mb-4">
+
+                <h4>
+
+                    Remark
+
+                </h4>
 
                 <textarea name="remark"
+                          rows="4"
                           class="form-control"></textarea>
 
             </div>
 
-            <button type="submit"
-                    class="btn btn-dark">
+            <div class="text-center">
 
-                Save Service
+                <button type="submit"
+                        class="btn btn-dark btn-lg">
 
-            </button>
+                    Save Service
+
+                </button>
+
+                <a href="/dashboard"
+                   class="btn btn-secondary">
+
+                    Back To Dashboard
+
+                </a>
+
+                <a href="/client-services/{{ client.client_id }}"
+                   class="btn btn-secondary btn-lg">
+
+                    Back
+
+                </a>
+
+            </div>
 
         </form>
 

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Invoice Management</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-5">
+
+    <div class="card shadow p-4">
+
+        <h2 class="text-center mb-4">
+
+            Invoice Management
+
+        </h2>
+
+        <form method="POST"
+              enctype="multipart/form-data">
+
+            <!-- SELECT SALES RECORD -->
+
+            <div class="card shadow-sm p-4 mb-4">
+
+                <h4>
+
+                    Select Sales Record
+
+                </h4>
+
+                <select name="sales_id"
+                        id="sales_id"
+                        class="form-select">
+
+                    <option value="">
+
+                        Select Sales Record
+
+                    </option>
+
+                    {% for sale in sales %}
+
+                    <option
+
+                        value="{{ sale.sales_id }}"
+
+                        data-name="{{ sale.name }}"
+
+                        data-gst="{{ sale.gst_no }}"
+
+                        data-units="{{ sale.total_units }}"
+
+                        data-price="{{ sale.price_of_units }}"
+
+                        data-cmc="{{ sale.first_year_cmc }}"
+
+                        data-installation="{{ sale.installation }}"
+
+                        data-sensor="{{ sale.total_sensor }}"
+
+                        data-sensorcost="{{ sale.sensor_cost }}"
+
+                        data-revenue="{{ sale.revenue }}"
+
+                        data-totalrevenue="{{ sale.total_revenue }}">
+
+                        {{ sale.reference_no }}
+                        -
+                        {{ sale.name }}
+
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+            <!-- INVOICE DETAILS -->
+
+            <div class="card shadow-sm p-4 mb-4">
+
+                <h4>
+
+                    Invoice Details
+
+                </h4>
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Name
+
+                        </label>
+
+                        <input type="text"
+                               id="name"
+                               name="name"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Date Of Invoice
+
+                        </label>
+
+                        <input type="date"
+                               name="doi"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Invoice No
+
+                        </label>
+
+                        <input type="text"
+                               name="invoice_no"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            GST No
+
+                        </label>
+
+                        <input type="text"
+                               id="gst_no"
+                               name="gst_no"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Product Sold
+
+                        </label>
+
+                        <input type="text"
+                               name="product_sold"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            Invoice PDF
+
+                        </label>
+
+                        <input type="file"
+                            name="invoice_pdf"
+                        class="form-control">
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- REVENUE INFORMATION -->
+
+            <div class="card shadow-sm p-4 mb-4">
+
+                <h4>
+
+                    Revenue Information
+
+                </h4>
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Total Units
+
+                        </label>
+
+                        <input type="number"
+                               id="total_units"
+                               name="total_units"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Price Of Units
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               id="price_of_units"
+                               name="price_of_units"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            First Year CMC
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               id="first_year_cmc"
+                               name="first_year_cmc"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Installation
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               id="installation"
+                               name="installation"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Total Sensor
+
+                        </label>
+
+                        <input type="number"
+                               id="total_sensor"
+                               name="total_sensor"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Sensor Cost
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               id="sensor_cost"
+                               name="sensor_cost"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+                                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Revenue
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               id="revenue"
+                               name="revenue"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Total Revenue
+
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               id="total_revenue"
+                               name="total_revenue"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="text-center">
+
+                <button type="submit"
+                        class="btn btn-dark btn-lg">
+
+                    Save Invoice
+
+                </button>
+
+                <a href="/dashboard"
+                   class="btn btn-secondary">
+
+                    Back To Dashboard
+
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+    <br>
+
+    <div class="card shadow p-4">
+
+        <h3 class="mb-3">
+
+            All Invoices
+
+        </h3>
+
+        <table class="table table-bordered table-striped">
+
+            <thead>
+
+                <tr>
+
+                    <th>ID</th>
+
+                    <th>Invoice No</th>
+
+                    <th>Name</th>
+
+                    <th>GST No</th>
+
+                    <th>Total Revenue</th>
+
+                    <th>PDF</th>
+
+                    <th>Action</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for invoice in invoices %}
+
+                <tr>
+
+                    <td>{{ invoice.invoice_id }}</td>
+
+                    <td>{{ invoice.invoice_no }}</td>
+
+                    <td>{{ invoice.name }}</td>
+
+                    <td>{{ invoice.gst_no }}</td>
+
+                    <td>{{ invoice.total_revenue }}</td>
+
+                    <td>
+                        {% if invoice.invoice_pdf %}
+
+                        <a href="{{ url_for(
+                                        'static',
+                                        filename=invoice.invoice_pdf
+                                    ) }}"
+                            target="_blank"
+                            class="btn btn-dark btn-sm">
+
+                            View PDF
+
+                        </a>
+
+                        {% else %}
+
+                            No PDF
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+
+                        <a href="/invoice/{{ invoice.invoice_id }}"
+                           class="btn btn-dark btn-sm">
+
+                            View
+
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<script>
+
+document.getElementById(
+    'sales_id'
+).addEventListener(
+    'change',
+    function() {
+
+        let selected =
+            this.options[
+                this.selectedIndex
+            ];
+
+        document.getElementById(
+            'name'
+        ).value =
+            selected.dataset.name || '';
+
+        document.getElementById(
+            'gst_no'
+        ).value =
+            selected.dataset.gst || '';
+
+        document.getElementById(
+            'total_units'
+        ).value =
+            selected.dataset.units || '';
+
+        document.getElementById(
+            'price_of_units'
+        ).value =
+            selected.dataset.price || '';
+
+        document.getElementById(
+            'first_year_cmc'
+        ).value =
+            selected.dataset.cmc || '';
+
+        document.getElementById(
+            'installation'
+        ).value =
+            selected.dataset.installation || '';
+
+        document.getElementById(
+            'total_sensor'
+        ).value =
+            selected.dataset.sensor || '';
+
+        document.getElementById(
+            'sensor_cost'
+        ).value =
+            selected.dataset.sensorcost || '';
+
+        document.getElementById(
+            'revenue'
+        ).value =
+            selected.dataset.revenue || '';
+
+        document.getElementById(
+            'total_revenue'
+        ).value =
+            selected.dataset.totalrevenue || '';
+
+    }
+);
+
+</script>
+
+</body>
+
+</html>

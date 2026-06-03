@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Drawing Management</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-4">
+
+    <div class="card shadow p-4">
+
+        <h2 class="text-center mb-4">
+
+            Drawing Management
+
+        </h2>
+
+        <form method="POST"
+              enctype="multipart/form-data">
+
+            <!-- SELECT VISIT -->
+
+            <div class="card shadow-sm p-4 mb-4">
+
+                <h4>
+
+                    Select Visit
+
+                </h4>
+
+                <select name="visit_id"
+                        id="visit_id"
+                        class="form-select">
+
+                    <option value="">
+
+                        Select Visit
+
+                    </option>
+
+                    {% for visit in visits %}
+
+                    <option
+
+                        value="{{ visit.visit_id }}"
+
+                        data-name="{{ visit.company_name }}"
+
+                        data-address="{{ visit.address }}">
+
+                        {{ visit.company_name }}
+
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+            <!-- DRAWING DETAILS -->
+
+            <div class="card shadow-sm p-4 mb-4">
+
+                <h4>
+
+                    Drawing Details
+
+                </h4>
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Name
+
+                        </label>
+
+                        <input type="text"
+                               id="name"
+                               name="name"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Iteration Number
+
+                        </label>
+
+                        <input type="number"
+                               name="iterations"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Address
+
+                    </label>
+
+                    <textarea id="address"
+                              name="address"
+                              rows="3"
+                              class="form-control"></textarea>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            MOCA
+
+                        </label>
+
+                        <input type="text"
+                               name="moca"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Drawing PDF
+
+                        </label>
+
+                        <input type="file"
+                               name="drawing_pdf"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+            </div>
+                        <div class="text-center">
+
+                <button type="submit"
+                        class="btn btn-dark">
+
+                    Save Drawing
+
+                </button>
+
+                <a href="/dashboard"
+                   class="btn btn-secondary">
+
+                    Back To Dashboard
+
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+    <br>
+
+    <div class="card shadow p-4">
+
+        <h3 class="mb-3">
+
+            All Drawings
+
+        </h3>
+
+        <table class="table table-bordered table-striped">
+
+            <thead>
+
+                <tr>
+
+                    <th>ID</th>
+
+                    <th>Name</th>
+
+                    <th>Iteration</th>
+
+                    <th>MOCA</th>
+
+                    <th>Drawing PDF</th>
+
+                    <th>Action</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for drawing in drawings %}
+
+                <tr>
+
+                    <td>{{ drawing.drawing_id }}</td>
+
+                    <td>{{ drawing.name }}</td>
+
+                    <td>{{ drawing.iterations }}</td>
+
+                    <td>{{ drawing.moca }}</td>
+
+                    <td>
+
+                        {% if drawing.drawing_pdf %}
+
+                        <a href="{{ url_for('static',
+                                             filename=drawing.drawing_pdf) }}"
+                           target="_blank">
+
+                            View PDF
+
+                        </a>
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+
+                        <a href="/drawing/{{ drawing.drawing_id }}"
+                           class="btn btn-dark btn-sm">
+
+                            View
+
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<script>
+
+document.getElementById(
+    'visit_id'
+).addEventListener(
+    'change',
+    function () {
+
+        let selected =
+            this.options[
+                this.selectedIndex
+            ];
+
+        document.getElementById(
+            'name'
+        ).value =
+            selected.dataset.name || '';
+
+        document.getElementById(
+            'address'
+        ).value =
+            selected.dataset.address || '';
+
+    }
+);
+
+</script>
+
+</body>
+
+</html>

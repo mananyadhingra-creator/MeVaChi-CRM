@@ -3,7 +3,7 @@
 
 <head>
 
-    <title>Service History</title>
+    <title>Client Services</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
           rel="stylesheet">
@@ -14,94 +14,240 @@
 
 <div class="container mt-5">
 
-    <div class="card shadow p-4">
+    <h2 class="text-center mb-4">
 
-        <h2>
+        Client Services
 
-            Service History
+    </h2>
 
-        </h2>
+    <!-- CLIENT SUMMARY -->
 
-        <h4>
+    <div class="card shadow p-4 mb-4">
 
-            {{ client.client_name }}
+        <h4 class="mb-3">
+
+            Client Summary
 
         </h4>
 
-    <div class="card mb-4 p-3">
+        <div class="row">
 
-        <h4>Client Summary</h4>
+            <div class="col-md-4 mb-3">
 
-        <table class="table table-bordered">
+                <strong>
 
-            <tr>
-                <th>Client Name</th>
-                <td>{{ client.client_name }}</td>
-            </tr>
+                    Client Name
 
-            <tr>
-                <th>Address</th>
-                <td>{{ client.address }}</td>
-            </tr>
+                </strong>
 
-            <tr>
-                <th>Installation Date</th>
-                <td>{{ client.installation_date }}</td>
-            </tr>
-            <p>
-                <b>Total Services:</b>
-                    {{ service_count }}
-            </p>
-            <tr>
-                <th>Last Service Date</th>
-                <td>{{ last_service_date }}</td>
-            </tr>
+                <br>
 
-            <tr>
-                <th>Service Due Date</th>
-                <td>
-                    {% if service_due_date %}
-                        {{service_due_date }}
-                    {% else %}
-                        N/A
-                    {% endif %}
-                </td>
-            </tr>
+                {{ client.client_name }}
 
-            <tr>
-                <th>No. of Units Installed</th>
-                <td>{{ client.no_of_units_installed }}</td>
-            </tr>
+            </div>
 
-        </table>
+            <div class="col-md-4 mb-3">
 
-</div>
+                <strong>
+
+                    Product
+
+                </strong>
+
+                <br>
+
+                {{ client.product }}
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <strong>
+
+                    Mobile Number
+
+                </strong>
+
+                <br>
+
+                {{ client.mobile_no }}
+
+            </div>
+
+        </div>
+
+        <div class="row">
+
+            <div class="col-md-4 mb-3">
+
+                <strong>
+
+                    Installation Date
+
+                </strong>
+
+                <br>
+
+                {{ client.installation_date }}
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <strong>
+
+                    Last Service Date
+
+                </strong>
+
+                <br>
+
+                {{ client.last_service_date }}
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <strong>
+
+                    Total Services
+
+                </strong>
+
+                <br>
+
+                {{ service_count }}
+
+            </div>
+
+        </div>
+
+        <hr>
+
+        <div class="row">
+
+            <div class="col-md-3">
+
+                <strong>
+
+                    CMC Due Days
+
+                </strong>
+
+                <br>
+
+                {{ client.cmc_due_days }}
+
+            </div>
+
+            <div class="col-md-3">
+
+                <strong>
+
+                    CMC Due
+
+                </strong>
+
+                <br>
+
+                {{ client.cmc_due }}
+
+            </div>
+
+            <div class="col-md-3">
+
+                <strong>
+
+                    Service Due
+
+                </strong>
+
+                <br>
+
+                {{ client.service_due }}
+
+            </div>
+
+            <div class="col-md-3">
+
+                <strong>
+
+                    Solution Working
+
+                </strong>
+
+                <br>
+
+                {{ client.solution_working }}
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ACTION BUTTONS -->
+
+    <div class="mb-4">
+
+        <a href="/client/{{ client.client_id }}"
+           class="btn btn-secondary">
+
+            Client Details
+
+        </a>
 
         <a href="/add-service/{{ client.client_id }}"
-            class="btn btn-dark mb-3">
+           class="btn btn-dark">
 
             Add Service
 
-        </a>    
-        <br>
+        </a>
 
-        <table class="table table-bordered">
+        <a href="/add-client"
+           class="btn btn-outline-dark">
+
+            Back To Clients
+
+        </a>
+        <a href="/dashboard"
+           class="btn btn-secondary">
+
+            Back To Dashboard
+
+        </a>
+
+    </div>
+
+    <!-- SERVICE HISTORY -->
+
+    <div class="card shadow p-4">
+
+        <h4 class="mb-3">
+
+            Service History
+
+        </h4>
+
+        <table class="table table-bordered table-striped">
 
             <thead>
 
                 <tr>
 
+                    <th>ID</th>
+
                     <th>Service Date</th>
 
                     <th>Service Of</th>
 
-                    <th>No. of Filters</th>
-
                     <th>Serviced By</th>
 
-                    <th>Action</th>
-                </tr>
+                    <th>Filters</th>
 
+                    <th>Action</th>
+
+                </tr>
 
             </thead>
 
@@ -110,22 +256,45 @@
                 {% for service in services %}
 
                 <tr>
-                    <td>{{ service.service_date }}</td>
-
-                    <td>{{ service.service_of }}</td>
-
-                    <td>{{ service.no_of_filters }}</td>
-
-                    <td>{{ service.serviced_by }}</td>
 
                     <td>
 
-                    <a href="/service/{{ service.card_id }}"
-                        class="btn btn-dark btn-sm">
+                        {{ service.card_id }}
 
-                        View
+                    </td>
 
-                    </a>
+                    <td>
+
+                        {{ service.service_date }}
+
+                    </td>
+
+                    <td>
+
+                        {{ service.service_of }}
+
+                    </td>
+
+                    <td>
+
+                        {{ service.serviced_by }}
+
+                    </td>
+
+                    <td>
+
+                        {{ service.no_of_filters }}
+
+                    </td>
+
+                    <td>
+
+                        <a href="/service/{{ service.card_id }}"
+                           class="btn btn-dark btn-sm">
+
+                            View
+
+                        </a>
 
                     </td>
 
@@ -136,13 +305,6 @@
             </tbody>
 
         </table>
-
-        <a href="/add-client"
-           class="btn btn-dark">
-
-            Back
-
-        </a>
 
     </div>
 

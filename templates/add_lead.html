@@ -9,6 +9,21 @@
           rel="stylesheet">
 
 </head>
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div class="alert alert-danger">
+
+                {{ message }}
+
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+{% endwith %}
 
 <body class="bg-light">
 
@@ -140,6 +155,13 @@
 
                 </button>
 
+                <a href="/dashboard"
+                   class="btn btn-secondary">
+
+                    Back To Dashboard
+
+                </a>
+
             </div>
 
         </form>
@@ -201,10 +223,31 @@
                     <td>{{ lead.recent }}</td>
 
                     <td>
+
                         <a href="/lead/{{ lead.lead_id }}"
                             class="btn btn-dark btn-sm">
+
                             View
+
                         </a>
+
+                        <a href="/edit-lead/{{ lead.lead_id }}"
+                            class="btn btn-warning btn-sm">
+
+                            Edit
+
+                        </a>
+
+                        <a href="/delete-lead/{{ lead.lead_id }}"
+                            class="btn btn-danger btn-sm"
+                            onclick="return confirm(
+                                'Delete this lead?'
+                            )">
+
+                            Delete
+
+                        </a>
+
                     </td>
 
                 </tr>

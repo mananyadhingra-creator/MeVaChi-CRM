@@ -15,22 +15,6 @@
 
 </head>
 
-{% with messages = get_flashed_messages() %}
-    {% if messages %}
-
-        {% for message in messages %}
-
-            <div class="alert alert-danger">
-
-                {{ message }}
-
-            </div>
-
-        {% endfor %}
-
-    {% endif %}
-{% endwith %}
-
 <body class="bg-light">
 
 <div class="container mt-5">
@@ -39,7 +23,7 @@
 
         <h2 class="text-center mb-4">
 
-            Add Meeting
+            Edit Meeting
 
         </h2>
 
@@ -55,9 +39,7 @@
 
                     </label>
 
-                    <select name="lead_id"
-                            class="form-select">
-
+                    <select name="lead_id">
                         <option value="">
                             Select Lead
                         </option>
@@ -68,7 +50,10 @@
                                 data-name="{{ lead.name }}"
                                 data-reference="{{ lead.reference }}"
                                 data-phone="{{ lead.phone }}"
-                                data-location="{{ lead.location }}">
+                                data-location="{{ lead.location }}"
+                                {% if lead.lead_id == meeting.lead_id %}
+                                    selected
+                                {% endif %}>
 
                             {{ lead.name }}
 
@@ -88,7 +73,7 @@
 
                     <input type="text"
                            name="meeting_fixed_by"
-                           class="form-control">
+                           value="{{ meeting.meeting_fixed_by }}">
 
                 </div>
 
@@ -101,20 +86,103 @@
                     <select name="source"
                             class="form-select">
 
-                        <option>Linkedin</option>
-                        <option>Instagram</option>
-                        <option>Customer Reference</option>
-                        <option>Cold Call</option>
-                        <option>Cold Email</option>
-                        <option>Gate Crashing</option>
-                        <option>Architect</option>
-                        <option>Website</option>
-                        <option>Direct</option>
-                        <option>Distributors</option>
-                        <option>MVC Reference</option>
-                        <option>Contractor</option>
-                        <option>Builder</option>
-                        <option>Others</option>
+                        <option value="Linkedin"
+                            {% if meeting.source == 'Linkedin' %}
+                                selected
+                            {% endif %}>
+                            Linkedin
+                        </option>
+
+                        <option value="Instagram"
+                            {% if meeting.source == 'Instagram' %}
+                                selected
+                            {% endif %}>
+                            Instagram
+                        </option>
+
+                        <option value="Customer Reference"
+                            {% if meeting.source == 'Customer Reference' %}
+                                selected
+                            {% endif %}>
+                            Customer Reference
+                        </option>
+
+                        <option value="Cold Call"
+                            {% if meeting.source == 'Cold Call' %}
+                                selected
+                            {% endif %}>
+                            Cold Call
+                        </option>
+
+                        <option value="Cold Email"
+                            {% if meeting.source == 'Cold Email' %}
+                                selected
+                            {% endif %}>
+                            Cold Email
+                        </option>
+
+                        <option value="Gate Crashing"
+                            {% if meeting.source == 'Gate Crashing' %}
+                                selected
+                            {% endif %}>
+                            Gate Crashing
+                        </option>
+
+                        <option value="Architect"
+                            {% if meeting.source == 'Architect' %}
+                                selected
+                            {% endif %}>
+                            Architect
+                        </option>
+
+                        <option value="Website"
+                            {% if meeting.source == 'Website' %}
+                                selected
+                            {% endif %}>
+                            Website
+                        </option>
+
+                        <option value="Direct"
+                            {% if meeting.source == 'Direct' %}
+                                selected
+                            {% endif %}>
+                            Direct
+                        </option>
+
+                        <option value="Distributors"
+                            {% if meeting.source == 'Distributors' %}
+                                selected
+                            {% endif %}>
+                            Distributors
+                        </option>
+
+                        <option value="MVC Reference"
+                            {% if meeting.source == 'MVC Reference' %}
+                                selected
+                            {% endif %}>
+                            MVC Reference
+                        </option>
+
+                        <option value="Contractor"
+                            {% if meeting.source == 'Contractor' %}
+                                selected
+                            {% endif %}>
+                            Contractor
+                        </option>
+
+                        <option value="Builder"
+                            {% if meeting.source == 'Builder' %}
+                                selected
+                            {% endif %}>
+                            Builder
+                        </option>
+
+                        <option value="Others"
+                            {% if meeting.source == 'Others' %}
+                                selected
+                            {% endif %}>
+                            Others
+                        </option>
 
                     </select>
 
@@ -133,7 +201,7 @@
                     <input type="text"
                            id="name"
                            name="name"
-                           class="form-control">
+                           value="{{ meeting.name }}">
 
                 </div>
 
@@ -146,6 +214,7 @@
                     <input type="text"
                            id="reference"
                            name="reference"
+                           value="{{ meeting.reference }}"
                            class="form-control">
 
                 </div>
@@ -162,6 +231,7 @@
 
                     <input type="text"
                            name="firm_name"
+                           value="{{ meeting.firm_name }}"
                            class="form-control">
 
                 </div>
@@ -174,6 +244,7 @@
 
                     <input type="text"
                            name="designation"
+                           value="{{ meeting.designation }}"
                            class="form-control">
 
                 </div>
@@ -188,7 +259,7 @@
 
                 <textarea id="address"
                           name="address"
-                          class="form-control"></textarea>
+                          class="form-control">{{ meeting.address }}</textarea>
 
             </div>
 
@@ -202,6 +273,7 @@
 
                     <input type="text"
                            name="state"
+                           value="{{ meeting.state }}"
                            class="form-control">
 
                 </div>
@@ -215,6 +287,7 @@
                     <input type="text"
                            id="contact_no"
                            name="contact_no"
+                           value="{{ meeting.contact_no }}"
                            class="form-control">
 
                 </div>
@@ -229,6 +302,7 @@
 
                 <input type="email"
                        name="email"
+                       value="{{ meeting.email }}"
                        class="form-control">
 
             </div>
@@ -244,8 +318,17 @@
                     <select name="company_info_shared"
                             class="form-select">
 
-                        <option>YES</option>
-                        <option>NO</option>
+                        <option value="YES"
+                            {% if meeting.company_info_shared == 'YES' %}
+                                selected
+                            {% endif %}>
+                            YES
+                        </option>
+                        <option value="NO"
+                            {% if meeting.company_info_shared == 'NO' %}
+                                selected
+                            {% endif %}>
+                            NO
 
                     </select>
 
@@ -260,9 +343,18 @@
                     <select name="meeting_fixed"
                             class="form-select">
 
-                        <option>YES</option>
-                        <option>NO</option>
-
+                        <option value="YES"
+                            {% if meeting.meeting_fixed == 'YES' %}
+                                selected
+                            {% endif %}>
+                            YES
+                        </option>
+                        <option value="NO"
+                            {% if meeting.meeting_fixed == 'NO' %}
+                                selected
+                            {% endif %}>
+                            NO
+                        </option>
                     </select>
 
                 </div>
@@ -275,6 +367,7 @@
 
                     <input type="date"
                            name="date_of_meeting"
+                           value="{{ meeting.date_of_meeting }}"
                            class="form-control">
 
                 </div>
@@ -292,8 +385,18 @@
                     <select name="mode_of_meeting"
                             class="form-select">
 
-                        <option>In-person</option>
-                        <option>Online</option>
+                        <option value="In-person"
+                            {% if meeting.mode_of_meeting == 'In-person' %}
+                                selected
+                            {% endif %}>
+                            In-person
+                        </option>
+                        <option value="Online"
+                            {% if meeting.mode_of_meeting == 'Online' %}
+                                selected
+                            {% endif %}>
+                            Online
+                        </option>
 
                     </select>
 
@@ -307,6 +410,7 @@
 
                     <input type="text"
                            name="meeting_status"
+                           value="{{ meeting.meeting_status }}"
                            class="form-control">
 
                 </div>
@@ -319,6 +423,7 @@
 
                     <input type="text"
                            name="meeting_conducted_by"
+                           value="{{ meeting.meeting_conducted_by }}"
                            class="form-control">
 
                 </div>
@@ -336,8 +441,18 @@
                     <select name="floor_plan_shared"
                             class="form-select">
 
-                        <option>YES</option>
-                        <option>NO</option>
+                        <option value="YES"
+                            {% if meeting.floor_plan_shared == 'YES' %}
+                                selected
+                            {% endif %}>
+                            YES
+                        </option>
+                        <option value="NO"
+                            {% if meeting.floor_plan_shared == 'NO' %}
+                                selected
+                            {% endif %}>
+                            NO
+                        </option>
 
                     </select>
 
@@ -352,8 +467,18 @@
                     <select name="site_visit"
                             class="form-select">
 
-                        <option>YES</option>
-                        <option>NO</option>
+                        <option value="YES"
+                            {% if meeting.site_visit == 'YES' %}
+                                selected
+                            {% endif %}>
+                            YES
+                        </option>
+                        <option value="NO"
+                            {% if meeting.site_visit == 'NO' %}
+                                selected
+                            {% endif %}>
+                            NO
+                        </option>
 
                     </select>
 
@@ -368,8 +493,18 @@
                     <select name="post_meeting_mail"
                             class="form-select">
 
-                        <option>YES</option>
-                        <option>NO</option>
+                        <option value="YES"
+                            {% if meeting.post_meeting_mail == 'YES' %}
+                                selected
+                            {% endif %}>
+                            YES
+                        </option>
+                        <option value="NO"
+                            {% if meeting.post_meeting_mail == 'NO' %}
+                                selected
+                            {% endif %}>
+                            NO
+                        </option>
 
                     </select>
 
@@ -387,6 +522,7 @@
 
                     <input type="date"
                            name="date_of_last_followup"
+                           value="{{ meeting.date_of_last_followup }}"
                            class="form-control">
 
                 </div>
@@ -399,6 +535,7 @@
 
                     <input type="date"
                            name="date_to_call_next"
+                           value="{{ meeting.date_to_call_next }}"
                            class="form-control">
 
                 </div>
@@ -411,6 +548,7 @@
 
                     <input type="date"
                            name="reschedule_date"
+                           value="{{ meeting.reschedule_date }}"
                            class="form-control">
 
                 </div>
@@ -424,7 +562,7 @@
                 </label>
 
                 <textarea name="final_remarks"
-                          class="form-control"></textarea>
+                          class="form-control">{{ meeting.final_remarks }}</textarea>
 
             </div>
 
@@ -435,7 +573,7 @@
                 </label>
 
                 <textarea name="reason_for_reschedule"
-                          class="form-control"></textarea>
+                          class="form-control">{{ meeting.reason_for_reschedule }}</textarea>
 
             </div>
 
@@ -446,149 +584,21 @@
                 </label>
 
                 <textarea name="remarks"
-                          class="form-control"></textarea>
+                          class="form-control">{{ meeting.remarks }}</textarea>
 
             </div>
 
             <button type="submit"
                     class="btn btn-dark">
 
-                Save Meeting
+                Update Meeting
 
             </button>
-
-            <a href="/dashboard"
-               class="btn btn-secondary">
-
-                Back To Dashboard
-
-            </a>
 
         </form>
 
     </div>
 
-    <br>
-
-    <div class="card shadow p-4">
-
-        <h3>
-
-            Meeting Records
-
-        </h3>
-
-        <div class="table-responsive">
-
-            <table class="table table-bordered">
-
-                <thead>
-
-                    <tr>
-
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Firm Name</th>
-                        <th>Contact</th>
-                        <th>Meeting Date</th>
-                        <th>Status</th>
-                        <th>Action</th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                    {% for meeting in meetings %}
-
-                    <tr>
-
-                        <td>{{ meeting.meeting_id }}</td>
-
-                        <td>{{ meeting.name }}</td>
-
-                        <td>{{ meeting.firm_name }}</td>
-
-                        <td>{{ meeting.contact_no }}</td>
-
-                        <td>{{ meeting.date_of_meeting }}</td>
-
-                        <td>{{ meeting.meeting_status }}</td>
-
-                        <td>
-
-                            <a href="/meeting/{{ meeting.meeting_id }}"
-                               class="btn btn-info btn-sm">
-
-                                View Details
-
-                            </a>
-                            <a href="/edit-meeting/{{ meeting.meeting_id }}"
-                               class="btn btn-dark btn-sm">
-
-                                Edit
-
-                            </a>
-
-                            <a href="/delete-meeting/{{ meeting.meeting_id }}"
-                               class="btn btn-danger btn-sm"
-                               onclick="return confirm('Are you sure you want to delete this meeting?');">
-
-                                Delete
-                            </a>
-                        </td>
-
-                    </tr>
-
-                    {% endfor %}
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </div>
-
-</div>
-<script>
-
-document.querySelector(
-    'select[name="lead_id"]'
-).addEventListener(
-    'change',
-    function () {
-
-        let selected =
-            this.options[
-                this.selectedIndex
-            ];
-
-        document.getElementById(
-            'name'
-        ).value =
-            selected.dataset.name || '';
-
-        document.getElementById(
-            'reference'
-        ).value =
-            selected.dataset.reference || '';
-
-        document.getElementById(
-            'contact_no'
-        ).value =
-            selected.dataset.phone || '';
-
-        document.getElementById(
-            'address'
-        ).value =
-            selected.dataset.location || '';
-
-    }
-);
-
-</script>
 </body>
 
 </html>

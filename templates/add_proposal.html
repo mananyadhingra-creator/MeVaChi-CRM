@@ -64,6 +64,36 @@
 
         </div>
 
+        <div class="card shadow-sm p-4 mb-4">
+            
+            <h4>
+                Select Drawing
+
+            </h4>
+
+            <select name="drawing_id"
+                    class="form-select">
+
+                <option value="">
+
+                    Select Drawing
+
+                </option>
+
+                {% for drawing in drawings %}
+
+                <option value="{{ drawing.drawing_id }}">
+
+                    {{ drawing.name }}
+
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
             <!-- CLIENT DETAILS -->
 
             <div class="card shadow-sm p-4 mb-4">
@@ -280,9 +310,16 @@
 
                         </label>
 
-                        <input type="text"
-                               name="type"
-                               class="form-control">
+                        <select name="type"
+                                class="form-select">
+
+                            <option>Residential</option>
+                            <option>Office/Commercial Space</option>
+                            <option>School/University</option>
+                            <option>Farmhouse</option>
+                            <option>Others</option>
+
+                        </select>
 
                     </div>
 
@@ -539,6 +576,7 @@
 
                         <input type="number"
                                step="0.01"
+                               id="total_amount"
                                name="total_amount"
                                class="form-control">
 
@@ -554,6 +592,7 @@
 
                         <input type="number"
                                step="0.01"
+                               id="discount"
                                name="discount"
                                class="form-control">
 
@@ -570,7 +609,10 @@
                         <input type="number"
                                step="0.01"
                                name="final_amount"
-                               class="form-control">
+                               class="form-control"
+                               id="final_amount"
+                               readonly>
+
 
                     </div>
 
@@ -743,6 +785,13 @@
 
             </button>
 
+            <a href="/dashboard"
+               class="btn btn-secondary">
+
+                Back To Dashboard
+
+            </a>
+
         </form>
 
     </div>
@@ -882,6 +931,53 @@ document.getElementById(
             selected.dataset.state || '';
 
     }
+);
+
+</script>
+
+<script>
+
+function calculateFinalAmount() {
+
+    let total =
+        parseFloat(
+            document.getElementById(
+                'total_amount'
+            ).value
+        ) || 0;
+
+    let discount =
+        parseFloat(
+            document.getElementById(
+                'discount'
+            ).value
+        ) || 0;
+
+    let amountAfterDiscount =
+        total - discount;
+
+    let finalAmount =
+        amountAfterDiscount * 1.18;
+
+    document.getElementById(
+        'final_amount'
+    ).value =
+        finalAmount.toFixed(2);
+
+}
+
+document.getElementById(
+    'total_amount'
+).addEventListener(
+    'input',
+    calculateFinalAmount
+);
+
+document.getElementById(
+    'discount'
+).addEventListener(
+    'input',
+    calculateFinalAmount
 );
 
 </script>

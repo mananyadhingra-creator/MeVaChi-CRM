@@ -1,16 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
 
-    <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>CRM System</title>
-
-    <!-- Bootstrap -->
+    <title>Client Management</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
           rel="stylesheet">
@@ -23,152 +16,267 @@
 
     <div class="card shadow p-4">
 
-        <h2 class="mb-4 text-center">
-            Add Client Service
+        <h2 class="text-center mb-4">
+
+            Client Management
+
         </h2>
 
         <form method="POST">
 
-            <!-- CLIENT DETAILS -->
+            <!-- SELECT PROPOSAL & INVOICE -->
 
-            <h4 class="mb-3">
-                Client Details
-            </h4>
+            <div class="card shadow-sm p-4 mb-4">
 
-            <h4 class="mb-3">
+                <h4>
 
-                Select Proposal
+                    Select Records
 
-            </h4>
+                </h4>
 
-            <select name="proposal_id"
-                    class="form-select">
+                <div class="row">
 
-                <option value="">
+                    <div class="col-md-6 mb-3">
 
-                    Select Proposal
+                        <label class="form-label">
 
-                </option>
+                            Proposal
 
-                {% for proposal in proposals %}
+                        </label>
 
-                <option value="{{ proposal.proposal_id }}">
+                        <select name="proposal_id"
+                                id="proposal_id"
+                                class="form-select">
 
-                    {{ proposal.name }}
+                            <option value="">
 
-                </option>
+                                Select Proposal
 
-                {% endfor %}
+                            </option>
 
-            </select>
+                            {% for proposal in proposals %}
 
-            <br>
+                            <option
 
-            <div class="row">
+                                value="{{ proposal.proposal_id }}"
 
-                <div class="col-md-6 mb-3">
+                                data-name="{{ proposal.name }}"
 
-                    <label class="form-label">
-                        Client Name
-                    </label>
+                                data-address="{{ proposal.site_address }}"
 
-                    <input type="text"
-                           name="client_name"
-                           class="form-control"
-                           required>
+                                data-email="{{ proposal.email }}"
 
-                </div>
+                                data-phone="{{ proposal.phone_no_client }}"
 
-                <div class="col-md-6 mb-3">
+                                data-state="{{ proposal.state }}">
 
-                    <label class="form-label">
-                        Property Type
-                    </label>
+                                {{ proposal.reference_no }}
+                                -
+                                {{ proposal.name }}
 
-                    <select name="property_type"
-                            class="form-select">
+                            </option>
 
-                        <option>
-                            Residence
-                        </option>
+                            {% endfor %}
 
-                        <option>
-                            Office/Commercial Space
-                        </option>
+                        </select>
 
-                        <option>
-                            Farmhouse
-                        </option>
+                    </div>
 
-                        <option>
-                            Gym
-                        </option>
+                    <div class="col-md-6 mb-3">
 
-                        <option>
-                            School/University
-                        </option>
+                        <label class="form-label">
 
-                        <option>
-                            Others
-                        </option>
+                            Invoice
 
-                    </select>
+                        </label>
 
-                </div>
+                        <select name="invoice_id"
+                                id="invoice_id"
+                                class="form-select">
 
-            </div>
+                            <option value="">
 
-            <!-- CONTACT DETAILS -->
+                                Select Invoice
 
-            <h4 class="mt-4 mb-3">
-                Contact Details
-            </h4>
+                            </option>
 
-            <div class="row">
+                            {% for invoice in invoices %}
 
-                <div class="col-md-6 mb-3">
+                            <option
 
-                    <label class="form-label">
-                        Mobile Number
-                    </label>
+                                value="{{ invoice.invoice_id }}"
 
-                    <input type="text"
-                           name="mobile_no"
-                           class="form-control">
+                                data-product="{{ invoice.product_sold }}"
 
-                </div>
+                                data-units="{{ invoice.total_units }}">
 
-                <div class="col-md-6 mb-3">
+                                {{ invoice.invoice_no }}
+                                -
+                                {{ invoice.name }}
 
-                    <label class="form-label">
-                        Email
-                    </label>
+                            </option>
 
-                    <input type="email"
-                           name="mail_id"
-                           class="form-control">
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
 
                 </div>
 
             </div>
 
-            <div class="mb-3">
+            <!-- BASIC CLIENT INFORMATION -->
 
-                <label class="form-label">
-                    Address
-                </label>
+            <div class="card shadow-sm p-4 mb-4">
 
-                <textarea name="address"
-                          class="form-control"></textarea>
+                <h4>
 
-            </div>
+                    Basic Client Information
 
-            <div class="row">
+                </h4>
 
-                <div class="col-md-6 mb-3">
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Client Name
+
+                        </label>
+
+                        <input type="text"
+                               id="client_name"
+                               name="client_name"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Monitor Present
+
+                        </label>
+
+                        <select name="monitor_present"
+                                class="form-select">
+
+                            <option value="YES">
+
+                                YES
+
+                            </option>
+
+                            <option value="NO">
+
+                                NO
+
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Property Type
+
+                        </label>
+
+                        <select name="property_type"
+                                class="form-select">
+
+                            <option>Residential</option>
+                            <option>Office/Commercial Space</option>
+                            <option>School/University</option>
+                            <option>Farmhouse</option>
+                            <option>Others</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            State
+
+                        </label>
+
+                        <input type="text"
+                               id="state"
+                               name="state"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="mb-3">
 
                     <label class="form-label">
-                        Google Map Link
+
+                        Address
+
+                    </label>
+
+                    <textarea id="address"
+                              name="address"
+                              rows="3"
+                              class="form-control"></textarea>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Email ID
+
+                        </label>
+
+                        <input type="email"
+                               id="mail_id"
+                               name="mail_id"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Mobile Number
+
+                        </label>
+
+                        <input type="text"
+                               id="mobile_no"
+                               name="mobile_no"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Location Link
+
                     </label>
 
                     <input type="text"
@@ -177,10 +285,12 @@
 
                 </div>
 
-                <div class="col-md-6 mb-3">
+                <div class="mb-3">
 
                     <label class="form-label">
+
                         Nearest Metro Station
+
                     </label>
 
                     <input type="text"
@@ -191,348 +301,395 @@
 
             </div>
 
-            <div class="mb-3">
+                        <!-- INSTALLATION INFORMATION -->
 
-                <label class="form-label">
-                    State
-                </label>
+            <div class="card shadow-sm p-4 mb-4">
 
-                <input type="text"
-                       name="state"
-                       class="form-control">
+                <h4>
 
-            </div>
+                    Installation Information
 
-            <!-- PRODUCT DETAILS -->
+                </h4>
 
-            <h4 class="mt-4 mb-3">
-                Product Details
-            </h4>
+                <div class="row">
 
-            <div class="row">
+                    <div class="col-md-4 mb-3">
 
-                <div class="col-md-6 mb-3">
+                        <label class="form-label">
 
-                    <label class="form-label">
-                        Product
-                    </label>
+                            Product
 
-                    <input type="text"
-                           name="product"
-                           class="form-control">
+                        </label>
 
-                </div>
+                        <input type="text"
+                               id="product"
+                               name="product"
+                               class="form-control">
 
-                <div class="col-md-6 mb-3">
+                    </div>
 
-                    <label class="form-label">
-                        Monitor Present
-                    </label>
+                    <div class="col-md-4 mb-3">
 
-                    <select name="monitor_present"
-                            class="form-select">
+                        <label class="form-label">
 
-                        <option>
-                            YES
-                        </option>
+                            Installation Date
 
-                        <option>
-                            NO
-                        </option>
+                        </label>
 
-                    </select>
+                        <input type="date"
+                               name="installation_date"
+                               class="form-control">
 
-                </div>
+                    </div>
 
-            </div>
+                    <div class="col-md-4 mb-3">
 
-            <div class="row">
+                        <label class="form-label">
 
-                <div class="col-md-4 mb-3">
+                            Activation Date
 
-                    <label class="form-label">
-                        Filter Colour
-                    </label>
+                        </label>
 
-                    <select name="filter_colour"
-                            class="form-select">
+                        <input type="date"
+                               name="activation_date"
+                               class="form-control">
 
-                        <option>
-                            MERV 15-BLACK
-                        </option>
-
-                        <option>
-                            MERV 16-WHITE
-                        </option>
-
-                        
-
-                    </select>
+                    </div>
 
                 </div>
 
-                <div class="col-md-4 mb-3">
+                <div class="row">
 
-                    <label class="form-label">
-                        Units Installed
-                    </label>
+                    <div class="col-md-4 mb-3">
 
-                    <input type="number"
-                           name="no_of_units_installed"
-                           class="form-control">
+                        <label class="form-label">
 
-                </div>
+                            Filter Colour
 
-                <div class="col-md-4 mb-3">
+                        </label>
 
-                    <label class="form-label">
-                        Solution Working
-                    </label>
+                        <select name="filter_colour"
+                                class="form-select">
 
-                    <select name="solution_working"
-                            class="form-select">
+                            <option>MERV-15 (Black)</option>
 
-                        <option>
-                            ACTIVE
-                        </option>
+                            <option>MERV-16 (White)</option>
 
-                        <option>
-                            NOT WORKING
-                        </option>
 
-                    </select>
+                        </select>
 
-                </div>
+                    </div>
 
-            </div>
+                    <div class="col-md-4 mb-3">
 
-            <!-- DATE DETAILS -->
+                        <label class="form-label">
 
-            <h4 class="mt-4 mb-3">
-                Installation & Service Dates
-            </h4>
+                            No Of Units Installed
 
-            <div class="row">
+                        </label>
 
-                <div class="col-md-4 mb-3">
+                        <input type="number"
+                               id="no_of_units_installed"
+                               name="no_of_units_installed"
+                               class="form-control">
 
-                    <label class="form-label">
-                        Installation Date
-                    </label>
+                    </div>
 
-                    <input type="date"
-                           name="installation_date"
-                           class="form-control">
+                    <div class="col-md-4 mb-3">
 
-                </div>
+                        <label class="form-label">
 
-                <div class="col-md-4 mb-3">
+                            Solution Working
 
-                    <label class="form-label">
-                        Activation Date
-                    </label>
+                        </label>
 
-                    <input type="date"
-                           name="activation_date"
-                           class="form-control">
+                        <select name="solution_working"
+                                class="form-select">
 
-                </div>
+                            <option value="YES">
 
-                <div class="col-md-4 mb-3">
+                                YES
 
-                    <label class="form-label">
-                        Last Service Date
-                    </label>
+                            </option>
 
-                    <input type="date"
-                           name="last_service_date"
-                           class="form-control">
+                            <option value="NO">
+
+                                NO
+
+                            </option>
+
+                        </select>
+
+                    </div>
 
                 </div>
 
             </div>
 
-            <!-- CMC DETAILS -->
+            <!-- CMC INFORMATION -->
 
-            <h4 class="mt-4 mb-3">
-                CMC Details
-            </h4>
+            <div class="card shadow-sm p-4 mb-4">
 
-            <div class="row">
+                <h4>
 
-                <div class="col-md-6 mb-3">
+                    CMC Information
 
-                    <label class="form-label">
-                        CMC Applicable
-                    </label>
+                </h4>
 
-                    <select name="cmc_applicable"
-                            class="form-select">
+                <div class="row">
 
-                        <option>
-                            YES
-                        </option>
+                    <div class="col-md-4 mb-3">
 
-                        <option>
-                            NO
-                        </option>
+                        <label class="form-label">
 
-                    </select>
+                            CMC Applicable
 
-                </div>
+                        </label>
 
-                <div class="col-md-6 mb-3">
+                        <select name="cmc_applicable"
+                                class="form-select">
 
-                    <label class="form-label">
-                        CMC Amount
-                    </label>
+                            <option value="YES">
 
-                    <input type="number"
-                           step="0.01"
-                           name="cmc_amount"
-                           class="form-control">
+                                YES
 
-                </div>
+                            </option>
 
-            </div>
+                            <option value="NO">
 
-            <!-- SERVICE DETAILS -->
+                                NO
 
-            <h4 class="mt-4 mb-3">
-                Service Details
-            </h4>
+                            </option>
 
-            <div class="row">
+                        </select>
 
-                <div class="col-md-4 mb-3">
+                    </div>
 
-                    <label class="form-label">
-                        Service Interval Days
-                    </label>
+                    <div class="col-md-4 mb-3">
 
-                    <input type="number"
-                           name="service_interval_days"
-                           value="30"
-                           class="form-control">
+                        <label class="form-label">
 
-                </div>
+                            Next CMC Renewal Date
 
-                <div class="col-md-4 mb-3">
+                        </label>
 
-                    <label class="form-label">
-                        Service For
-                    </label>
+                        <input type="date"
+                               name="next_cmc_renewal_date"
+                               class="form-control">
 
-                    <input type="text"
-                           name="service_for"
-                           class="form-control">
+                    </div>
 
-                </div>
+                    <div class="col-md-4 mb-3">
 
-                <div class="col-md-4 mb-3">
+                        <label class="form-label">
 
-                    <label class="form-label">
-                        Filters Replaced
-                    </label>
+                            CMC Amount
 
-                    <input type="number"
-                           name="no_of_filters_replaced"
-                           class="form-control">
+                        </label>
+
+                        <input type="number"
+                               step="0.01"
+                               name="cmc_amount"
+                               class="form-control">
+
+                    </div>
 
                 </div>
 
             </div>
 
-            <div class="row">
+            <!-- SERVICE INFORMATION -->
 
-                <div class="col-md-4 mb-3">
+            <div class="card shadow-sm p-4 mb-4">
 
-                    <label class="form-label">
-                        Filter Clean
-                    </label>
+                <h4>
 
-                    <select name="filter_clean"
-                            class="form-select">
+                    Service Information
 
-                        <option>
-                            YES
-                        </option>
+                </h4>
 
-                        <option>
-                            NO
-                        </option>
+                <div class="row">
 
-                    </select>
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Last Service Date
+
+                        </label>
+
+                        <input type="date"
+                               name="last_service_date"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Service Interval Days
+
+                        </label>
+
+                        <input type="number"
+                               name="service_interval_days"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Filter Clean
+
+                        </label>
+
+                        <select name="filter_clean"
+                                class="form-select">
+
+                            <option value="YES">
+
+                                YES
+
+                            </option>
+
+                            <option value="NO">
+
+                                NO
+
+                            </option>
+
+                        </select>
+
+                    </div>
 
                 </div>
 
-                <div class="col-md-4 mb-3">
+                <div class="row">
 
-                    <label class="form-label">
-                        Pre Service Message
-                    </label>
+                    <div class="col-md-6 mb-3">
 
-                    <select name="pre_service_msg"
-                            class="form-select">
+                        <label class="form-label">
 
-                        <option>
-                            YES
-                        </option>
+                            Service For
 
-                        <option>
-                            NO
-                        </option>
+                        </label>
 
-                    </select>
+                        <input type="text"
+                               name="service_for"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            No Of Filters Replaced
+
+                        </label>
+
+                        <input type="number"
+                               name="no_of_filters_replaced"
+                               class="form-control">
+
+                    </div>
 
                 </div>
 
-                <div class="col-md-4 mb-3">
+                <div class="row">
 
-                    <label class="form-label">
-                        Post Service Message
-                    </label>
+                    <div class="col-md-6 mb-3">
 
-                    <select name="post_service_msg"
-                            class="form-select">
+                        <label class="form-label">
 
-                        <option>
-                            YES
-                        </option>
+                            Pre Service Message
 
-                        <option>
-                            NO
-                        </option>
+                        </label>
 
-                    </select>
+                        <select name="pre_service_msg"
+                                class="form-select">
+
+                            <option value="YES">
+
+                                YES
+
+                            </option>
+
+                            <option value="NO">
+
+                                NO
+
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Post Service Message
+
+                        </label>
+
+                        <select name="post_service_msg"
+                                class="form-select">
+
+                            <option value="YES">
+
+                                YES
+
+                            </option>
+
+                            <option value="NO">
+
+                                NO
+
+                            </option>
+
+                        </select>
+
+                    </div>
 
                 </div>
 
             </div>
 
-            <!-- REMARK -->
+            <!-- REMARKS -->
 
-            <div class="mb-3">
+            <div class="card shadow-sm p-4 mb-4">
 
-                <label class="form-label">
-                    Remark
-                </label>
+                <h4>
+
+                    Remarks
+
+                </h4>
 
                 <textarea name="remark"
+                          rows="4"
                           class="form-control"></textarea>
 
             </div>
 
-            <!-- BUTTON -->
-
-            <div class="text-center mt-4">
+            <div class="text-center">
 
                 <button type="submit"
-                        class="btn btn-primary btn-lg">
+                        class="btn btn-dark btn-lg">
 
                     Save Client
 
                 </button>
+
+                <a href="/dashboard"
+                   class="btn btn-secondary">
+
+                    Back To Dashboard
+
+                </a>
 
             </div>
 
@@ -542,86 +699,151 @@
 
 </div>
 
-<br><br>
+<div class="card shadow p-4 mt-4">
 
-<div class="container mt-5">
+    <h3 class="mb-3">
 
-    <div class="card shadow p-4">
+        All Clients
 
-        <h3 class="mb-3">
+    </h3>
 
-            All Clients
+    <table class="table table-bordered table-striped">
 
-        </h3>
+        <thead>
 
-        <table class="table table-bordered table-striped">
+            <tr>
 
-            <thead>
+                <th>ID</th>
 
-                <tr>
-                    <th>ID</th>
-                    <th>Client Name</th>
-                    <th>Phone</th>
-                    <th>Product</th>
-                    <th>Service Due</th>
-                    <th>CMC Due</th>
-                    <th>Action</th>
+                <th>Client Name</th>
 
+                <th>Product</th>
 
+                <th>Mobile</th>
 
-                </tr>
+                <th>CMC Due</th>
 
-            </thead>
+                <th>Service Due</th>
 
-            <tbody>
+                <th>Action</th>
 
-                {% for client in clients %}
+            </tr>
 
-                <tr>
+        </thead>
 
-                    <td>{{ client.client_id }}</td>
+        <tbody>
 
-                    <td>
+            {% for client in clients %}
 
-                        <a href="/client-services/{{ client.client_id }}">
+            <tr>
 
-                            {{ client.client_name }}
+                <td>{{ client.client_id }}</td>
 
-                        </a>
+                <td>
+                    <a href="/client-services/{{ client.client_id }}">
+                        {{ client.client_name }}
+                    </a>
 
-                    </td>
+                </td>
 
-                    <td>{{ client.mobile_no }}</td>
+                <td>{{ client.product }}</td>
 
-                    <td>{{ client.product }}</td>
+                <td>{{ client.mobile_no }}</td>
 
-                    <td>{{ client.service_due }}</td>
+                <td>{{ client.cmc_due }}</td>
 
-                    <td>{{ client.cmc_due }}</td>
+                <td>{{ client.service_due }}</td>
 
-                    <td>
+                <td>
 
-                        <a href="/client/{{ client.client_id }}"
-                            class="btn btn-dark btn-sm">
+                    <a href="/client/{{ client.client_id }}"
+                       class="btn btn-dark btn-sm">
 
-                            View
+                        View
 
-                        </a>
+                    </a>
 
-                    </td>
+                </td>
 
-                </tr>
+            </tr>
 
-                {% endfor %}
+            {% endfor %}
 
-            </tbody>
+        </tbody>
 
-        </table>
-
-    </div>
+    </table>
 
 </div>
+
+<script>
+
+document.getElementById(
+    'proposal_id'
+).addEventListener(
+    'change',
+    function() {
+
+        let selected =
+            this.options[
+                this.selectedIndex
+            ];
+
+        document.getElementById(
+            'client_name'
+        ).value =
+            selected.dataset.name || '';
+
+        document.getElementById(
+            'address'
+        ).value =
+            selected.dataset.address || '';
+
+        document.getElementById(
+            'mail_id'
+        ).value =
+            selected.dataset.email || '';
+
+        document.getElementById(
+            'mobile_no'
+        ).value =
+            selected.dataset.phone || '';
+
+        document.getElementById(
+            'state'
+        ).value =
+            selected.dataset.state || '';
+
+    }
+);
+
+document.getElementById(
+    'invoice_id'
+).addEventListener(
+    'change',
+    function() {
+
+        let selected =
+            this.options[
+                this.selectedIndex
+            ];
+
+        document.getElementById(
+            'product'
+        ).value =
+            selected.dataset.product || '';
+
+        document.getElementById(
+            'no_of_units_installed'
+        ).value =
+            selected.dataset.units || '';
+
+    }
+);
+
+</script>
 
 </body>
 
 </html>
+
+                

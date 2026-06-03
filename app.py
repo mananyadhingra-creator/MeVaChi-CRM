@@ -1,11 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, flash, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta
 import os
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-UPLOAD_FOLDER = 'static/proposals'
+UPLOAD_FOLDER = 'static'
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -125,7 +125,7 @@ class Meeting(db.Model):
     final_remarks = db.Column(db.Text)
 
     reschedule_date = db.Column(db.Date)
-
+    
     reason_for_reschedule = db.Column(db.Text)
 
     remarks = db.Column(db.Text)
@@ -337,7 +337,9 @@ class SalesPipeline(db.Model):
 
     proposal_id = db.Column(
         db.Integer,
-        db.ForeignKey('proposals.proposal_id')
+        db.ForeignKey(
+            'proposals.proposal_id'
+        )
     )
 
     name = db.Column(
@@ -536,6 +538,10 @@ class Invoice(db.Model):
 
     total_revenue = db.Column(
         db.Numeric(12,2)
+    )
+
+    invoice_pdf = db.Column(
+        db.String(255)
     )
 
 class Client(db.Model):
@@ -751,11 +757,115 @@ def lead_details(lead_id):
         lead=lead
     )
 
+@app.route(
+    '/edit-lead/<int:lead_id>',
+    methods=['GET','POST']
+)
+def edit_lead(lead_id):
+
+    lead = Lead.query.get_or_404(
+        lead_id
+    )
+
+    if request.method == 'POST':
+
+        lead.name = request.form.get(
+            'name'
+        )
+
+        lead.reference = request.form.get(
+            'reference'
+        )
+
+        lead.location = request.form.get(
+            'location'
+        )
+
+        lead.phone = request.form.get(
+            'phone'
+        )
+
+        lead.responses = request.form.get(
+            'responses'
+        )
+
+        lead.recent = request.form.get(
+            'recent'
+        )
+
+        lead.date_of_1st_followup = (
+            datetime.strptime(
+                request.form.get(
+                    'date_of_1st_followup'
+                ),
+                '%Y-%m-%d'
+            ).date()
+            if request.form.get(
+                'date_of_1st_followup'
+            )
+            else None
+        )
+
+        lead.next_to_call = (
+            datetime.strptime(
+                request.form.get(
+                    'next_to_call'
+                ),
+                '%Y-%m-%d'
+            ).date()
+            if request.form.get(
+                'next_to_call'
+            )
+            else None
+        )
+
+        db.session.commit()
+
+        return redirect(
+            url_for(
+                'add_lead'
+            )
+        )
+
+    return render_template(
+        'edit_lead.html',
+        lead=lead
+    )
+
+@app.route('/delete-lead/<int:lead_id>')
+def delete_lead(lead_id):
+
+    lead = Lead.query.get_or_404(
+        lead_id
+    )
+
+    try:
+
+        db.session.delete(
+            lead
+        )
+
+        db.session.commit()
+
+    except:
+
+        db.session.rollback()
+
+        flash(
+            'Cannot delete lead because it is linked to other records.'
+        )
+
+    return redirect(
+        url_for(
+            'add_lead'
+        )
+    )
+
 @app.route('/add-meeting',
            methods=['GET','POST'])
 def add_meeting():
     if request.method == 'POST':
-        lead_id = request.form.get('lead_id')
+        
         meeting_fixed_by = request.form.get('meeting_fixed_by')
         source = request.form.get('source')
         name = request.form.get('name')
@@ -797,6 +907,7 @@ def add_meeting():
             reschedule_date = None
         reason_for_reschedule = request.form.get('reason_for_reschedule')
         remarks = request.form.get('remarks')
+        lead_id = request.form.get('lead_id')
         meeting = Meeting(
             meeting_fixed_by=meeting_fixed_by,
             source=source,
@@ -822,7 +933,8 @@ def add_meeting():
             final_remarks=final_remarks,
             reschedule_date=reschedule_date,
             reason_for_reschedule=reason_for_reschedule,
-            remarks=remarks
+            remarks=remarks,
+            lead_id=lead_id
         )
         db.session.add(meeting)
         db.session.commit()
@@ -841,6 +953,200 @@ def meeting_details(meeting_id):
     return render_template(
         'meeting_details.html',
         meeting=meeting
+    )
+
+@app.route(
+    '/edit-meeting/<int:meeting_id>',
+    methods=['GET', 'POST']
+)
+def edit_meeting(meeting_id):
+
+    meeting = Meeting.query.get_or_404(
+        meeting_id
+    )
+
+    if request.method == 'POST':
+
+        meeting.meeting_fixed_by = request.form.get(
+            'meeting_fixed_by'
+        )
+
+        meeting.source = request.form.get(
+            'source'
+        )
+
+        meeting.name = request.form.get(
+            'name'
+        )
+
+        meeting.reference = request.form.get(
+            'reference'
+        )
+
+        meeting.firm_name = request.form.get(
+            'firm_name'
+        )
+
+        meeting.designation = request.form.get(
+            'designation'
+        )
+
+        meeting.address = request.form.get(
+            'address'
+        )
+
+        meeting.state = request.form.get(
+            'state'
+        )
+
+        meeting.contact_no = request.form.get(
+            'contact_no'
+        )
+
+        meeting.email = request.form.get(
+            'email'
+        )
+
+        meeting.company_info_shared = request.form.get(
+            'company_info_shared'
+        )
+
+        meeting.meeting_fixed = request.form.get(
+            'meeting_fixed'
+        )
+
+        meeting.mode_of_meeting = request.form.get(
+            'mode_of_meeting'
+        )
+
+        meeting.meeting_status = request.form.get(
+            'meeting_status'
+        )
+
+        meeting.meeting_conducted_by = request.form.get(
+            'meeting_conducted_by'
+        )
+
+        meeting.floor_plan_shared = request.form.get(
+            'floor_plan_shared'
+        )
+
+        meeting.site_visit = request.form.get(
+            'site_visit'
+        )
+
+        meeting.post_meeting_mail = request.form.get(
+            'post_meeting_mail'
+        )
+
+        meeting.final_remarks = request.form.get(
+            'final_remarks'
+        )
+
+        meeting.reason_for_reschedule = request.form.get(
+            'reason_for_reschedule'
+        )
+
+        meeting.remarks = request.form.get(
+            'remarks'
+        )
+
+        meeting.date_of_meeting = (
+            datetime.strptime(
+                request.form.get(
+                    'date_of_meeting'
+                ),
+                '%Y-%m-%d'
+            ).date()
+            if request.form.get(
+                'date_of_meeting'
+            )
+            else None
+        )
+
+        meeting.date_of_last_followup = (
+            datetime.strptime(
+                request.form.get(
+                    'date_of_last_followup'
+                ),
+                '%Y-%m-%d'
+            ).date()
+            if request.form.get(
+                'date_of_last_followup'
+            )
+            else None
+        )
+
+        meeting.date_to_call_next = (
+            datetime.strptime(
+                request.form.get(
+                    'date_to_call_next'
+                ),
+                '%Y-%m-%d'
+            ).date()
+            if request.form.get(
+                'date_to_call_next'
+            )
+            else None
+        )
+
+        meeting.reschedule_date = (
+            datetime.strptime(
+                request.form.get(
+                    'reschedule_date'
+                ),
+                '%Y-%m-%d'
+            ).date()
+            if request.form.get(
+                'reschedule_date'
+            )
+            else None
+        )
+
+        db.session.commit()
+
+        return redirect(
+            url_for(
+                'add_meeting'
+            )
+        )
+    all_leads = Lead.query.all()
+
+    return render_template(
+        'edit_meeting.html',
+        meeting=meeting,
+        leads=all_leads
+    )
+
+@app.route(
+    '/delete-meeting/<int:meeting_id>'
+)
+def delete_meeting(meeting_id):
+
+    meeting = Meeting.query.get_or_404(
+        meeting_id
+    )
+
+    try:
+
+        db.session.delete(
+            meeting
+        )
+
+        db.session.commit()
+
+    except:
+
+        db.session.rollback()
+
+        flash(
+            'Cannot delete this meeting because it is linked to a proposal.'
+        )
+
+    return redirect(
+        url_for(
+            'add_meeting'
+        )
     )
 
 @app.route('/add-visit',
@@ -982,10 +1288,237 @@ def visit_details(visit_id):
         visit=visit
     )
 
+@app.route(
+    '/edit-visit/<int:visit_id>',
+    methods=['GET', 'POST']
+)
+def edit_visit(visit_id):
+
+    visit = Visit.query.get_or_404(
+        visit_id
+    )
+
+    all_meetings = Meeting.query.all()
+
+    if request.method == 'POST':
+
+        visit.meeting_id = request.form.get(
+            'meeting_id'
+        )
+
+        visit.state = request.form.get(
+            'state'
+        )
+
+        visit.region = request.form.get(
+            'region'
+        )
+
+        visit.abc = request.form.get(
+            'abc'
+        )
+
+        visit.company_name = request.form.get(
+            'company_name'
+        )
+
+        visit.person_name = request.form.get(
+            'person_name'
+        )
+
+        visit.designation = request.form.get(
+            'designation'
+        )
+
+        visit.contact_no = request.form.get(
+            'contact_no'
+        )
+
+        visit.address = request.form.get(
+            'address'
+        )
+
+        visit.brief = request.form.get(
+            'brief'
+        )
+
+        visit.leads_generated = request.form.get(
+            'leads_generated'
+        )
+
+        visit.m2 = request.form.get(
+            'm2'
+        )
+
+        visit.m3 = request.form.get(
+            'm3'
+        )
+
+        visit.visit_date = (
+            datetime.strptime(
+                request.form.get(
+                    'visit_date'
+                ),
+                '%Y-%m-%d'
+            ).date()
+            if request.form.get(
+                'visit_date'
+            )
+            else None
+        )
+
+        db.session.commit()
+
+        return redirect(
+            url_for(
+                'add_visit'
+            )
+        )
+
+    return render_template(
+        'edit_visit.html',
+        visit=visit,
+        meetings=all_meetings
+    )
+
+@app.route(
+    '/delete-visit/<int:visit_id>'
+)
+def delete_visit(visit_id):
+
+    visit = Visit.query.get_or_404(
+        visit_id
+    )
+
+    try:
+
+        db.session.delete(
+            visit
+        )
+
+        db.session.commit()
+
+    except Exception:
+
+        db.session.rollback()
+
+        flash(
+            'Cannot delete this visit because it is linked to other records.'
+        )
+
+    return redirect(
+        url_for(
+            'add_visit'
+        )
+    )
+
+@app.route('/add-drawing',
+           methods=['GET','POST'])
+def add_drawing():
+
+    if request.method == 'POST':
+
+        visit_id = request.form.get(
+            'visit_id'
+        )
+
+        name = request.form.get(
+            'name'
+        )
+
+        address = request.form.get(
+            'address'
+        )
+
+        iterations = request.form.get(
+            'iterations'
+        )
+
+        moca = request.form.get(
+            'moca'
+        )
+
+        drawing_file = request.files.get(
+            'drawing_pdf'
+        )
+
+        drawing_pdf_path = None
+
+        if drawing_file and drawing_file.filename:
+
+            filename = secure_filename(
+                drawing_file.filename
+            )
+
+            drawing_pdf_path = (
+                'drawings/' + filename
+            )
+
+            drawing_file.save(
+                os.path.join(
+                    app.config['UPLOAD_FOLDER'],
+                    drawing_pdf_path
+                )
+            )
+
+        drawing = Drawing(
+
+            visit_id=visit_id,
+
+            name=name,
+
+            address=address,
+
+            iterations=iterations,
+
+            moca=moca,
+
+            drawing_pdf=drawing_pdf_path
+
+        )
+
+        db.session.add(
+            drawing
+        )
+
+        db.session.commit()
+
+        return redirect(
+            url_for(
+                'add_drawing'
+            )
+        )
+
+    all_drawings = Drawing.query.all()
+
+    all_visits = Visit.query.all()
+
+    return render_template(
+        'add_drawing.html',
+        drawings=all_drawings,
+        visits=all_visits
+    )
+
+@app.route('/drawing/<int:drawing_id>')
+def drawing_details(drawing_id):
+
+    drawing = Drawing.query.get_or_404(
+        drawing_id
+    )
+
+    return render_template(
+        'drawing_details.html',
+        drawing=drawing
+    )
+
 @app.route('/add-proposal',
             methods=['GET', 'POST'])
 def add_proposal():
     if request.method == 'POST':
+
+        meeting_id = request.form.get('meeting_id')
+
+        drawing_id = request.form.get('drawing_id')
 
         reference_no = request.form.get('reference_no')
 
@@ -1109,8 +1642,8 @@ def add_proposal():
                 file.save(
                     os.path.join(
                         app.config[
-                            'UPLOAD_FOLDER'
-                        ],
+                            'UPLOAD_FOLDER'],
+                            'proposals',
                         filename
                     )
                 )
@@ -1121,6 +1654,10 @@ def add_proposal():
                 )
 
         proposal = Proposal(
+
+            meeting_id=meeting_id,
+
+            drawing_id=drawing_id,
 
             reference_no=reference_no,
 
@@ -1237,10 +1774,12 @@ def add_proposal():
         ) 
     all_proposals = Proposal.query.all()
     all_meetings = Meeting.query.all()
+    all_drawings = Drawing.query.all()
     return render_template(
         'add_proposal.html',
         proposals=all_proposals,
-        meetings=all_meetings
+        meetings=all_meetings,
+        drawings=all_drawings
     )
 @app.route('/proposal/<int:proposal_id>')
 def proposal_details(proposal_id):
@@ -1254,93 +1793,613 @@ def proposal_details(proposal_id):
         proposal=proposal
     )
 
-@app.route('/add-client', methods=['GET', 'POST']) 
-def add_client():
-    if request.method == 'POST':
-        proposal_id = request.form['proposal_id']
+@app.route('/add-sales',
+           methods=['GET','POST'])
+def add_sales():
 
-        proposal = Proposal.query.get( 
-            proposal_id
-)
-        client_name = proposal.name
-        property_type = request.form['property_type']
-        monitor_present = request.form['monitor_present']
-        address = proposal.site_address
-        location_link = request.form['location_link']
-        nearest_metrostation = request.form['nearest_metrostation']
-        mail_id = proposal.email
-        state = request.form['state']
-        mobile_no = proposal.phone_no_client
-        product = proposal.product
-        filter_colour = request.form['filter_colour']
-        no_of_units_installed = int( request.form['no_of_units_installed'] )
-        solution_working = request.form['solution_working']
-        cmc_applicable = request.form['cmc_applicable']
-        cmc_amount = float( request.form['cmc_amount'] )
-        filter_clean = request.form['filter_clean']
-        service_for = request.form['service_for']
-        no_of_filters_replaced = int( request.form['no_of_filters_replaced'] )
-        pre_service_msg = request.form['pre_service_msg']
-        post_service_msg = request.form['post_service_msg']
-        remark = request.form['remark']
-        installation_date = datetime.strptime( request.form['installation_date'], '%Y-%m-%d' ).date()
-        activation_date = datetime.strptime( request.form['activation_date'], '%Y-%m-%d' ).date()
-        next_cmc_renewal_date = ( installation_date + timedelta(days=365) )
-        today = datetime.today().date()
-        cmc_due_days = ( today - installation_date ).days
-        if cmc_due_days >= 345:
-            cmc_due = "YES"
-        else:
-            cmc_due = "NO"
-        last_service_input = request.form[ 'last_service_date' ]
-        service_interval_days = int( request.form['service_interval_days'] )
-        if last_service_input:
-            last_service_date = datetime.strptime( last_service_input, '%Y-%m-%d' ).date()
-            last_service_days = ( today - last_service_date ).days
-        else:
-            last_service_date = None
-            last_service_days = ( today - activation_date ).days
-        if last_service_days >= service_interval_days:
-            service_due = "YES"
-        else:
-            service_due = "NO"
-        client = Client(
-            client_name=client_name,
-            property_type=property_type,
-            monitor_present=monitor_present,
+    if request.method == 'POST':
+
+        proposal_id = request.form.get(
+            'proposal_id'
+        )
+
+        name = request.form.get(
+            'name'
+        )
+
+        reference_no = request.form.get(
+            'reference_no'
+        )
+
+        source = request.form.get(
+            'source'
+        )
+
+        address = request.form.get(
+            'address'
+        )
+
+        contact_no = request.form.get(
+            'contact_no'
+        )
+
+        email_id = request.form.get(
+            'email_id'
+        )
+
+        project_stage = request.form.get(
+            'project_stage'
+        )
+
+        moc = request.form.get(
+            'moc'
+        )
+
+        next_action = request.form.get(
+            'next_action'
+        )
+
+        sales_person = request.form.get(
+            'sales_person'
+        )
+
+        sales = SalesPipeline(
+            proposal_id=proposal_id,
+
+            name=name,
+
+            reference_no=reference_no,
+
+            source=source,
+
             address=address,
-            location_link=location_link,
-            nearest_metrostation=nearest_metrostation,
-            mail_id=mail_id,
-            state=state,
-            mobile_no=mobile_no,
-            product=product,
-            installation_date= installation_date,
-            activation_date= activation_date,
-            filter_colour= filter_colour,
-            no_of_units_installed= no_of_units_installed,
-            solution_working= solution_working,
-            cmc_applicable= cmc_applicable,
-            next_cmc_renewal_date= next_cmc_renewal_date,
-            cmc_due_days= cmc_due_days,
-            cmc_due= cmc_due,
-            cmc_amount= cmc_amount,
-            last_service_date= last_service_date,
-            last_service_days= last_service_days,
-            service_interval_days= service_interval_days,
-            service_due= service_due,
-            filter_clean= filter_clean,
-            service_for= service_for,
-            no_of_filters_replaced= no_of_filters_replaced,
-            pre_service_msg= pre_service_msg,
-            post_service_msg= post_service_msg,
-            remark=remark
-        ) 
-        db.session.add(client)
+
+            contact_no=contact_no,
+
+            email_id=email_id,
+
+            project_stage=project_stage,
+
+            moc=moc,
+
+            next_action=next_action,
+
+            sales_person=sales_person,
+
+            project_type=request.form.get('project_type'),
+
+            category=request.form.get('category'),
+
+            site_incharge=request.form.get('site_incharge'),
+
+            site_incharge_contact=request.form.get('site_incharge_contact'),
+
+            first_contact=datetime.strptime(request.form.get('first_contact'), '%Y-%m-%d').date() if request.form.get('first_contact') else None,
+
+            last_contact=datetime.strptime(request.form.get('last_contact'), '%Y-%m-%d').date() if request.form.get('last_contact') else None,
+
+            followup_date=datetime.strptime(request.form.get('followup_date'), '%Y-%m-%d').date() if request.form.get('followup_date') else None,
+            
+            no_of_site_visits=request.form.get('no_of_site_visits'),
+
+            area_covered=request.form.get('area_covered'),
+
+            total_units=request.form.get('total_units'),
+
+            price_of_units=request.form.get('price_of_units'),
+
+            first_year_cmc=request.form.get('first_year_cmc'),
+
+            installation=request.form.get('installation'),
+
+            total_sensor=request.form.get('total_sensor'),
+
+            sensor_cost=request.form.get('sensor_cost'),
+
+            discount=request.form.get('discount'),
+
+            revenue=request.form.get('revenue'),
+
+            amount_received=request.form.get('amount_received'),
+
+            amount_due=request.form.get('amount_due'),
+
+            total_revenue=request.form.get('total_revenue'),
+
+            gst_no=request.form.get('gst_no'),
+
+            cmc_onwards=request.form.get('cmc_onwards'),
+
+            total_cmc=request.form.get('total_cmc')
+        )
+
+        db.session.add(
+            sales
+        )
+
         db.session.commit()
-        return redirect(url_for('add_client'))
+
+        return redirect(
+            url_for(
+                'add_sales'
+            )
+        )
+
+    all_sales = SalesPipeline.query.all()
+
+    all_proposals = Proposal.query.all()
+
+    return render_template(
+
+        'add_sales.html',
+
+        sales=all_sales,
+
+        proposals=all_proposals
+
+    )
+
+@app.route('/sales/<int:sales_id>')
+def sales_details(sales_id):
+
+    sale = SalesPipeline.query.get_or_404(
+        sales_id
+    )
+
+    return render_template(
+        'sales_details.html',
+        sale=sale
+    )
+
+@app.route('/add-invoice',
+           methods=['GET','POST'])
+def add_invoice():
+
+    if request.method == 'POST':
+
+        sales_id = request.form.get(
+            'sales_id'
+        )
+
+        doi_input = request.form.get(
+            'doi'
+        )
+
+        if doi_input:
+
+            doi = datetime.strptime(
+                doi_input,
+                '%Y-%m-%d'
+            ).date()
+
+        else:
+
+            doi = None
+
+        invoice_no = request.form.get(
+            'invoice_no'
+        )
+
+        name = request.form.get(
+            'name'
+        )
+
+        gst_no = request.form.get(
+            'gst_no'
+        )
+
+        product_sold = request.form.get(
+            'product_sold'
+        )
+
+        invoice_pdf = request.files.get(
+            'invoice_pdf'
+        )
+
+        total_units = request.form.get(
+            'total_units'
+        )
+
+        price_of_units = request.form.get(
+            'price_of_units'
+        )
+
+        first_year_cmc = request.form.get(
+            'first_year_cmc'
+        )
+
+        installation = request.form.get(
+            'installation'
+        )
+
+        total_sensor = request.form.get(
+            'total_sensor'
+        )
+
+        sensor_cost = request.form.get(
+            'sensor_cost'
+        )
+
+        revenue = request.form.get(
+            'revenue'
+        )
+
+        total_revenue = request.form.get(
+            'total_revenue'
+        )
+
+        pdf_path = None
+
+        if invoice_pdf and invoice_pdf.filename != '':
+            filename = secure_filename(
+                invoice_pdf.filename
+            )
+
+            invoice_pdf.save(
+
+                os.path.join(
+
+                    app.config['UPLOAD_FOLDER'],
+
+                    'invoices',
+
+                    filename
+
+                )
+
+            )
+
+            pdf_path = (
+                'invoices/' +
+                filename
+            )
+
+
+
+        invoice = Invoice(
+
+            sales_id=sales_id,
+
+            name=name,
+
+            doi=doi,
+
+            invoice_no=invoice_no,
+
+            gst_no=gst_no,
+
+            product_sold=product_sold,
+
+            total_units=total_units,
+
+            price_of_units=price_of_units,
+
+            first_year_cmc=first_year_cmc,
+
+            installation=installation,
+
+            total_sensor=total_sensor,
+
+            sensor_cost=sensor_cost,
+
+            revenue=revenue,
+
+            total_revenue=total_revenue,
+
+            invoice_pdf=pdf_path
+
+        )
+
+        db.session.add(
+            invoice
+        )
+
+        db.session.commit()
+
+        return redirect(
+            url_for(
+                'add_invoice'
+            )
+        )
+
+    all_invoices = Invoice.query.all()
+
+    all_sales = SalesPipeline.query.all()
+
+    return render_template(
+
+        'add_invoice.html',
+
+        invoices=all_invoices,
+
+        sales=all_sales
+
+    )
+
+@app.route('/invoice/<int:invoice_id>')
+def invoice_details(invoice_id):
+
+    invoice = Invoice.query.get_or_404(
+        invoice_id
+    )
+
+    return render_template(
+        'invoice_details.html',
+        invoice=invoice
+    )
+
+@app.route('/add-client',
+           methods=['GET', 'POST'])
+def add_client():
+
+    if request.method == 'POST':
+
+        proposal_id = request.form.get(
+            'proposal_id'
+        )
+
+        invoice_id = request.form.get(
+            'invoice_id'
+        )
+
+        installation_date = (
+            datetime.strptime(
+                request.form.get(
+                    'installation_date'
+                ),
+                '%Y-%m-%d'
+            ).date()
+            if request.form.get(
+                'installation_date'
+            )
+            else None
+        )
+
+        activation_date = (
+            datetime.strptime(
+                request.form.get(
+                    'activation_date'
+                ),
+                '%Y-%m-%d'
+            ).date()
+            if request.form.get(
+                'activation_date'
+            )
+            else None
+        )
+
+        next_cmc_renewal_date = (
+            datetime.strptime(
+                request.form.get(
+                    'next_cmc_renewal_date'
+                ),
+                '%Y-%m-%d'
+            ).date()
+            if request.form.get(
+                'next_cmc_renewal_date'
+            )
+            else None
+        )
+
+        last_service_date = (
+            datetime.strptime(
+                request.form.get(
+                    'last_service_date'
+                ),
+                '%Y-%m-%d'
+            ).date()
+            if request.form.get(
+                'last_service_date'
+            )
+            else None
+        )
+
+        today = datetime.today().date()
+
+        # CMC CALCULATIONS
+
+        if installation_date:
+
+            cmc_due_days = (
+                today -
+                installation_date
+            ).days
+
+        else:
+
+            cmc_due_days = 0
+
+        if cmc_due_days >= 345:
+
+            cmc_due = 'YES'
+
+        else:
+
+            cmc_due = 'NO'
+
+        # SERVICE CALCULATIONS
+
+        service_interval_days = request.form.get(
+            'service_interval_days'
+        )
+
+        if service_interval_days:
+
+            service_interval_days = int(
+                service_interval_days
+            )
+
+        else:
+
+            service_interval_days = 0
+
+        if last_service_date:
+
+            last_service_days = (
+                today -
+                last_service_date
+            ).days
+
+        else:
+
+            last_service_days = 0
+
+        if last_service_days >= service_interval_days:
+
+            service_due = 'YES'
+
+        else:
+
+            service_due = 'NO'
+
+        client = Client(
+
+            proposal_id=proposal_id,
+
+            invoice_id=invoice_id,
+
+            client_name=request.form.get(
+                'client_name'
+            ),
+
+            monitor_present=request.form.get(
+                'monitor_present'
+            ),
+
+            property_type=request.form.get(
+                'property_type'
+            ),
+
+            address=request.form.get(
+                'address'
+            ),
+
+            location_link=request.form.get(
+                'location_link'
+            ),
+
+            nearest_metrostation=request.form.get(
+                'nearest_metrostation'
+            ),
+
+            mail_id=request.form.get(
+                'mail_id'
+            ),
+
+            state=request.form.get(
+                'state'
+            ),
+
+            mobile_no=request.form.get(
+                'mobile_no'
+            ),
+
+            product=request.form.get(
+                'product'
+            ),
+
+            installation_date=
+            installation_date,
+
+            activation_date=
+            activation_date,
+
+            filter_colour=request.form.get(
+                'filter_colour'
+            ),
+
+            no_of_units_installed=request.form.get(
+                'no_of_units_installed'
+            ),
+
+            solution_working=request.form.get(
+                'solution_working'
+            ),
+
+            cmc_applicable=request.form.get(
+                'cmc_applicable'
+            ),
+
+            cmc_due_days=
+            cmc_due_days,
+
+            cmc_due=
+            cmc_due,
+
+            next_cmc_renewal_date=
+            next_cmc_renewal_date,
+
+            cmc_amount=request.form.get(
+                'cmc_amount'
+            ),
+
+            last_service_days=
+            last_service_days,
+
+            last_service_date=
+            last_service_date,
+
+            service_interval_days=
+            service_interval_days,
+
+            service_due=
+            service_due,
+
+            filter_clean=request.form.get(
+                'filter_clean'
+            ),
+
+            service_for=request.form.get(
+                'service_for'
+            ),
+
+            no_of_filters_replaced=request.form.get(
+                'no_of_filters_replaced'
+            ),
+
+            pre_service_msg=request.form.get(
+                'pre_service_msg'
+            ),
+
+            post_service_msg=request.form.get(
+                'post_service_msg'
+            ),
+
+            remark=request.form.get(
+                'remark'
+            )
+
+        )
+
+        db.session.add(
+            client
+        )
+
+        db.session.commit()
+
+        return redirect(
+            url_for(
+                'add_client'
+            )
+        )
+
     all_clients = Client.query.all()
-    return render_template('add_client.html', clients=all_clients)
+
+    all_proposals = Proposal.query.all()
+
+    all_invoices = Invoice.query.all()
+
+    return render_template(
+
+        'add_client.html',
+
+        clients=all_clients,
+
+        proposals=all_proposals,
+
+        invoices=all_invoices
+
+    )
 
 @app.route('/client/<int:client_id>')
 def client_details(client_id):
@@ -1363,34 +2422,29 @@ def client_services(client_id):
 
     services = CustomerCareCard.query.filter_by(
         client_id=client_id
-    ).all()
-
-    last_service = CustomerCareCard.query.filter_by(
-        client_id=client_id
     ).order_by(
         CustomerCareCard.service_date.desc()
-    ).first()
+    ).all()
 
-    if last_service:
-        last_service_date = last_service.service_date
-        service_due_date = last_service_date + timedelta(days=30)
-    else:
-        last_service_date = None
-        service_due_date = None
-
-    service_count = len(services)
+    service_count = len(
+        services
+    )
 
     return render_template(
+
         'client_services.html',
+
         client=client,
+
         services=services,
-        last_service_date=last_service_date,
-        service_due_date=service_due_date,
+
         service_count=service_count
+
     )
+
 @app.route(
     '/add-service/<int:client_id>',
-    methods=['GET','POST']
+    methods=['GET', 'POST']
 )
 def add_service(client_id):
 
@@ -1400,73 +2454,128 @@ def add_service(client_id):
 
     if request.method == 'POST':
 
+        service_date = (
+            datetime.strptime(
+                request.form.get(
+                    'service_date'
+                ),
+                '%Y-%m-%d'
+            ).date()
+            if request.form.get(
+                'service_date'
+            )
+            else None
+        )
+
+        communication_date = (
+            datetime.strptime(
+                request.form.get(
+                    'communication_date'
+                ),
+                '%Y-%m-%d'
+            ).date()
+            if request.form.get(
+                'communication_date'
+            )
+            else None
+        )
+
         service = CustomerCareCard(
 
             client_id=client_id,
 
-            service_date=datetime.strptime(
-                request.form['service_date'],
-                '%Y-%m-%d'
-            ).date(),
+            service_date=
+            service_date,
 
-            service_of=request.form['service_of'],
+            service_of=request.form.get(
+                'service_of'
+            ),
 
-            no_of_filters=request.form['no_of_filters'],
+            no_of_filters=request.form.get(
+                'no_of_filters'
+            ),
 
-            controller_changed=request.form['controller_changed'],
+            controller_changed=request.form.get(
+                'controller_changed'
+            ),
 
-            fan_changed=request.form['fan_changed'],
+            fan_changed=request.form.get(
+                'fan_changed'
+            ),
 
-            serviced_by=request.form['serviced_by'],
+            serviced_by=request.form.get(
+                'serviced_by'
+            ),
 
-            pre_service_msgd=request.form[
+            pre_service_msgd=request.form.get(
                 'pre_service_msgd'
-            ],
+            ),
 
-            post_service_report_sent=request.form[
+            post_service_report_sent=request.form.get(
                 'post_service_report_sent'
-            ],
+            ),
 
-            miscellaneous_messages=request.form[
+            miscellaneous_messages=request.form.get(
                 'miscellaneous_messages'
-            ],
+            ),
 
-            tips_and_tricks=request.form[
+            tips_and_tricks=request.form.get(
                 'tips_and_tricks'
-            ],
+            ),
 
-            referrals_program=request.form[
+            referrals_program=request.form.get(
                 'referrals_program'
-            ],
+            ),
 
-            news_sent=request.form[
+            news_sent=request.form.get(
                 'news_sent'
-            ],
+            ),
 
-            communication_date=datetime.strptime(
-                request.form[
-                    'communication_date'
-                ],
-                '%Y-%m-%d'
-            ).date(),
+            communication_date=
+            communication_date,
 
-            remark=request.form['remark']
+            remark=request.form.get(
+                'remark'
+            )
+
         )
 
-        db.session.add(service)
+        db.session.add(
+            service
+        )
+
+        # UPDATE CLIENT STATUS
+
+        if service_date:
+
+            client.last_service_date = (
+                service_date
+            )
+
+            client.last_service_days = 0
+
+            client.service_due = 'NO'
 
         db.session.commit()
 
         return redirect(
+
             url_for(
+
                 'client_services',
+
                 client_id=client_id
+
             )
+
         )
 
     return render_template(
+
         'add_service.html',
+
         client=client
+
     )
 
 @app.route('/service/<int:card_id>')
@@ -1476,13 +2585,19 @@ def service_details(card_id):
         card_id
     )
 
-    return render_template(
-        'service_details.html',
-        service=service
+    client = Client.query.get(
+        service.client_id
     )
 
+    return render_template(
 
+        'service_details.html',
 
+        service=service,
+
+        client=client
+
+    )
 
 
 if __name__ == '__main__':
