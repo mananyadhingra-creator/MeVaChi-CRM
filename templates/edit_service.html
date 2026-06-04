@@ -3,7 +3,7 @@
 
 <head>
 
-    <title>Add Service</title>
+    <title>Edit Service</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
           rel="stylesheet">
@@ -18,7 +18,7 @@
 
         <h2 class="text-center mb-4">
 
-            Add Service
+            Edit Service
 
         </h2>
 
@@ -104,6 +104,7 @@
 
                         <input type="date"
                                name="service_date"
+                               value="{{service.service_date}}"
                                class="form-control"
                                required>
 
@@ -119,6 +120,7 @@
 
                         <input type="text"
                                name="service_of"
+                               value="{{service.service_of}}"
                                class="form-control">
 
                     </div>
@@ -133,6 +135,7 @@
 
                         <input type="text"
                                name="serviced_by"
+                               value="{{service.serviced_by}}"
                                class="form-control">
 
                     </div>
@@ -151,6 +154,7 @@
 
                         <input type="number"
                                name="no_of_filters"
+                               value="{{service.no_of_filters}}"
                                class="form-control">
 
                     </div>
@@ -166,13 +170,19 @@
                         <select name="controller_changed"
                                 class="form-select">
 
-                            <option value="YES">
+                            <option value="YES"
+                                {% if service.controller_changed == 'YES' %}
+                                    selected
+                                {% endif %}>
 
                                 YES
 
                             </option>
 
-                            <option value="NO">
+                            <option value="NO"
+                                {% if service.controller_changed == 'NO' %}
+                                    selected
+                                {% endif %}>
 
                                 NO
 
@@ -193,13 +203,19 @@
                         <select name="fan_changed"
                                 class="form-select">
 
-                            <option value="YES">
+                            <option value="YES"
+                                {% if service.fan_changed == 'YES' %}
+                                    selected
+                                {% endif %}>
 
                                 YES
 
                             </option>
 
-                            <option value="NO">
+                            <option value="NO"
+                                {% if service.fan_changed == 'NO' %}
+                                    selected
+                                {% endif %}>
 
                                 NO
 
@@ -236,13 +252,19 @@
                         <select name="pre_service_msgd"
                                 class="form-select">
 
-                            <option value="YES">
+                            <option value="YES"
+                                {% if service.pre_service_msgd == 'YES' %}
+                                    selected
+                                {% endif %}>
 
                                 YES
 
                             </option>
 
-                            <option value="NO">
+                            <option value="NO"
+                                {% if service.pre_service_msgd == 'NO' %}
+                                    selected
+                                {% endif %}>
 
                                 NO
 
@@ -263,13 +285,19 @@
                         <select name="post_service_report_sent"
                                 class="form-select">
 
-                            <option value="YES">
+                            <option value="YES"
+                                {% if service.post_service_report_sent == 'YES' %}
+                                    selected
+                                {% endif %}>
 
                                 YES
 
                             </option>
 
-                            <option value="NO">
+                            <option value="NO"
+                                {% if service.post_service_report_sent == 'NO' %}
+                                    selected
+                                {% endif %}>
 
                                 NO
 
@@ -289,6 +317,7 @@
 
                         <input type="date"
                                name="communication_date"
+                               value="{{service.communication_date}}"
                                class="form-control">
 
                     </div>
@@ -317,7 +346,7 @@
 
                     <textarea name="miscellaneous_messages"
                               rows="3"
-                              class="form-control"></textarea>
+                              class="form-control">{{ service.miscellaneous_messages }}</textarea>
 
                 </div>
 
@@ -331,7 +360,7 @@
 
                     <textarea name="tips_and_tricks"
                               rows="3"
-                              class="form-control"></textarea>
+                              class="form-control">{{ service.tips_and_tricks }}</textarea>
 
                 </div>
 
@@ -347,6 +376,7 @@
 
                         <input type="text"
                                name="referrals_program"
+                               value="{{service.referrals_program}}"
                                class="form-control">
 
                     </div>
@@ -362,19 +392,27 @@
                         <select name="news_sent"
                                 class="form-select">
 
-                            <option value="YES">
+                            <option value="YES"
+                                {% if service.news_sent == 'YES' %}
+                                    selected
+                                {% endif %}>
 
                                 YES
 
                             </option>
 
-                            <option value="NO">
+                            <option value="NO"
+                                {% if service.news_sent == 'NO' %}
+                                    selected
+                                {% endif %}>
 
                                 NO
 
                             </option>
 
                         </select>
+
+
 
                     </div>
 
@@ -394,7 +432,7 @@
 
                 <textarea name="remark"
                           rows="4"
-                          class="form-control"></textarea>
+                          class="form-control">{{ service.remark }}</textarea>
 
             </div>
 
@@ -403,23 +441,9 @@
                 <button type="submit"
                         class="btn btn-dark btn-lg">
 
-                    Save Service
+                    Update Service
 
                 </button>
-
-                <a href="/dashboard"
-                   class="btn btn-secondary btn-lg">
-
-                    Back To Dashboard
-
-                </a>
-
-                <a href="/client-services/{{ client.client_id }}"
-                   class="btn btn-secondary btn-lg">
-
-                    Back
-
-                </a>
 
             </div>
 

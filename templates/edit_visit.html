@@ -35,14 +35,14 @@
                 </h4>
 
                 <select name="meeting_id">
-                        <option value="">
-                            Select Meeting
-                        </option>
+
+                    <option value="">
+                        Select Meeting
+                    </option>
 
                     {% for meeting in meetings %}
 
                     <option
-
                         value="{{ meeting.meeting_id }}"
 
                         data-company="{{ meeting.firm_name }}"
@@ -55,7 +55,11 @@
 
                         data-address="{{ meeting.address }}"
 
-                        data-state="{{ meeting.state }}">
+                        data-state="{{ meeting.state }}"
+
+                        {% if meeting.meeting_id == visit.meeting_id %}
+                            selected
+                        {% endif %}>
 
                         {{ meeting.name }}
 
@@ -64,7 +68,6 @@
                     {% endfor %}
 
                 </select>
-
             </div>
 
             <!-- VISIT DETAILS -->

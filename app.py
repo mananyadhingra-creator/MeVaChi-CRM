@@ -3,6 +3,9 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta
 import os
 from werkzeug.utils import secure_filename
+from sqlalchemy import func, extract
+from werkzeug.security import generate_password_hash
+from werkzeug.security import check_password_hash
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'static'
@@ -703,7 +706,6 @@ def login():
     )
 
 @app.route('/dashboard')
-
 def dashboard():
 
     if 'user_id' not in session:
@@ -712,8 +714,41 @@ def dashboard():
             url_for('login')
         )
 
+    monthly_filters = db.session.query(
+        func.sum(
+            CustomerCareCard.no_of_filters
+        )
+    ).filter(
+        extract(
+            'month',
+            CustomerCareCard.service_date
+        ) == datetime.now().month,
+
+        extract(
+            'year',
+            CustomerCareCard.service_date
+        ) == datetime.now().year
+    ).scalar()
+
+    monthly_filters = monthly_filters or 0
+
+    yearly_filters = db.session.query(
+        func.sum(
+            CustomerCareCard.no_of_filters
+        )
+    ).filter(
+        extract(
+            'year',
+            CustomerCareCard.service_date
+        ) == datetime.now().year
+    ).scalar()
+
+    yearly_filters = yearly_filters or 0
+
     return render_template(
-        'index.html'
+        'index.html',
+        monthly_filters=monthly_filters,
+        yearly_filters=yearly_filters
     )
 
 @app.route('/add-lead',
@@ -1511,6 +1546,132 @@ def drawing_details(drawing_id):
         drawing=drawing
     )
 
+@app.route(
+    '/edit-drawing/<int:drawing_id>',
+    methods=['GET', 'POST']
+)
+def edit_drawing(drawing_id):
+
+    drawing = Drawing.query.get_or_404(
+        drawing_id
+    )
+
+    drawing_pdf=drawing.drawing_pdf
+
+    all_visits = Visit.query.all()
+
+    if request.method == 'POST':
+
+        drawing.visit_id = (
+            int(
+                request.form.get(
+                    'visit_id'
+                )
+            )
+            if request.form.get(
+                'visit_id'
+            )
+            else None
+        )
+
+        drawing.name = request.form.get(
+            'name'
+        )
+
+        drawing.address = request.form.get(
+            'address'
+        )
+
+        drawing.iterations = (
+            int(
+                request.form.get(
+                    'iterations'
+                )
+            )
+            if request.form.get(
+                'iterations'
+            )
+            else None
+        )
+
+        drawing.moca = request.form.get(
+            'moca'
+        )
+
+        if 'drawing_pdf' in request.files:
+
+            file = request.files[
+                'drawing_pdf'
+            ]
+
+            if file.filename != '':
+
+                filename = secure_filename(
+                    file.filename
+                )
+
+                file.save(
+                    os.path.join(
+                        app.config[
+                            'UPLOAD_FOLDER'
+                        ],
+                        'drawings',
+                        filename
+                    )
+                )
+
+                drawing_pdf = (
+                    'drawings/' +
+                filename
+                )
+
+        drawing.drawing_pdf = drawing_pdf
+
+        db.session.commit()
+
+        return redirect(
+            url_for(
+                'add_drawing'
+            )
+        )
+
+    return render_template(
+        'edit_drawing.html',
+        drawing=drawing,
+        visits=all_visits
+    )
+
+@app.route(
+    '/delete-drawing/<int:drawing_id>'
+)
+def delete_drawing(drawing_id):
+
+    drawing = Drawing.query.get_or_404(
+        drawing_id
+    )
+
+    try:
+
+        db.session.delete(
+            drawing
+        )
+
+        db.session.commit()
+
+    except Exception:
+
+        db.session.rollback()
+
+        flash(
+            'Cannot delete this drawing because it is linked to other records.'
+        )
+
+    return redirect(
+        url_for(
+            'add_drawing'
+        )
+    )
+
 @app.route('/add-proposal',
             methods=['GET', 'POST'])
 def add_proposal():
@@ -1781,6 +1942,233 @@ def add_proposal():
         meetings=all_meetings,
         drawings=all_drawings
     )
+
+@app.route(
+    '/edit-proposal/<int:proposal_id>',
+    methods=['GET', 'POST']
+)
+def edit_proposal(proposal_id):
+
+    proposal = Proposal.query.get_or_404(
+        proposal_id
+    )
+
+    all_meetings = Meeting.query.all()
+
+    all_drawings = Drawing.query.all()
+
+    if request.method == 'POST':
+        proposal.meeting_id = request.form.get(
+            'meeting_id'
+        )
+
+        proposal.drawing_id = request.form.get(
+            'drawing_id'
+        )
+
+        proposal.reference_no = request.form.get(
+            'reference_no'
+        )
+        proposal.name = request.form.get(
+            'name'
+        )
+        proposal.phone_no_client = request.form.get(
+            'phone_no_client'
+        )
+        proposal.source = request.form.get(
+            'source'
+        )
+        proposal.type = request.form.get(
+            'type'
+        )
+        proposal.reference_source_details = request.form.get(
+            'reference_source_details'
+        )
+        proposal.phone_no_source = request.form.get(
+            'phone_no_source'
+        )
+        proposal.contact_person = request.form.get(
+            'contact_person'
+        )
+        proposal.phone_no_contact_person = request.form.get(
+            'phone_no_contact_person'
+        )
+        proposal.email = request.form.get(
+            'email'
+        )
+        proposal.site_address = request.form.get(
+            'site_address'
+        )
+        proposal.state = request.form.get(
+            'state'
+        )
+        proposal.total_area_sqft = request.form.get(
+            'total_area_sqft'
+        )
+        proposal.type_of_units = request.form.get(
+            'type_of_units'
+        )
+        proposal.no_of_mvd_units = request.form.get(
+            'no_of_mvd_units'
+        )
+        proposal.no_of_mvd_max_units = request.form.get(
+            'no_of_mvd_max_units'
+        )
+        proposal.total_no_of_units = request.form.get(
+            'total_no_of_units'
+        )
+        proposal.product = request.form.get(
+            'product'
+        )
+        proposal.cost_total_per_unit = request.form.get(
+            'cost_total_per_unit'
+        )
+        proposal.no_of_monitors = request.form.get(
+            'no_of_monitors'
+        )
+        proposal.cmc = request.form.get(
+            'cmc'
+        )
+        proposal.per_unit_cost = request.form.get(
+            'per_unit_cost'
+        )
+        proposal.per_unit_cost_max_unit = request.form.get(
+            'per_unit_cost_max_unit'
+        )
+        proposal.cmc_cost = request.form.get(
+            'cmc_cost'
+        )
+        proposal.monitor_cost = request.form.get(
+            'monitor_cost'
+        )
+        proposal.installation_cost = request.form.get(
+            'installation_cost'
+        )
+        proposal.total_amount = request.form.get(
+            'total_amount'
+        )
+        proposal.cmc_starting_period = request.form.get(
+            'cmc_starting_period'
+        )
+        proposal.discount = request.form.get(
+            'discount'
+        )
+        proposal.final_amount = request.form.get(
+            'final_amount'
+        )
+        proposal.proposal_prepared_by = request.form.get(
+            'proposal_prepared_by'
+        )
+        proposal.proposal_shared_by = request.form.get(
+            'proposal_shared_by'
+        )
+        proposal.status = request.form.get(
+            'status'
+        )
+        proposal.remarks = request.form.get(
+            'remarks'
+        )
+        date_of_proposal_sent = request.form.get(
+            'date_of_proposal_sent'
+        )
+        if date_of_proposal_sent:
+
+            proposal.date_of_proposal_sent = datetime.strptime(
+                date_of_proposal_sent,
+                '%Y-%m-%d'
+            ).date()
+
+        else:
+
+            proposal.date_of_proposal_sent = None
+        date_of_last_followup = request.form.get(
+            'date_of_last_followup'
+        )
+        if date_of_last_followup:
+            proposal.date_of_last_followup = datetime.strptime(
+                date_of_last_followup,
+                '%Y-%m-%d'
+            ).date()
+
+        else:
+            proposal.date_of_last_followup = None
+        next_to_call = request.form.get(
+            'next_to_call'
+        )
+        if next_to_call:
+            proposal.next_to_call = datetime.strptime(
+                next_to_call,
+                '%Y-%m-%d'
+            ).date()
+        else:
+            proposal.next_to_call = None
+        proposal_pdf = proposal.proposal_pdf
+        if 'proposal_pdf' in request.files:
+            file = request.files[
+                'proposal_pdf'
+            ]
+            if file.filename != '':
+                filename = secure_filename(
+                    file.filename
+                )
+                file.save(
+                    os.path.join(
+                        app.config[
+                            'UPLOAD_FOLDER'],
+                            'proposals',
+                        filename
+                    )
+                )
+                proposal_pdf = (
+                    'proposals/' +
+                    filename
+                )
+        proposal.proposal_pdf = proposal_pdf
+        db.session.commit()
+        return redirect(
+            url_for(
+                'add_proposal'
+            )
+        )
+    
+    return render_template(
+        'edit_proposal.html',
+        proposal=proposal,
+        meetings=all_meetings,
+        drawings=all_drawings
+    )
+
+@app.route(
+    '/delete-proposal/<int:proposal_id>'
+)
+def delete_proposal(proposal_id):
+
+    proposal = Proposal.query.get_or_404(
+        proposal_id
+    )
+
+    try:
+
+        db.session.delete(
+            proposal
+        )
+
+        db.session.commit()
+
+    except Exception:
+
+        db.session.rollback()
+
+        flash(
+            'Cannot delete proposal because it is linked to sales records.'
+        )
+
+    return redirect(
+        url_for(
+            'add_proposal'
+        )
+    )
+
 @app.route('/proposal/<int:proposal_id>')
 def proposal_details(proposal_id):
 
@@ -1949,6 +2337,228 @@ def sales_details(sales_id):
     return render_template(
         'sales_details.html',
         sale=sale
+    )
+
+@app.route(
+    '/edit-sales/<int:sales_id>',
+    methods=['GET', 'POST']
+)
+def edit_sales(sales_id):
+
+    sales = SalesPipeline.query.get_or_404(
+        sales_id
+    )
+
+    all_proposals = Proposal.query.all()
+
+    if request.method == 'POST':
+
+        sales.proposal_id = request.form.get(
+            'proposal_id'
+        )
+
+        sales.name = request.form.get(
+            'name'
+        )
+
+        sales.reference_no = request.form.get(
+            'reference_no'
+        )
+
+        sales.source = request.form.get(
+            'source'
+        )
+
+        sales.address = request.form.get(
+            'address'
+        )
+
+        sales.contact_no = request.form.get(
+            'contact_no'
+        )
+
+        sales.email_id = request.form.get(
+            'email_id'
+        )
+
+        sales.project_stage = request.form.get(
+            'project_stage'
+        )
+
+        sales.moc = request.form.get(
+            'moc'
+        )
+
+        sales.next_action = request.form.get(
+            'next_action'
+        )
+
+        sales.sales_person = request.form.get(
+            'sales_person'
+        )
+
+        sales.project_type = request.form.get(
+            'project_type'
+        )
+
+        sales.category = request.form.get(
+            'category'
+        )
+
+        sales.site_incharge = request.form.get(
+            'site_incharge'
+        )
+
+        sales.site_incharge_contact = request.form.get(
+            'site_incharge_contact'
+        )
+
+        sales.first_contact = (
+            datetime.strptime(
+                request.form.get(
+                    'first_contact'
+                ),
+                '%Y-%m-%d'
+            ).date()
+            if request.form.get(
+                'first_contact'
+            )
+            else None
+        )
+
+        sales.last_contact = (
+            datetime.strptime(
+                request.form.get(
+                    'last_contact'
+                ),
+                '%Y-%m-%d'
+            ).date()
+            if request.form.get(
+                'last_contact'
+            )
+            else None
+        )
+
+        sales.followup_date = (
+            datetime.strptime(
+                request.form.get(
+                    'followup_date'
+                ),
+                '%Y-%m-%d'
+            ).date()
+            if request.form.get(
+                'followup_date'
+            )
+            else None
+        )
+
+        sales.no_of_site_visits = request.form.get(
+            'no_of_site_visits'
+        )
+
+        sales.area_covered = request.form.get(
+            'area_covered'
+        )
+
+        sales.total_units = request.form.get(
+            'total_units'
+        )
+
+        sales.price_of_units = request.form.get(
+            'price_of_units'
+        )
+
+        sales.first_year_cmc = request.form.get(
+            'first_year_cmc'
+        )
+
+        sales.installation = request.form.get(
+            'installation'
+        )
+
+        sales.total_sensor = request.form.get(
+            'total_sensor'
+        )
+
+        sales.sensor_cost = request.form.get(
+            'sensor_cost'
+        )
+
+        sales.discount = request.form.get(
+            'discount'
+        )
+
+        sales.revenue = request.form.get(
+            'revenue'
+        )
+
+        sales.amount_received = request.form.get(
+            'amount_received'
+        )
+
+        sales.amount_due = request.form.get(
+            'amount_due'
+        )
+
+        sales.total_revenue = request.form.get(
+            'total_revenue'
+        )
+
+        sales.gst_no = request.form.get(
+            'gst_no'
+        )
+
+        sales.cmc_onwards = request.form.get(
+            'cmc_onwards'
+        )
+
+        sales.total_cmc = request.form.get(
+            'total_cmc'
+        )
+
+        db.session.commit()
+
+        return redirect(
+            url_for(
+                'add_sales'
+            )
+        )
+
+    return render_template(
+        'edit_sales.html',
+        sales=sales,
+        proposals=all_proposals
+    )
+
+@app.route(
+    '/delete-sales/<int:sales_id>'
+)
+def delete_sales(sales_id):
+
+    sales = SalesPipeline.query.get_or_404(
+        sales_id
+    )
+
+    try:
+
+        db.session.delete(
+            sales
+        )
+
+        db.session.commit()
+
+    except Exception:
+
+        db.session.rollback()
+
+        flash(
+            'Cannot delete this sales record because it is linked to invoices.'
+        )
+
+    return redirect(
+        url_for(
+            'add_sales'
+        )
     )
 
 @app.route('/add-invoice',
@@ -2128,6 +2738,146 @@ def invoice_details(invoice_id):
         invoice=invoice
     )
 
+@app.route(
+    '/edit-invoice/<int:invoice_id>',
+    methods=['GET', 'POST']
+)
+def edit_invoice(invoice_id):
+
+    invoice = Invoice.query.get_or_404(
+        invoice_id
+    )
+
+    all_sales = SalesPipeline.query.all()
+
+    if request.method == 'POST':
+        invoice.sales_id = request.form.get(
+            'sales_id'
+        )
+
+        doi_input = request.form.get(
+            'doi'
+        )
+
+        if doi_input:
+
+            invoice.doi = datetime.strptime(
+                doi_input,
+                '%Y-%m-%d'
+            ).date()
+
+        else:
+
+            invoice.doi = None
+
+        invoice.invoice_no = request.form.get(
+            'invoice_no'
+        )
+
+        invoice.name = request.form.get(
+            'name'
+        )
+
+        invoice.gst_no = request.form.get(
+            'gst_no'
+        )
+
+        invoice.product_sold = request.form.get(
+            'product_sold'
+        )
+
+        invoice.total_units = request.form.get(
+            'total_units'
+        )
+
+        invoice.price_of_units = request.form.get(
+            'price_of_units'
+        )
+
+        invoice.first_year_cmc = request.form.get(
+            'first_year_cmc'
+        )
+        invoice.installation = request.form.get(
+            'installation'
+        )
+        invoice.total_sensor = request.form.get(
+            'total_sensor'
+        )
+        invoice.sensor_cost = request.form.get(
+            'sensor_cost'
+        )
+        invoice.revenue = request.form.get(
+            'revenue'
+        )
+        invoice.total_revenue = request.form.get(
+            'total_revenue'
+        )
+        pdf_path = invoice.invoice_pdf
+        invoice_pdf = request.files.get(
+            'invoice_pdf'
+        )
+        if invoice_pdf and invoice_pdf.filename != '':
+            filename = secure_filename(
+                invoice_pdf.filename
+            )
+            invoice_pdf.save(
+                os.path.join(
+                    app.config['UPLOAD_FOLDER'],
+                    'invoices',
+                    filename
+                )
+            )
+            pdf_path = (
+                'invoices/' +
+                filename
+            )
+        invoice.invoice_pdf = pdf_path
+
+        db.session.commit()
+
+        return redirect(
+            url_for(
+                'add_invoice'
+            )
+        )
+
+    return render_template(
+        'edit_invoice.html',
+        invoice=invoice,
+        sales=all_sales
+    )
+
+@app.route(
+    '/delete-invoice/<int:invoice_id>'
+)
+def delete_invoice(invoice_id):
+
+    invoice = Invoice.query.get_or_404(
+        invoice_id
+    )
+
+    try:
+
+        db.session.delete(
+            invoice
+        )
+
+        db.session.commit()
+
+    except Exception:
+
+        db.session.rollback()
+
+        flash(
+            'Cannot delete this invoice because it is linked to other records.'
+        )
+
+    return redirect(
+        url_for(
+            'add_invoice'
+        )
+    )
+
 @app.route('/add-client',
            methods=['GET', 'POST'])
 def add_client():
@@ -2218,7 +2968,6 @@ def add_client():
             cmc_due = 'NO'
 
         # SERVICE CALCULATIONS
-
         service_interval_days = request.form.get(
             'service_interval_days'
         )
@@ -2231,7 +2980,7 @@ def add_client():
 
         else:
 
-            service_interval_days = 0
+            service_interval_days = 30
 
         if last_service_date:
 
@@ -2241,9 +2990,15 @@ def add_client():
             ).days
 
         else:
+            if activation_date:
 
-            last_service_days = 0
-
+                last_service_days = (
+                    today -
+                    activation_date
+                ).days
+            else:
+                last_service_days=0
+        
         if last_service_days >= service_interval_days:
 
             service_due = 'YES'
@@ -2251,6 +3006,7 @@ def add_client():
         else:
 
             service_due = 'NO'
+
 
         client = Client(
 
@@ -2411,6 +3167,297 @@ def client_details(client_id):
     return render_template(
         'client_details.html',
         client=client
+    )
+
+@app.route(
+    '/edit-client/<int:client_id>',
+    methods=['GET', 'POST']
+)
+def edit_client(client_id):
+
+    client = Client.query.get_or_404(
+        client_id
+    )
+
+    all_proposals = Proposal.query.all()
+
+    all_invoices = Invoice.query.all()
+
+    if request.method == 'POST':
+        client.proposal_id = request.form.get(
+            'proposal_id'
+        )
+
+        client.invoice_id = request.form.get(
+            'invoice_id'
+        )
+        installation_date = (
+            datetime.strptime(
+                request.form.get(
+                    'installation_date'
+                ),
+                '%Y-%m-%d'
+            ).date()
+            if request.form.get(
+                'installation_date'
+            )
+            else None
+        )
+
+        activation_date = (
+            datetime.strptime(
+                request.form.get(
+                    'activation_date'
+                ),
+                '%Y-%m-%d'
+            ).date()
+            if request.form.get(
+                'activation_date'
+            )
+            else None
+        )
+
+        next_cmc_renewal_date = (
+            datetime.strptime(
+                request.form.get(
+                    'next_cmc_renewal_date'
+                ),
+                '%Y-%m-%d'
+            ).date()
+            if request.form.get(
+                'next_cmc_renewal_date'
+            )
+            else None
+        )
+
+        last_service_date = (
+            datetime.strptime(
+                request.form.get(
+                    'last_service_date'
+                ),
+                '%Y-%m-%d'
+            ).date()
+            if request.form.get(
+                'last_service_date'
+            )
+            else None
+        )
+
+        today = datetime.today().date()
+
+        # CMC CALCULATIONS
+
+        if installation_date:
+
+            cmc_due_days = (
+                today -
+                installation_date
+            ).days
+
+        else:
+
+            cmc_due_days = 0
+
+        if cmc_due_days >= 345:
+
+            cmc_due = 'YES'
+
+        else:
+
+            cmc_due = 'NO'
+
+        # SERVICE CALCULATIONS
+
+        service_interval_days = request.form.get(
+            'service_interval_days'
+        )
+
+        if service_interval_days:
+
+            service_interval_days = int(
+                service_interval_days
+            )
+
+        else:
+
+            service_interval_days = 30
+
+        if last_service_date:
+
+            last_service_days = (
+                today -
+                last_service_date
+            ).days
+
+        else:
+            if activation_date:
+
+                last_service_days = (
+                    today -
+                    activation_date
+                ).days
+            else:
+                last_service_days=0
+        
+        if last_service_days >= service_interval_days:
+
+            service_due = 'YES'
+
+        else:
+
+            service_due = 'NO'
+
+        client.client_name=request.form.get(
+            'client_name'
+        )
+
+        client.monitor_present=request.form.get(
+            'monitor_present'
+        )
+
+        client.property_type=request.form.get(
+            'property_type'
+        )
+
+        client.address=request.form.get(
+            'address'
+        )
+
+        client.location_link=request.form.get(
+            'location_link'
+        )
+
+        client.nearest_metrostation=request.form.get(
+            'nearest_metrostation'
+        )
+
+        client.mail_id=request.form.get(
+            'mail_id'
+        )
+
+        client.state=request.form.get(
+            'state'
+        )
+
+        client.mobile_no=request.form.get(
+            'mobile_no'
+        )
+
+        client.product=request.form.get(
+            'product'
+        )
+
+        client.installation_date= installation_date
+
+        client.activation_date= activation_date
+
+        client.filter_colour=request.form.get(
+            'filter_colour'
+        )
+
+        client.no_of_units_installed=request.form.get(
+            'no_of_units_installed'
+        )
+
+        client.solution_working=request.form.get(
+            'solution_working'
+        )
+
+        client.cmc_applicable=request.form.get(
+            'cmc_applicable'
+        )
+
+        client.cmc_due_days=cmc_due_days
+
+        client.cmc_due=cmc_due
+
+        client.next_cmc_renewal_date=next_cmc_renewal_date
+
+        client.cmc_amount=request.form.get(
+            'cmc_amount'
+        )
+
+        client.last_service_days=last_service_days
+
+        client.last_service_date=last_service_date
+
+        client.service_interval_days=service_interval_days
+
+        client.service_due=service_due
+
+        client.filter_clean=request.form.get(
+            'filter_clean'
+        )
+
+        client.service_for=request.form.get(
+            'service_for'
+        )
+
+        client.no_of_filters_replaced=request.form.get(
+            'no_of_filters_replaced'
+        )
+
+        client.pre_service_msg=request.form.get(
+            'pre_service_msg'
+        )
+
+        client.post_service_msg=request.form.get(
+            'post_service_msg'
+        )
+
+        client.remark=request.form.get(
+            'remark'
+        )
+
+        db.session.commit()
+
+        return redirect(
+            url_for(
+                'add_client'
+            )
+        )
+
+    return render_template(
+
+        'edit_client.html',
+
+        client=client,
+
+        proposals=all_proposals,
+
+        invoices=all_invoices
+
+    )        
+
+@app.route(
+    '/delete-client/<int:client_id>'
+)
+def delete_client(client_id):
+
+    client = Client.query.get_or_404(
+        client_id
+    )
+
+    try:
+
+        db.session.delete(
+            client
+        )
+
+        db.session.commit()
+
+    except Exception:
+
+        db.session.rollback()
+
+        flash(
+            'Cannot delete this client because it is linked to service records.'
+        )
+
+    return redirect(
+        url_for(
+            'add_client'
+        )
     )
 
 @app.route('/client-services/<int:client_id>')
@@ -2597,6 +3644,190 @@ def service_details(card_id):
 
         client=client
 
+    )
+
+@app.route(
+    '/edit-service/<int:card_id>',
+    methods=['GET', 'POST']
+)
+def edit_service(card_id):
+
+    service = CustomerCareCard.query.get_or_404(
+        card_id
+    )
+
+    if request.method == 'POST':
+
+        service.service_date = (
+            datetime.strptime(
+                request.form.get(
+                    'service_date'
+                ),
+                '%Y-%m-%d'
+            ).date()
+            if request.form.get(
+                'service_date'
+            )
+            else None
+        )
+
+        service.communication_date = (
+            datetime.strptime(
+                request.form.get(
+                    'communication_date'
+                ),
+                '%Y-%m-%d'
+            ).date()
+            if request.form.get(
+                'communication_date'
+            )
+            else None
+        )
+
+        service.service_of = request.form.get(
+            'service_of'
+        )
+
+        service.no_of_filters = request.form.get(
+            'no_of_filters'
+        )
+
+        service.controller_changed = request.form.get(
+            'controller_changed'
+        )
+
+        service.fan_changed = request.form.get(
+            'fan_changed'
+        )
+
+        service.serviced_by = request.form.get(
+            'serviced_by'
+        )
+
+        service.pre_service_msgd = request.form.get(
+            'pre_service_msgd'
+        )
+
+        service.post_service_report_sent = request.form.get(
+            'post_service_report_sent'
+        )
+
+        service.miscellaneous_messages = request.form.get(
+            'miscellaneous_messages'
+        )
+
+        service.tips_and_tricks = request.form.get(
+            'tips_and_tricks'
+        )
+
+        service.referrals_program = request.form.get(
+            'referrals_program'
+        )
+
+        service.news_sent = request.form.get(
+            'news_sent'
+        )
+
+        service.remark = request.form.get(
+            'remark'
+        )
+
+        client = Client.query.get(
+            service.client_id
+        )
+
+        latest_service = CustomerCareCard.query.filter_by(
+            client_id=service.client_id
+        ).order_by(
+            CustomerCareCard.service_date.desc()
+        ).first()
+
+        if latest_service:
+
+            client.last_service_date = (
+                latest_service.service_date
+            )
+
+            client.last_service_days = 0
+
+            client.service_due = 'NO'
+
+        else:
+
+            client.last_service_date=None
+
+            client.last_service_days=0
+
+        db.session.commit()
+
+        return redirect(
+            url_for(
+                'client_services',
+                client_id=service.client_id
+            )
+        )
+    client= Client.query.get(
+        service.client_id
+    )
+
+    return render_template(
+        'edit_service.html',
+        service=service,
+        client=client
+    )
+
+@app.route(
+    '/delete-service/<int:card_id>'
+)
+def delete_service(card_id):
+
+    service = CustomerCareCard.query.get_or_404(
+        card_id
+    )
+
+    client_id = service.client_id
+
+    db.session.delete(
+        service
+    )
+
+    db.session.commit()
+
+    client = Client.query.get(
+        client_id
+    )
+
+    latest_service = CustomerCareCard.query.filter_by(
+        client_id=client_id
+    ).order_by(
+        CustomerCareCard.service_date.desc()
+    ).first()
+
+    if latest_service:
+
+        client.last_service_date = (
+            latest_service.service_date
+        )
+
+        client.last_service_days = 0
+
+        client.service_due = 'NO'
+
+    else:
+
+        client.last_service_date = None
+
+        client.last_service_days = 0
+
+        client.service_due = 'YES'
+
+    db.session.commit()
+
+    return redirect(
+        url_for(
+            'client_services',
+            client_id=client_id
+        )
     )
 
 

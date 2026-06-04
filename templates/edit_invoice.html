@@ -10,22 +10,6 @@
 
 </head>
 
-{% with messages = get_flashed_messages() %}
-    {% if messages %}
-
-        {% for message in messages %}
-
-            <div class="alert alert-danger">
-
-                {{ message }}
-
-            </div>
-
-        {% endfor %}
-
-    {% endif %}
-{% endwith %}
-
 <body class="bg-light">
 
 <div class="container mt-5">
@@ -34,7 +18,7 @@
 
         <h2 class="text-center mb-4">
 
-            Invoice Management
+            Update Invoice
 
         </h2>
 
@@ -51,9 +35,7 @@
 
                 </h4>
 
-                <select name="sales_id"
-                        id="sales_id"
-                        class="form-select">
+                <select name="sales_id">
 
                     <option value="">
 
@@ -85,7 +67,10 @@
 
                         data-revenue="{{ sale.revenue }}"
 
-                        data-totalrevenue="{{ sale.total_revenue }}">
+                        data-totalrevenue="{{ sale.total_revenue }}"
+                        {% if sale.sales_id == invoice.sales_id %}
+                            selected
+                        {% endif %}>
 
                         {{ sale.reference_no }}
                         -
@@ -122,6 +107,7 @@
                         <input type="text"
                                id="name"
                                name="name"
+                               value="{{ invoice.name }}"
                                class="form-control">
 
                     </div>
@@ -136,6 +122,7 @@
 
                         <input type="date"
                                name="doi"
+                               value="{{ invoice.doi }}"
                                class="form-control">
 
                     </div>
@@ -150,6 +137,7 @@
 
                         <input type="text"
                                name="invoice_no"
+                               value="{{ invoice.invoice_no }}"
                                class="form-control">
 
                     </div>
@@ -169,6 +157,7 @@
                         <input type="text"
                                id="gst_no"
                                name="gst_no"
+                               value="{{ invoice.gst_no }}"
                                class="form-control">
 
                     </div>
@@ -183,6 +172,7 @@
 
                         <input type="text"
                                name="product_sold"
+                               value="{{ invoice.product_sold }}"
                                class="form-control">
 
                     </div>
@@ -191,13 +181,25 @@
 
                         <label class="form-label">
 
-                            Invoice PDF
+                            CurrentInvoice PDF
 
                         </label>
 
+                        <br>
+                        {% if invoice.invoice_pdf %}
+                        <a href="{{ url_for(
+                                        'static',
+                                        filename=invoice.invoice_pdf
+                        ) }}"
+                        target="_blank">
+
+                            View Current PDF
+                        </a>
+                        <br><br>
+                        {% endif %}
                         <input type="file"
-                            name="invoice_pdf"
-                        class="form-control">
+                               name="invoice_pdf"
+                               class="form-control">
 
                     </div>
 
@@ -228,6 +230,7 @@
                         <input type="number"
                                id="total_units"
                                name="total_units"
+                               value="{{ invoice.total_units }}"
                                class="form-control">
 
                     </div>
@@ -244,6 +247,7 @@
                                step="0.01"
                                id="price_of_units"
                                name="price_of_units"
+                               value="{{ invoice.price_of_units }}"
                                class="form-control">
 
                     </div>
@@ -260,6 +264,7 @@
                                step="0.01"
                                id="first_year_cmc"
                                name="first_year_cmc"
+                               value="{{ invoice.first_year_cmc }}"
                                class="form-control">
 
                     </div>
@@ -280,6 +285,7 @@
                                step="0.01"
                                id="installation"
                                name="installation"
+                               value="{{ invoice.installation }}"
                                class="form-control">
 
                     </div>
@@ -295,6 +301,7 @@
                         <input type="number"
                                id="total_sensor"
                                name="total_sensor"
+                               value="{{ invoice.total_sensor }}"
                                class="form-control">
 
                     </div>
@@ -311,6 +318,7 @@
                                step="0.01"
                                id="sensor_cost"
                                name="sensor_cost"
+                               value="{{ invoice.sensor_cost }}"
                                class="form-control">
 
                     </div>
@@ -330,6 +338,7 @@
                                step="0.01"
                                id="revenue"
                                name="revenue"
+                               value="{{ invoice.revenue }}"
                                class="form-control">
 
                     </div>
@@ -346,6 +355,7 @@
                                step="0.01"
                                id="total_revenue"
                                name="total_revenue"
+                               value="{{ invoice.total_revenue }}"
                                class="form-control">
 
                     </div>
@@ -359,12 +369,12 @@
                 <button type="submit"
                         class="btn btn-dark btn-lg">
 
-                    Save Invoice
+                    Update Invoice
 
                 </button>
 
                 <a href="/dashboard"
-                   class="btn btn-secondary btn-lg">
+                   class="btn btn-secondary">
 
                     Back To Dashboard
 
@@ -376,181 +386,10 @@
 
     </div>
 
-    <br>
-
-    <div class="card shadow p-4">
-
-        <h3 class="mb-3">
-
-            All Invoices
-
-        </h3>
-
-        <table class="table table-bordered table-striped">
-
-            <thead>
-
-                <tr>
-
-                    <th>ID</th>
-
-                    <th>Invoice No</th>
-
-                    <th>Name</th>
-
-                    <th>GST No</th>
-
-                    <th>Total Revenue</th>
-
-                    <th>PDF</th>
-
-                    <th>Action</th>
-
-                </tr>
-
-            </thead>
-
-            <tbody>
-
-                {% for invoice in invoices %}
-
-                <tr>
-
-                    <td>{{ invoice.invoice_id }}</td>
-
-                    <td>{{ invoice.invoice_no }}</td>
-
-                    <td>{{ invoice.name }}</td>
-
-                    <td>{{ invoice.gst_no }}</td>
-
-                    <td>{{ invoice.total_revenue }}</td>
-
-                    <td>
-                        {% if invoice.invoice_pdf %}
-
-                        <a href="{{ url_for(
-                                        'static',
-                                        filename=invoice.invoice_pdf
-                                    ) }}"
-                            target="_blank"
-                            class="btn btn-dark btn-sm">
-
-                            View PDF
-
-                        </a>
-
-                        {% else %}
-
-                            No PDF
-
-                        {% endif %}
-
-                    </td>
-
-                    <td>
-
-                        <a href="/invoice/{{ invoice.invoice_id }}"
-                           class="btn btn-dark btn-sm">
-
-                            View
-
-                        </a>
-                        <a href="/edit-invoice/{{ invoice.invoice_id }}"
-                           class="btn btn-warning btn-sm">
-
-                            Edit
-                        </a>
-                        <a href="/delete-invoice/{{ invoice.invoice_id }}"
-                           class="btn btn-danger btn-sm"
-                           onclick="return confirm(
-                               'Delete this invoice?'
-                           )">
-
-                            Delete
-                        </a>
-
-                    </td>
-
-                </tr>
-
-                {% endfor %}
-
-            </tbody>
-
-        </table>
-
-    </div>
+    
 
 </div>
 
-<script>
-
-document.getElementById(
-    'sales_id'
-).addEventListener(
-    'change',
-    function() {
-
-        let selected =
-            this.options[
-                this.selectedIndex
-            ];
-
-        document.getElementById(
-            'name'
-        ).value =
-            selected.dataset.name || '';
-
-        document.getElementById(
-            'gst_no'
-        ).value =
-            selected.dataset.gst || '';
-
-        document.getElementById(
-            'total_units'
-        ).value =
-            selected.dataset.units || '';
-
-        document.getElementById(
-            'price_of_units'
-        ).value =
-            selected.dataset.price || '';
-
-        document.getElementById(
-            'first_year_cmc'
-        ).value =
-            selected.dataset.cmc || '';
-
-        document.getElementById(
-            'installation'
-        ).value =
-            selected.dataset.installation || '';
-
-        document.getElementById(
-            'total_sensor'
-        ).value =
-            selected.dataset.sensor || '';
-
-        document.getElementById(
-            'sensor_cost'
-        ).value =
-            selected.dataset.sensorcost || '';
-
-        document.getElementById(
-            'revenue'
-        ).value =
-            selected.dataset.revenue || '';
-
-        document.getElementById(
-            'total_revenue'
-        ).value =
-            selected.dataset.totalrevenue || '';
-
-    }
-);
-
-</script>
 
 </body>
 

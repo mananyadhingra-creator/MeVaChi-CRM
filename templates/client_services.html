@@ -10,6 +10,22 @@
 
 </head>
 
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div class="alert alert-danger">
+
+                {{ message }}
+
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+{% endwith %}
+
 <body class="bg-light">
 
 <div class="container mt-5">
@@ -294,6 +310,16 @@
 
                             View
 
+                        </a>
+                        <a href="/edit-service/{{ service.card_id }}"
+                           class="btn btn-warning btn-sm">
+                            Edit
+                        </a>
+                        <a href="/delete-service/{{ service.card_id }}"
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('Delete this service record?')">
+                            Delete
+                    
                         </a>
 
                     </td>

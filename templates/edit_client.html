@@ -10,22 +10,6 @@
 
 </head>
 
-{% with messages = get_flashed_messages() %}
-    {% if messages %}
-
-        {% for message in messages %}
-
-            <div class="alert alert-danger">
-
-                {{ message }}
-
-            </div>
-
-        {% endfor %}
-
-    {% endif %}
-{% endwith %}
-
 <body class="bg-light">
 
 <div class="container mt-5">
@@ -34,7 +18,7 @@
 
         <h2 class="text-center mb-4">
 
-            Client Management
+            Edit Client
 
         </h2>
 
@@ -60,9 +44,8 @@
 
                         </label>
 
-                        <select name="proposal_id"
-                                id="proposal_id"
-                                class="form-select">
+                        <select name="proposal_id">
+
 
                             <option value="">
 
@@ -84,7 +67,12 @@
 
                                 data-phone="{{ proposal.phone_no_client }}"
 
-                                data-state="{{ proposal.state }}">
+                                data-state="{{ proposal.state }}"
+                                {% if client.proposal_id == proposal.proposal_id %}
+
+                                    selected
+
+                                {% endif %}>
 
                                 {{ proposal.reference_no }}
                                 -
@@ -106,9 +94,7 @@
 
                         </label>
 
-                        <select name="invoice_id"
-                                id="invoice_id"
-                                class="form-select">
+                        <select name="invoice_id">
 
                             <option value="">
 
@@ -124,7 +110,12 @@
 
                                 data-product="{{ invoice.product_sold }}"
 
-                                data-units="{{ invoice.total_units }}">
+                                data-units="{{ invoice.total_units }}"
+                                {% if client.invoice_id == invoice.invoice_id %}
+
+                                    selected
+
+                                {% endif %}>
 
                                 {{ invoice.invoice_no }}
                                 -
@@ -165,6 +156,7 @@
                         <input type="text"
                                id="client_name"
                                name="client_name"
+                               value="{{ client.client_name }}"
                                class="form-control">
 
                     </div>
@@ -180,13 +172,13 @@
                         <select name="monitor_present"
                                 class="form-select">
 
-                            <option value="YES">
+                            <option value="YES"{% if client.monitor_present == "YES" %} selected{% endif %}>
 
                                 YES
 
                             </option>
 
-                            <option value="NO">
+                            <option value="NO"{% if client.monitor_present == "NO" %} selected{% endif %}>
 
                                 NO
 
@@ -211,11 +203,35 @@
                         <select name="property_type"
                                 class="form-select">
 
-                            <option>Residential</option>
-                            <option>Office/Commercial Space</option>
-                            <option>School/University</option>
-                            <option>Farmhouse</option>
-                            <option>Others</option>
+                            <option value="Residential"{% if client.property_type == "Residential" %} selected{% endif %}>
+
+                                Residential
+
+                            </option>
+
+                            <option value="Office/Commercial Space"{% if client.property_type == "Office/Commercial Space" %} selected{% endif %}>
+
+                                Office/Commercial Space
+
+                            </option>
+
+                            <option value="School/University"{% if client.property_type == "School/University" %} selected{% endif %}>
+
+                                School/University
+
+                            </option>
+
+                            <option value="Farmhouse"{% if client.property_type == "Farmhouse" %} selected{% endif %}>
+
+                                Farmhouse
+
+                            </option>
+
+                            <option value="Others"{% if client.property_type == "Others" %} selected{% endif %}>
+
+                                Others
+
+                            </option>
 
                         </select>
 
@@ -232,6 +248,7 @@
                         <input type="text"
                                id="state"
                                name="state"
+                               value="{{ client.state }}"
                                class="form-control">
 
                     </div>
@@ -249,7 +266,7 @@
                     <textarea id="address"
                               name="address"
                               rows="3"
-                              class="form-control"></textarea>
+                              class="form-control">{{ client.address }}</textarea>
 
                 </div>
 
@@ -266,6 +283,7 @@
                         <input type="email"
                                id="mail_id"
                                name="mail_id"
+                               value="{{ client.email }}"
                                class="form-control">
 
                     </div>
@@ -281,6 +299,7 @@
                         <input type="text"
                                id="mobile_no"
                                name="mobile_no"
+                               value="{{ client.mobile_no }}"
                                class="form-control">
 
                     </div>
@@ -297,6 +316,7 @@
 
                     <input type="text"
                            name="location_link"
+                           value="{{ client.location_link }}"
                            class="form-control">
 
                 </div>
@@ -311,6 +331,7 @@
 
                     <input type="text"
                            name="nearest_metrostation"
+                           value="{{ client.nearest_metrostation }}"
                            class="form-control">
 
                 </div>
@@ -340,6 +361,7 @@
                         <input type="text"
                                id="product"
                                name="product"
+                               value="{{ client.product }}"
                                class="form-control">
 
                     </div>
@@ -354,6 +376,7 @@
 
                         <input type="date"
                                name="installation_date"
+                               value="{{ client.installation_date }}"
                                class="form-control">
 
                     </div>
@@ -368,6 +391,7 @@
 
                         <input type="date"
                                name="activation_date"
+                               value="{{ client.activation_date }}"
                                class="form-control">
 
                     </div>
@@ -387,10 +411,13 @@
                         <select name="filter_colour"
                                 class="form-select">
 
-                            <option>MERV-15 (Black)</option>
+                            <option value="MERV-15 (Black)" {% if client.filter_colour == "MERV-15 (Black)" %} selected {% endif %}>
+                                MERV-15 (Black)
+                            </option>
 
-                            <option>MERV-16 (White)</option>
-
+                            <option value="MERV-16 (White)" {% if client.filter_colour == "MERV-16 (White)" %} selected {% endif %}>
+                                MERV-16 (White)
+                            </option>
 
                         </select>
 
@@ -407,6 +434,7 @@
                         <input type="number"
                                id="no_of_units_installed"
                                name="no_of_units_installed"
+                               value="{{ client.no_of_units_installed }}"
                                class="form-control">
 
                     </div>
@@ -422,13 +450,13 @@
                         <select name="solution_working"
                                 class="form-select">
 
-                            <option value="YES">
+                            <option value="YES" {% if client.solution_working == "YES" %} selected {% endif %}>
 
                                 YES
 
                             </option>
 
-                            <option value="NO">
+                            <option value="NO" {% if client.solution_working == "NO" %} selected {% endif %}>
 
                                 NO
 
@@ -465,13 +493,13 @@
                         <select name="cmc_applicable"
                                 class="form-select">
 
-                            <option value="YES">
+                            <option value="YES" {% if client.cmc_applicable == "YES" %} selected {% endif %}>
 
                                 YES
 
                             </option>
 
-                            <option value="NO">
+                            <option value="NO" {% if client.cmc_applicable == "NO" %} selected {% endif %}>
 
                                 NO
 
@@ -491,6 +519,7 @@
 
                         <input type="date"
                                name="next_cmc_renewal_date"
+                               value="{{ client.next_cmc_renewal_date }}"
                                class="form-control">
 
                     </div>
@@ -506,6 +535,7 @@
                         <input type="number"
                                step="0.01"
                                name="cmc_amount"
+                               value="{{ client.cmc_amount }}"
                                class="form-control">
 
                     </div>
@@ -536,6 +566,7 @@
 
                         <input type="date"
                                name="last_service_date"
+                               value="{{ client.last_service_date }}"
                                class="form-control">
 
                     </div>
@@ -550,6 +581,7 @@
 
                         <input type="number"
                                name="service_interval_days"
+                               value="{{ client.service_interval_days }}"
                                class="form-control">
 
                     </div>
@@ -565,13 +597,13 @@
                         <select name="filter_clean"
                                 class="form-select">
 
-                            <option value="YES">
+                            <option value="YES" {% if client.filter_clean == "YES" %} selected {% endif %}>
 
                                 YES
 
                             </option>
 
-                            <option value="NO">
+                            <option value="NO" {% if client.filter_clean == "NO" %} selected {% endif %}>
 
                                 NO
 
@@ -595,6 +627,7 @@
 
                         <input type="text"
                                name="service_for"
+                               value="{{ client.service_for }}"
                                class="form-control">
 
                     </div>
@@ -609,6 +642,7 @@
 
                         <input type="number"
                                name="no_of_filters_replaced"
+                               value="{{ client.no_of_filters_replaced }}"
                                class="form-control">
 
                     </div>
@@ -628,13 +662,13 @@
                         <select name="pre_service_msg"
                                 class="form-select">
 
-                            <option value="YES">
+                            <option value="YES" {% if client.pre_service_msg == "YES" %} selected {% endif %}>
 
                                 YES
 
                             </option>
 
-                            <option value="NO">
+                            <option value="NO" {% if client.pre_service_msg == "NO" %} selected {% endif %}>
 
                                 NO
 
@@ -655,14 +689,13 @@
                         <select name="post_service_msg"
                                 class="form-select">
 
-                            <option value="YES">
+                            <option value="YES" {% if client.post_service_msg == "YES" %} selected {% endif %}>
 
                                 YES
 
                             </option>
 
-                            <option value="NO">
-
+                            <option value="NO" {% if client.post_service_msg == "NO" %} selected {% endif %}>
                                 NO
 
                             </option>
@@ -687,7 +720,7 @@
 
                 <textarea name="remark"
                           rows="4"
-                          class="form-control"></textarea>
+                          class="form-control">{{ client.remark }}</textarea>
 
             </div>
 
@@ -696,12 +729,12 @@
                 <button type="submit"
                         class="btn btn-dark btn-lg">
 
-                    Save Client
+                    Update Client
 
                 </button>
 
                 <a href="/dashboard"
-                   class="btn btn-secondary btn-lg">
+                   class="btn btn-secondary">
 
                     Back To Dashboard
 
@@ -715,163 +748,7 @@
 
 </div>
 
-<div class="card shadow p-4 mt-4">
-
-    <h3 class="mb-3">
-
-        All Clients
-
-    </h3>
-
-    <table class="table table-bordered table-striped">
-
-        <thead>
-
-            <tr>
-
-                <th>ID</th>
-
-                <th>Client Name</th>
-
-                <th>Product</th>
-
-                <th>Mobile</th>
-
-                <th>CMC Due</th>
-
-                <th>Service Due</th>
-
-                <th>Action</th>
-
-            </tr>
-
-        </thead>
-
-        <tbody>
-
-            {% for client in clients %}
-
-            <tr>
-
-                <td>{{ client.client_id }}</td>
-
-                <td>
-                    <a href="/client-services/{{ client.client_id }}">
-                        {{ client.client_name }}
-                    </a>
-
-                </td>
-
-                <td>{{ client.product }}</td>
-
-                <td>{{ client.mobile_no }}</td>
-
-                <td>{{ client.cmc_due }}</td>
-
-                <td>{{ client.service_due }}</td>
-
-                <td>
-
-                    <a href="/client/{{ client.client_id }}"
-                       class="btn btn-dark btn-sm">
-
-                        View
-
-                    </a>
-                    <a href="/edit-client/{{ client.client_id }}"
-                       class="btn btn-warning btn-sm">
-
-                        Edit
-
-                    </a>
-                    <a href="/delete-client/{{ client.client_id }}"
-                       class="btn btn-danger btn-sm"
-                       onclick="return confirm('Are you sure you want to delete this client?');">
-
-                        Delete
-                    </a>
-
-                </td>
-
-            </tr>
-
-            {% endfor %}
-
-        </tbody>
-
-    </table>
-
-</div>
-
-<script>
-
-document.getElementById(
-    'proposal_id'
-).addEventListener(
-    'change',
-    function() {
-
-        let selected =
-            this.options[
-                this.selectedIndex
-            ];
-
-        document.getElementById(
-            'client_name'
-        ).value =
-            selected.dataset.name || '';
-
-        document.getElementById(
-            'address'
-        ).value =
-            selected.dataset.address || '';
-
-        document.getElementById(
-            'mail_id'
-        ).value =
-            selected.dataset.email || '';
-
-        document.getElementById(
-            'mobile_no'
-        ).value =
-            selected.dataset.phone || '';
-
-        document.getElementById(
-            'state'
-        ).value =
-            selected.dataset.state || '';
-
-    }
-);
-
-document.getElementById(
-    'invoice_id'
-).addEventListener(
-    'change',
-    function() {
-
-        let selected =
-            this.options[
-                this.selectedIndex
-            ];
-
-        document.getElementById(
-            'product'
-        ).value =
-            selected.dataset.product || '';
-
-        document.getElementById(
-            'no_of_units_installed'
-        ).value =
-            selected.dataset.units || '';
-
-    }
-);
-
-</script>
 
 </body>
 
 </html>
-
-                

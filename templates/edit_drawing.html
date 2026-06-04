@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Drawing Management</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-4">
+
+    <div class="card shadow p-4">
+
+        <h2 class="text-center mb-4">
+
+            Edit Drawing
+
+        </h2>
+
+        <form method="POST"
+              enctype="multipart/form-data">
+
+            <!-- SELECT VISIT -->
+
+            <div class="card shadow-sm p-4 mb-4">
+
+                <h4>
+
+                    Select Visit
+
+                </h4>
+
+                <select name="visit_id">
+
+                    <option value="">
+                        Select Visit
+                    </option>
+
+                    {% for visit in visits %}
+
+                    <option
+
+                        value="{{ visit.visit_id }}"
+
+                        data-name="{{ visit.company_name }}"
+
+                        data-address="{{ visit.address }}"
+
+                        {% if visit.visit_id == drawing.visit_id %}
+                            selected
+                        {% endif %}>
+
+                        {{ visit.company_name }}
+
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+            <!-- DRAWING DETAILS -->
+
+            <div class="card shadow-sm p-4 mb-4">
+
+                <h4>
+
+                    Drawing Details
+
+                </h4>
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Name
+
+                        </label>
+
+                        <input type="text"
+                               id="name"
+                               name="name"
+                               value="{{ drawing.name }}"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Iteration Number
+
+                        </label>
+
+                        <input type="number"
+                               name="iterations"
+                               value="{{ drawing.iterations }}"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Address
+
+                    </label>
+
+                    <textarea id="address"
+                              name="address"
+                              rows="3"
+                              class="form-control">{{ drawing.address }}</textarea>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            MOCA
+
+                        </label>
+
+                        <input type="text"
+                               name="moca"
+                               value="{{ drawing.moca }}"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label>
+
+                            Current Drawing PDF
+
+                        </label>
+
+                        <br>
+
+                        <a href="{{ url_for(
+                            'static',
+                            filename=drawing.drawing_pdf
+                        ) }}"
+                        target="_blank">
+
+                            View Current PDF
+
+                        </a>
+
+                        <br><br>
+
+                    <input
+                        type="file"
+                        name="drawing_pdf"
+                        class="form-control">
+
+                </div>
+
+            </div>
+                        <div class="text-center">
+
+                <button type="submit"
+                        class="btn btn-dark">
+
+                    Update Drawing
+
+                </button>
+
+                <a href="/dashboard"
+                   class="btn btn-secondary">
+
+                    Back To Dashboard
+
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+    
+
+</div>
+
+</body>
+
+</html>
