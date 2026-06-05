@@ -5,6 +5,7 @@
 
 <title>CRM Dashboard</title>
 
+
 <style>
 
 body{
@@ -67,6 +68,34 @@ body{
 
     <h1>CRM Dashboard</h1>
 
+    <div class="d-flex justify-content-center mb-5">
+
+        <form action="{{ url_for('global_search') }}"
+              method="GET">
+
+            <div class="input-group">
+
+                <input type="text"
+                       name="search"
+                       placeholder="Search anything..."
+                       class="form-control"
+                       style="width:900px;
+                              height:30px;
+                              font-size:16px;">
+
+                <button class="btn btn-primary btn"
+                        style="width:120px;height:35px;font-size:16px;"
+                        type="submit">
+
+                    Search
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
     <br>
 
     <a href="/add-lead" class="card">

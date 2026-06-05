@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Global Search</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container py-5">
+
+    <div class="mb-3">
+
+        <a href="{{ url_for('dashboard') }}"
+           class="btn btn-secondary">
+
+            ← Back To Dashboard
+
+        </a>
+
+    </div>
+
+    <h1 class="mb-4">
+
+        Global Search
+
+    </h1>
+
+    <form method="GET">
+
+        <div class="input-group mb-4">
+
+            <input type="text"
+                   name="search"
+                   value="{{ search }}"
+                   class="form-control"
+                   placeholder="Search anything...">
+
+            <button class="btn btn-dark"
+                    type="submit">
+
+                Search
+
+            </button>
+
+            <a href="{{ url_for('global_search') }}"
+               class="btn btn-secondary">
+
+                Clear
+
+            </a>
+
+        </div>
+
+    </form>
+
+    {% if search %}
+
+    <div class="alert alert-info">
+
+        Results for:
+        <strong>{{ search }}</strong>
+
+    </div>
+
+    {% endif %}
+
+    {% if leads %}
+
+    <div class="card mb-4">
+
+        <div class="card-header">
+
+            Leads ({{ leads|length }})
+
+        </div>
+
+        <div class="card-body">
+
+            <ul>
+
+                {% for lead in leads %}
+
+                <li>
+
+                    <a href="{{ url_for('edit_lead',
+                                        lead_id=lead.lead_id) }}">
+
+                        {{ lead.name }}
+
+                    </a>
+
+                </li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+    {% if meetings %}
+
+    <div class="card mb-4">
+
+        <div class="card-header">
+
+            Meetings ({{ meetings|length }})
+
+        </div>
+
+        <div class="card-body">
+
+            <ul>
+
+                {% for meeting in meetings %}
+
+                <li>
+
+                    <a href="{{ url_for('edit_meeting',
+                                        meeting_id=meeting.meeting_id) }}">
+
+                        {{ meeting.name }}
+                        -
+                        {{ meeting.firm_name}}
+                    </a>
+
+                </li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+    {% if visits %}
+
+    <div class="card mb-4">
+
+        <div class="card-header">
+
+            Visits ({{ visits|length }})
+
+        </div>
+
+        <div class="card-body">
+
+            <ul>
+
+                {% for visit in visits %}
+
+                <li>
+
+                    <a href="{{ url_for('edit_visit',
+                                        visit_id=visit.visit_id) }}">
+
+                        {{ visit.company_name }}
+                        -
+                        {{ visit.person_name }}
+                    </a>
+
+                </li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+    
+    {% if drawings %}
+
+    <div class="card mb-4">
+
+        <div class="card-header">
+
+            Drawings ({{ drawings|length }})
+
+        </div>
+
+        <div class="card-body">
+
+            <ul>
+
+                {% for drawing in drawings %}
+
+                <li>
+
+                    <a href="{{ url_for('edit_drawing',
+                                        drawing_id=drawing.drawing_id) }}">
+
+                        {{ drawing.name }}
+                        -
+                        {{ drawing.iterations }}
+                    </a>
+
+                </li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+    {% if proposals %}
+
+    <div class="card mb-4">
+
+        <div class="card-header">
+
+            Proposals ({{ proposals|length }})
+
+        </div>
+
+        <div class="card-body">
+
+            <ul>
+
+                {% for proposal in proposals %}
+
+                <li>
+
+                    <a href="{{ url_for('edit_proposal',
+                                        proposal_id=proposal.proposal_id) }}">
+
+                        {{ proposal.reference_no }}
+                        -
+                        {{ proposal.name }}
+                    </a>
+
+                </li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+    {% if sales %}
+
+    <div class="card mb-4">
+
+        <div class="card-header">
+
+            Sales ({{ sales|length }})
+
+        </div>
+
+        <div class="card-body">
+
+            <ul>
+
+                {% for sale in sales %}
+
+                <li>
+
+                    <a href="{{ url_for('edit_sales',
+                                        sales_id=sale.sales_id) }}">
+
+                        {{ sale.reference_no }}
+                        -
+                        {{ sale.name }}
+                    </a>
+
+                </li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+    {% if invoices %}
+
+    <div class="card mb-4">
+
+        <div class="card-header">
+
+            Invoices ({{ invoices|length }})
+
+        </div>
+
+        <div class="card-body">
+
+            <ul>
+
+                {% for invoice in invoices %}
+
+                <li>
+
+                    <a href="{{ url_for('edit_invoice',
+                                        invoice_id=invoice.invoice_id) }}">
+
+                        {{ invoice.invoice_no }}
+                        -
+                        {{ invoice.name }}   
+                    </a>
+
+                </li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+    {% if clients %}
+
+    <div class="card mb-4">
+
+        <div class="card-header">
+
+                Clients ({{ clients|length }})
+
+        </div>
+
+        <div class="card-body">
+
+            <ul>
+
+                {% for client in clients %}
+
+                <li>
+
+                    <a href="{{ url_for('edit_client',
+                                        client_id=client.client_id) }}">
+
+                        {{ client.name }}
+                        -
+                        {{ client.product }}
+                    </a>
+
+                </li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+    {% if services %}
+
+    <div class="card mb-4">
+
+        <div class="card-header">
+
+            Services ({{ services|length }})
+
+        </div>
+
+        <div class="card-body">
+
+            <ul>
+
+                {% for service in services %}
+
+                <li>
+
+                    <a href="{{ url_for('edit_service',
+                                        card_id=service.card_id) }}">
+
+                        {{ service.client.client_name }}
+                        -
+                        {{ service.service_date }}
+                        -
+                        {{ service.service_of }}
+                    </a>
+
+                </li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+    {% if search
+    and not leads
+    and not meetings
+    and not visits
+    and not drawings
+    and not proposals
+    and not sales
+    and not invoices
+    and not clients
+    and not services %}
+
+    <div class="alert alert-warning">
+
+        No results found.
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+</body>
+
+</html>

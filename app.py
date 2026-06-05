@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import os
 from werkzeug.utils import secure_filename
 from sqlalchemy import func, extract
+from sqlalchemy import or_
 from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
 
@@ -635,7 +636,11 @@ class CustomerCareCard(db.Model):
         db.Integer,
         db.ForeignKey('client.client_id')
     )
-
+    client = db.relationship(
+        'Client',
+        backref='services'
+    )
+    
     service_date = db.Column(db.Date)
 
     service_of = db.Column(db.String(100))
@@ -777,7 +782,38 @@ def add_lead():
         db.session.add(lead)
         db.session.commit()
         return redirect(url_for('add_lead'))
-    all_leads = Lead.query.all()
+    search = request.args.get(
+        'search'
+    )
+
+    if search:
+
+        all_leads = Lead.query.filter(
+            or_(
+                Lead.name.ilike(
+                    f'%{search}%'
+                ),
+                Lead.reference.ilike(
+                    f'%{search}%'
+                ),
+                Lead.location.ilike(
+                    f'%{search}%'
+                ),
+                Lead.phone.ilike(
+                    f'%{search}%'
+                ),
+                Lead.responses.ilike(
+                    f'%{search}%'
+                ),
+                Lead.recent.ilike(
+                    f'%{search}%'
+                )
+            )
+        ).all()
+
+    else:
+
+        all_leads = Lead.query.all()
     return render_template('add_lead.html', leads=all_leads)
 
 @app.route('/lead/<int:lead_id>')
@@ -974,7 +1010,64 @@ def add_meeting():
         db.session.add(meeting)
         db.session.commit()
         return redirect(url_for('add_meeting'))
-    all_meetings = Meeting.query.all()
+    search=request.args.get(
+        'search'
+    )
+    if search:
+        all_meetings=Meeting.query.filter(
+            or_(
+                Meeting.meeting_fixed_by.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.source.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.name.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.reference.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.firm_name.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.designation.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.address.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.state.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.contact_no.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.email.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.mode_of_meeting.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.meeting_status.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.meeting_conducted_by.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.final_remarks.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.reason_for_reschedule.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.remarks.ilike(
+                    f'%{search}%'
+                )
+            )
+        ).all()
+    else:
+        all_meetings=Meeting.query.all()
     all_leads = Lead.query.all()
     return render_template('add_meeting.html', meetings=all_meetings, leads=all_leads)
 
@@ -1301,7 +1394,43 @@ def add_visit():
             )
         )
 
-    all_visits = Visit.query.all()
+    search=request.args.get(
+        'search'
+    )
+    if search:
+        all_visits=Visit.query.filter(
+            or_(
+                Visit.state.ilike(
+                    f'%{search}%'
+                ),
+                Visit.region.ilike(
+                    f'%{search}%'
+                ),
+                Visit.abc.ilike(
+                    f'%{search}%'
+                ),
+                Visit.company_name.ilike(
+                    f'%{search}%'
+                ),
+                Visit.person_name.ilike(
+                    f'%{search}%'
+                ),
+                Visit.designation.ilike(
+                    f'%{search}%'
+                ),
+                Visit.contact_no.ilike(
+                    f'%{search}%'
+                ),
+                Visit.address.ilike(
+                    f'%{search}%'
+                ),
+                Visit.brief.ilike(
+                    f'%{search}%'
+                )
+            )
+        ).all()
+    else:
+        all_visits=Visit.query.all()
 
     all_meetings = Meeting.query.all()
 
@@ -1524,7 +1653,25 @@ def add_drawing():
             )
         )
 
-    all_drawings = Drawing.query.all()
+    search=request.args.get(
+        'search'
+    )
+    if search:
+        all_drawings=Drawing.query.filter(
+            or_(
+                Drawing.name.ilike(
+                    f'%{search}%'
+                ),
+                Drawing.address.ilike(
+                    f'%{search}%'
+                ),
+                Drawing.moca.ilike(
+                    f'%{search}%'
+                )
+            )
+        ).all()
+    else:
+        all_drawings=Drawing.query.all()
 
     all_visits = Visit.query.all()
 
@@ -1933,7 +2080,70 @@ def add_proposal():
                 'add_proposal'
             )
         ) 
-    all_proposals = Proposal.query.all()
+    search=request.args.get(
+        'search'
+    )
+    if search:
+        all_proposals=Proposal.query.filter(
+            or_(
+                Proposal.reference_no.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.name.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.phone_no_client.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.source.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.type.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.reference_source_details.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.phone_no_source.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.contact_person.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.phone_no_contact_person.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.email.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.site_address.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.state.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.type_of_units.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.product.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.proposal_prepared_by.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.proposal_shared_by.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.status.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.remarks.ilike(
+                    f'%{search}%'
+                )
+            )
+        ).all()
+    else:
+        all_proposals = Proposal.query.all()
     all_meetings = Meeting.query.all()
     all_drawings = Drawing.query.all()
     return render_template(
@@ -2313,7 +2523,61 @@ def add_sales():
             )
         )
 
-    all_sales = SalesPipeline.query.all()
+    search=request.args.get(
+        'search'
+    )
+    if search:
+        all_sales=SalesPipeline.query.filter(
+            or_(
+                SalesPipeline.name.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.reference_no.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.project_stage.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.moc.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.source.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.next_action.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.address.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.contact_no.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.project_type.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.category.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.email_id.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.site_incharge.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.site_incharge_contact.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.gst_no.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.sales_person.ilike(
+                    f'%{search}%'
+                )
+            )
+        ).all()
+    else:
+        all_sales=SalesPipeline.query.all()
 
     all_proposals = Proposal.query.all()
 
@@ -2712,7 +2976,28 @@ def add_invoice():
             )
         )
 
-    all_invoices = Invoice.query.all()
+    search=request.args.get(
+        'search'
+    )
+    if search:
+        all_invoices=Invoice.query.filter(
+            or_(
+                Invoice.name.ilike(
+                    f'%{search}%'
+                ),
+                Invoice.invoice_no.ilike(
+                    f'%{search}%'
+                ),
+                Invoice.gst_no.ilike(
+                    f'%{search}%'
+                ),
+                Invoice.product_sold.ilike(
+                    f'%{search}%'
+                )
+            )
+        ).all()
+    else:
+        all_invoices=Invoice.query.all()
 
     all_sales = SalesPipeline.query.all()
 
@@ -3139,7 +3424,43 @@ def add_client():
             )
         )
 
-    all_clients = Client.query.all()
+    search=request.args.get(
+        'search'
+    )
+    if search:
+        all_clients=Client.query.filter(
+            or_(
+                Client.client_name.ilike(
+                    f'%{search}%'
+                ),
+                Client.property_type.ilike(
+                    f'%{search}%'
+                ),
+                Client.nearest_metrostation.ilike(
+                    f'%{search}%'
+                ),
+                Client.mail_id.ilike(
+                    f'%{search}%'
+                ),
+                Client.state.ilike(
+                    f'%{search}%'
+                ),
+                Client.mobile_no.ilike(
+                    f'%{search}%'
+                ),
+                Client.product.ilike(
+                    f'%{search}%'
+                ),
+                Client.filter_colour.ilike(
+                    f'%{search}%'
+                ),
+                Client.remark.ilike(
+                    f'%{search}%'
+                )
+            )
+        ).all()
+    else:
+        all_clients=Client.query.all()
 
     all_proposals = Proposal.query.all()
 
@@ -3467,11 +3788,55 @@ def client_services(client_id):
         client_id
     )
 
-    services = CustomerCareCard.query.filter_by(
-        client_id=client_id
-    ).order_by(
-        CustomerCareCard.service_date.desc()
-    ).all()
+    search = request.args.get(
+        'search'
+    )
+
+    if search:
+
+        services = CustomerCareCard.query.filter(
+            CustomerCareCard.client_id == client_id
+        ).filter(
+
+            or_(
+
+                CustomerCareCard.service_of.ilike(
+                    f'%{search}%'
+                ),
+
+                CustomerCareCard.serviced_by.ilike(
+                    f'%{search}%'
+                ),
+
+                CustomerCareCard.remark.ilike(
+                    f'%{search}%'
+                ),
+
+                CustomerCareCard.miscellaneous_messages.ilike(
+                    f'%{search}%'
+                ),
+
+                CustomerCareCard.tips_and_tricks.ilike(
+                    f'%{search}%'
+                ),
+
+                CustomerCareCard.referrals_program.ilike(
+                    f'%{search}%'
+                )
+
+            )
+
+        ).order_by(
+            CustomerCareCard.service_date.desc()
+        ).all()
+
+    else:
+
+        services = CustomerCareCard.query.filter_by(
+            client_id=client_id
+        ).order_by(
+            CustomerCareCard.service_date.desc()
+        ).all()
 
     service_count = len(
         services
@@ -3830,6 +4195,394 @@ def delete_service(card_id):
         )
     )
 
+@app.route('/global-search')
+def global_search():
+
+    search = request.args.get(
+        'search'
+    )
+
+    leads = []
+    meetings = []
+    visits = []
+    drawings = []
+    proposals = []
+    sales = []
+    invoices = []
+    clients = []
+    services = []
+
+    if search:
+
+        leads = Lead.query.filter(
+            or_(
+                Lead.name.ilike(
+                    f'%{search}%'
+                ),
+                Lead.reference.ilike(
+                    f'%{search}%'
+                ),
+                Lead.location.ilike(
+                    f'%{search}%'
+                ),
+                Lead.phone.ilike(
+                    f'%{search}%'
+                ),
+                Lead.responses.ilike(
+                    f'%{search}%'
+                ),
+                Lead.recent.ilike(
+                    f'%{search}%'
+                )
+            )
+        ).all()
+
+        meetings = Meeting.query.filter(
+            or_(
+                Meeting.meeting_fixed_by.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.source.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.name.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.reference.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.firm_name.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.designation.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.address.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.state.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.contact_no.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.email.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.mode_of_meeting.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.meeting_status.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.meeting_conducted_by.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.final_remarks.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.reason_for_reschedule.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.remarks.ilike(
+                    f'%{search}%'
+                )
+            )
+        ).all()
+
+        visits=Visit.query.filter(
+            or_(
+                Visit.state.ilike(
+                    f'%{search}%'
+                ),
+                Visit.region.ilike(
+                    f'%{search}%'
+                ),
+                Visit.abc.ilike(
+                    f'%{search}%'
+                ),
+                Visit.company_name.ilike(
+                    f'%{search}%'
+                ),
+                Visit.person_name.ilike(
+                    f'%{search}%'
+                ),
+                Visit.designation.ilike(
+                    f'%{search}%'
+                ),
+                Visit.contact_no.ilike(
+                    f'%{search}%'
+                ),
+                Visit.address.ilike(
+                    f'%{search}%'
+                ),
+                Visit.brief.ilike(
+                    f'%{search}%'
+                )
+            )
+        ).all()        
+
+        drawings=Drawing.query.filter(
+            or_(
+                Drawing.name.ilike(
+                    f'%{search}%'
+                ),
+                Drawing.address.ilike(
+                    f'%{search}%'
+                ),
+                Drawing.moca.ilike(
+                    f'%{search}%'
+                )
+            )
+        ).all()
+
+        proposals=Proposal.query.filter(
+            or_(
+                Proposal.reference_no.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.name.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.phone_no_client.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.source.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.type.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.reference_source_details.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.phone_no_source.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.contact_person.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.phone_no_contact_person.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.email.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.site_address.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.state.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.type_of_units.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.product.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.proposal_prepared_by.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.proposal_shared_by.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.status.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.remarks.ilike(
+                    f'%{search}%'
+                )
+            )
+        ).all()
+
+        sales=SalesPipeline.query.filter(
+            or_(
+                SalesPipeline.name.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.reference_no.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.project_stage.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.moc.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.source.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.next_action.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.address.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.contact_no.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.project_type.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.category.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.email_id.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.site_incharge.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.site_incharge_contact.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.gst_no.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.sales_person.ilike(
+                    f'%{search}%'
+                )
+            )
+        ).all()
+
+        invoices=Invoice.query.filter(
+            or_(
+                Invoice.name.ilike(
+                    f'%{search}%'
+                ),
+                Invoice.invoice_no.ilike(
+                    f'%{search}%'
+                ),
+                Invoice.gst_no.ilike(
+                    f'%{search}%'
+                ),
+                Invoice.product_sold.ilike(
+                    f'%{search}%'
+                )
+            )
+        ).all()
+
+        clients=Client.query.filter(
+            or_(
+                Client.client_name.ilike(
+                    f'%{search}%'
+                ),
+                Client.property_type.ilike(
+                    f'%{search}%'
+                ),
+                Client.nearest_metrostation.ilike(
+                    f'%{search}%'
+                ),
+                Client.mail_id.ilike(
+                    f'%{search}%'
+                ),
+                Client.state.ilike(
+                    f'%{search}%'
+                ),
+                Client.mobile_no.ilike(
+                    f'%{search}%'
+                ),
+                Client.product.ilike(
+                    f'%{search}%'
+                ),
+                Client.filter_colour.ilike(
+                    f'%{search}%'
+                ),
+                Client.remark.ilike(
+                    f'%{search}%'
+                )
+            )
+        ).all()
+
+        services = CustomerCareCard.query.filter(
+            or_(
+
+                CustomerCareCard.service_of.ilike(
+                    f'%{search}%'
+                ),
+
+                CustomerCareCard.serviced_by.ilike(
+                    f'%{search}%'
+                ),
+
+                CustomerCareCard.remark.ilike(
+                    f'%{search}%'
+                ),
+
+                CustomerCareCard.miscellaneous_messages.ilike(
+                    f'%{search}%'
+                ),
+
+                CustomerCareCard.tips_and_tricks.ilike(
+                    f'%{search}%'
+                ),
+
+                CustomerCareCard.referrals_program.ilike(
+                    f'%{search}%'
+                )
+            )
+        ).all()
+        services = CustomerCareCard.query.join(
+            Client,
+            CustomerCareCard.client_id == Client.client_id
+        ).filter(
+
+            or_(
+
+                Client.client_name.ilike(
+                    f'%{search}%'
+                ),
+
+                Client.mobile_no.ilike(
+                    f'%{search}%'
+                ),
+
+                Client.product.ilike(
+                    f'%{search}%'
+                ),
+
+                CustomerCareCard.service_of.ilike(
+                    f'%{search}%'
+                ),
+
+                CustomerCareCard.serviced_by.ilike(
+                    f'%{search}%'
+                ),
+
+                CustomerCareCard.remark.ilike(
+                    f'%{search}%'
+                ),
+
+                CustomerCareCard.miscellaneous_messages.ilike(
+                    f'%{search}%'
+                ),
+
+                CustomerCareCard.tips_and_tricks.ilike(
+                    f'%{search}%'
+                ),
+
+                CustomerCareCard.referrals_program.ilike(
+                    f'%{search}%'
+                )
+
+            )
+
+        ).all()
+    
+
+    return render_template(
+        'global_search.html',
+        search=search,
+        leads=leads,
+        meetings=meetings,
+        visits=visits,
+        drawings=drawings,
+        proposals=proposals,
+        sales=sales,
+        invoices=invoices,
+        clients=clients,
+        services=services
+    )
 
 if __name__ == '__main__':
 
