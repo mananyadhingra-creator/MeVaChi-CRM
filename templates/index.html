@@ -322,7 +322,7 @@ body{
             'ADMIN',
             'SALES'
         ] %}
-        <div class="col-lg-3 colo-md-4 col-sm-6">
+        <div class="col-lg-3 col-md-4 col-sm-6">
 
 
             <a href="/add-visit" class="card module-card">
@@ -420,8 +420,24 @@ body{
             </a>
 
         </div>
+        {% endif %}
+        {% if session['role'] == 'ADMIN' %}
 
-        {% endif %}       
+        <div class="col-lg-3 col-md-4 col-sm-6">
+
+            <a href="{{ url_for(
+                'activity_logs'
+            ) }}"
+               class="card module-card">
+
+                Activity Logs
+
+            </a>
+
+        </div>
+
+        {% endif %}
+      
 
     </div>
 

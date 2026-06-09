@@ -28,6 +28,36 @@ def has_access(*allowed_roles):
         'role'
     ) in allowed_roles
 
+def log_activity(
+
+    module_name,
+
+    record_id,
+
+    action,
+
+    details=None
+
+):
+
+    log = ActivityLog(
+
+        module_name=module_name,
+
+        record_id=record_id,
+
+        action=action,
+
+        details=details,
+
+        performed_by=session.get(
+            'username'
+        )
+
+    )
+
+    db.session.add(log)
+
 class User(db.Model):
 
     __tablename__ = 'users'
@@ -707,6 +737,41 @@ class CompletedTask(db.Model):
         default=datetime.now
     )
 
+class ActivityLog(db.Model):
+
+    __tablename__ = 'activity_logs'
+
+    log_id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    module_name = db.Column(
+        db.String(50)
+    )
+
+    record_id = db.Column(
+        db.Integer
+    )
+
+    action = db.Column(
+        db.String(50)
+    )
+
+    performed_by = db.Column(
+        db.String(100)
+    )
+
+    performed_on = db.Column(
+        db.DateTime,
+        default=datetime.now
+    )
+
+    details = db.Column(
+        db.String(500)
+    )
+
+
 class DeleteRequest(db.Model):
 
     __tablename__ = 'delete_requests'
@@ -995,6 +1060,15 @@ def add_user():
         db.session.add(
             user
         )
+        db.session.flush()
+        log_activity(
+
+            'USER',
+
+            user.user_id,
+
+            'CREATED'
+        )
 
         db.session.commit()
 
@@ -1044,6 +1118,15 @@ def edit_user(user_id):
 
         user.is_active = request.form.get(
             'is_active'
+        )
+        db.session.flush()
+        log_activity(
+
+            'USER',
+
+            user.user_id,
+
+            'UPDATED'
         )
 
         db.session.commit()
@@ -1095,6 +1178,16 @@ def add_lead():
             recent=recent
         )
         db.session.add(lead)
+        db.session.flush()
+        log_activity(
+
+            'LEAD',
+
+            lead.lead_id,
+
+            'CREATED'
+
+        )
         db.session.commit()
         return redirect(url_for('add_lead'))
     search = request.args.get(
@@ -1218,7 +1311,16 @@ def edit_lead(lead_id):
             )
             else None
         )
+        db.session.flush()
+        log_activity(
 
+            'LEAD',
+
+            lead.lead_id,
+
+            'UPDATED'
+
+        )
         db.session.commit()
 
         return redirect(
@@ -1252,7 +1354,16 @@ def delete_lead(lead_id):
         db.session.delete(
             lead
         )
+        db.session.flush()
+        log_activity(
 
+            'LEAD',
+
+            lead.lead_id,
+
+            'DELETED'
+
+        )
         db.session.commit()
 
     except:
@@ -1355,6 +1466,16 @@ def add_meeting():
             lead_id=lead_id
         )
         db.session.add(meeting)
+        db.session.flush()
+        log_activity(
+
+            'MEETING',
+
+            meeting.meeting_id,
+
+            'CREATED'
+
+        )        
         db.session.commit()
         return redirect(url_for('add_meeting'))
     search=request.args.get(
@@ -1591,7 +1712,16 @@ def edit_meeting(meeting_id):
             )
             else None
         )
+        db.session.flush()
+        log_activity(
 
+            'MEETING',
+
+            meeting.meeting_id,
+
+            'UPDATED'
+
+        )  
         db.session.commit()
 
         return redirect(
@@ -1629,7 +1759,16 @@ def delete_meeting(meeting_id):
         db.session.delete(
             meeting
         )
+        db.session.flush()
+        log_activity(
 
+            'MEETING',
+
+            meeting.meeting_id,
+
+            'DELETED'
+
+        )  
         db.session.commit()
 
     except:
@@ -1762,8 +1901,17 @@ def add_visit():
             visit
         )
 
-        db.session.commit()
+        db.session.flush()
+        log_activity(
 
+            'VISIT',
+
+            visit.visit_id,
+
+            'CREATED'
+
+        )  
+        db.session.commit()
         return redirect(
             url_for(
                 'add_visit'
@@ -1920,7 +2068,16 @@ def edit_visit(visit_id):
             )
             else None
         )
+        db.session.flush()
+        log_activity(
 
+            'VISIT',
+
+            visit.visit_id,
+
+            'UPDATED'
+
+        )  
         db.session.commit()
 
         return redirect(
@@ -1957,7 +2114,16 @@ def delete_visit(visit_id):
         db.session.delete(
             visit
         )
+        db.session.flush()
+        log_activity(
 
+            'VISIT',
+
+            visit.visit_id,
+
+            'DELETED'
+
+        )  
         db.session.commit()
 
     except Exception:
@@ -2049,7 +2215,16 @@ def add_drawing():
         db.session.add(
             drawing
         )
+        db.session.flush()
+        log_activity(
 
+            'DRAWING',
+
+            drawing.drawing_id,
+
+            'CREATED'
+
+        )  
         db.session.commit()
 
         return redirect(
@@ -2192,7 +2367,16 @@ def edit_drawing(drawing_id):
                 )
 
         drawing.drawing_pdf = drawing_pdf
+        db.session.flush()
+        log_activity(
 
+            'DRAWING',
+
+            drawing.drawing_id,
+
+            'UPDATED'
+
+        )  
         db.session.commit()
 
         return redirect(
@@ -2229,7 +2413,16 @@ def delete_drawing(drawing_id):
         db.session.delete(
             drawing
         )
+        db.session.flush()
+        log_activity(
 
+            'DRAWING',
+
+            drawing.drawing_id,
+
+            'DELETED'
+
+        )  
         db.session.commit()
 
     except Exception:
@@ -2508,8 +2701,17 @@ def add_proposal():
 
         db.session.add(
             proposal
-        )  
+        )
+        db.session.flush()  
+        log_activity(
 
+            'PROPOSAL',
+
+            proposal.proposal_id,
+
+            'CREATED'
+
+        )  
         db.session.commit()
 
         return redirect(
@@ -2778,6 +2980,16 @@ def edit_proposal(proposal_id):
                     filename
                 )
         proposal.proposal_pdf = proposal_pdf
+        db.session.flush()
+        log_activity(
+
+            'PROPOSAL',
+
+            proposal.proposal_id,
+
+            'UPDATED'
+
+        )          
         db.session.commit()
         return redirect(
             url_for(
@@ -2814,7 +3026,16 @@ def delete_proposal(proposal_id):
         db.session.delete(
             proposal
         )
+        db.session.flush()
+        log_activity(
 
+            'PROPOSAL',
+
+            proposal.proposal_id,
+
+            'DELETED'
+
+        )  
         db.session.commit()
 
     except Exception:
@@ -2981,7 +3202,16 @@ def add_sales():
         db.session.add(
             sales
         )
+        db.session.flush()
+        log_activity(
 
+            'SALES',
+
+            sales.sales_id,
+
+            'CREATED'
+
+        )  
         db.session.commit()
 
         return redirect(
@@ -3262,7 +3492,16 @@ def edit_sales(sales_id):
         sales.total_cmc = request.form.get(
             'total_cmc'
         )
+        db.session.flush()
+        log_activity(
 
+            'SALES',
+
+            sales.sales_id,
+
+            'UPDATED'
+
+        )  
         db.session.commit()
 
         return redirect(
@@ -3299,7 +3538,16 @@ def delete_sales(sales_id):
         db.session.delete(
             sales
         )
+        db.session.flush()
+        log_activity(
 
+            'SALES',
+
+            sales.sales_id,
+
+            'DELETED'
+
+        )  
         db.session.commit()
 
     except Exception:
@@ -3465,7 +3713,16 @@ def add_invoice():
         db.session.add(
             invoice
         )
+        db.session.flush()
+        log_activity(
 
+            'INVOICE',
+
+            invoice.invoice_id,
+
+            'CREATED'
+
+        )  
         db.session.commit()
 
         return redirect(
@@ -3629,7 +3886,16 @@ def edit_invoice(invoice_id):
                 filename
             )
         invoice.invoice_pdf = pdf_path
+        db.session.flush()
+        log_activity(
 
+            'INVOICE',
+
+            invoice.invoice_id,
+
+            'UPDATED'
+
+        )  
         db.session.commit()
 
         return redirect(
@@ -3666,7 +3932,16 @@ def delete_invoice(invoice_id):
         db.session.delete(
             invoice
         )
+        db.session.flush()
+        log_activity(
 
+            'INVOICE',
+
+            invoice.invoice_id,
+
+            'DELETED'
+
+        )  
         db.session.commit()
 
     except Exception:
@@ -3944,7 +4219,16 @@ def add_client():
         db.session.add(
             client
         )
+        db.session.flush()
+        log_activity(
 
+            'CLIENT',
+
+            client.client_id,
+
+            'CREATED'
+
+        )  
         db.session.commit()
 
         return redirect(
@@ -4272,7 +4556,16 @@ def edit_client(client_id):
         client.remark=request.form.get(
             'remark'
         )
+        db.session.flush()
+        log_activity(
 
+            'CLIENT',
+
+            client.client_id,
+
+            'UPDATED'
+
+        )  
         db.session.commit()
 
         return redirect(
@@ -4315,7 +4608,16 @@ def delete_client(client_id):
         db.session.delete(
             client
         )
+        db.session.flush()
+        log_activity(
 
+            'CLIENT',
+
+            client.client_id,
+
+            'DELETED'
+
+        )  
         db.session.commit()
 
     except Exception:
@@ -4532,7 +4834,16 @@ def add_service(client_id):
             client.last_service_days = 0
 
             client.service_due = 'NO'
+        db.session.flush()
+        log_activity(
 
+            'SERVICE',
+
+            service.client_id,
+
+            'CREATED'
+
+        )  
         db.session.commit()
 
         return redirect(
@@ -4701,7 +5012,15 @@ def edit_service(card_id):
             client.last_service_date=None
 
             client.last_service_days=0
+        log_activity(
 
+            'SERVICE',
+
+            service.client_id,
+
+            'UPDATED'
+
+        )  
         db.session.commit()
 
         return redirect(
@@ -4742,7 +5061,16 @@ def delete_service(card_id):
     db.session.delete(
         service
     )
+    db.session.flush()
+    log_activity(
 
+        'SERVICE',
+
+        service.client_id,
+
+        'DELETED'
+
+    )  
     db.session.commit()
 
     client = Client.query.get(
@@ -5306,7 +5634,16 @@ def complete_lead_followup(lead_id):
     )
 
     lead.next_to_call = None
+    db.session.flush()
+    log_activity(
 
+        'TASK',
+
+        lead_id,
+
+        'COMPLETED'
+
+    )
     db.session.commit()
 
     return redirect(
@@ -5343,12 +5680,21 @@ def complete_meeting_followup(meeting_id):
         )
 
     )
-
     db.session.add(
         completed_task
     )
 
-    meeting.date_to_call_next = None
+    meeting.next_to_call = None
+    db.session.flush()
+    log_activity(
+
+        'TASK',
+
+        meeting_id,
+
+        'COMPLETED'
+
+    )
 
     db.session.commit()
 
@@ -5394,6 +5740,16 @@ def complete_proposal_followup(
     )
 
     proposal.next_to_call = None
+    db.session.flush()
+    log_activity(
+
+        'TASK',
+
+        proposal_id,
+
+        'COMPLETED'
+
+    )
 
     db.session.commit()
 
@@ -5454,6 +5810,59 @@ def completed_tasks():
         'completed_tasks.html',
 
         tasks=tasks,
+
+        search=search
+
+    )
+
+@app.route('/activity-logs')
+def activity_logs():
+
+    if session.get('role') != 'ADMIN':
+
+        return redirect(
+            url_for('dashboard')
+        )
+
+    search = request.args.get(
+        'search'
+    )
+
+    query = ActivityLog.query
+
+    if search:
+
+        query = query.filter(
+
+            or_(
+
+                ActivityLog.module_name.ilike(
+                    f'%{search}%'
+                ),
+
+                ActivityLog.action.ilike(
+                    f'%{search}%'
+                ),
+
+                ActivityLog.performed_by.ilike(
+                    f'%{search}%'
+                )
+
+            )
+
+        )
+
+    logs = query.order_by(
+
+        ActivityLog.performed_on.desc()
+
+    ).all()
+
+    return render_template(
+
+        'activity_logs.html',
+
+        logs=logs,
 
         search=search
 
