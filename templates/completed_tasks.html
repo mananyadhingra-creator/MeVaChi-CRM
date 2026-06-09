@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>
+
+        Completed Tasks
+
+    </title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-5">
+    <a href="/dashboard"
+        class="btn btn-secondary mb-3">
+
+        Back To Dashboard
+
+    </a>
+    <div class="d-flex justify-content-between mb-4">
+
+        <h1>
+
+            Completed Tasks
+
+        </h1>
+
+
+    </div>
+
+    {% if tasks %}
+
+    <form method="GET"
+          action="{{ url_for('completed_tasks') }}"
+          class="mb-4">
+
+        <div class="input-group">
+
+            <input type="text"
+                   name="search"
+                   class="form-control"
+                   placeholder="Search completed tasks..."
+                   value="{{ search or '' }}">
+
+            <button type="submit"
+                    class="btn btn-dark">
+
+                Search
+
+            </button>
+
+            <a href="{{ url_for('completed_tasks') }}"
+               class="btn btn-secondary">
+
+                Clear
+
+            </a>
+
+        </div>
+
+    </form>
+
+    <table class="table table-bordered table-hover bg-white">
+
+        <thead class="table-dark">
+
+            <tr>
+
+                <th>
+
+                    Module
+
+                </th>
+
+                <th>
+
+                    Task Name
+
+                </th>
+
+                <th>
+
+                    Completed By
+
+                </th>
+
+                <th>
+
+                    Completed On
+
+                </th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            {% for task in tasks %}
+
+            <tr>
+
+                <td>
+
+                    {{ task.module_type }}
+
+                </td>
+
+                <td>
+
+                    {{ task.task_name }}
+
+                </td>
+
+                <td>
+
+                    {{ task.completed_by }}
+
+                </td>
+
+                <td>
+
+                    {{ task.completed_on.strftime(
+                        '%d-%m-%Y %I:%M %p'
+                    ) }}
+
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+    {% else %}
+
+        <div class="alert alert-info">
+
+            No completed tasks found.
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+</body>
+
+</html>

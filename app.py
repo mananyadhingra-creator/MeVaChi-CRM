@@ -1,6 +1,6 @@
 from flask import Flask, flash, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date, UTC
 import os
 from werkzeug.utils import secure_filename
 from sqlalchemy import func, extract
@@ -21,6 +21,12 @@ app.config['SQLALCHEMY_DATABASE_URI'] = \
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
+
+def has_access(*allowed_roles):
+
+    return session.get(
+        'role'
+    ) in allowed_roles
 
 class User(db.Model):
 
@@ -669,6 +675,69 @@ class CustomerCareCard(db.Model):
 
     remark = db.Column(db.Text)
 
+class CompletedTask(db.Model):
+
+    __tablename__ = 'completed_tasks'
+
+    completed_task_id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    module_type = db.Column(
+        db.String(20),
+        nullable=False
+    )
+
+    record_id = db.Column(
+        db.Integer,
+        nullable=False
+    )
+
+    task_name = db.Column(
+        db.String(255)
+    )
+
+    completed_by = db.Column(
+        db.String(100)
+    )
+
+    completed_on = db.Column(
+        db.DateTime,
+        default=datetime.now
+    )
+
+class DeleteRequest(db.Model):
+
+    __tablename__ = 'delete_requests'
+
+    request_id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    module_type = db.Column(
+        db.String(50)
+    )
+
+    record_id = db.Column(
+        db.Integer
+    )
+
+    requested_by = db.Column(
+        db.String(100)
+    )
+
+    requested_on = db.Column(
+        db.DateTime,
+        default=datetime.now
+    )
+
+    status = db.Column(
+        db.String(20),
+        default='PENDING'
+    )
+
 with app.app_context():
 
     db.create_all()
@@ -694,9 +763,11 @@ def login():
             password=password
         ).first()
 
-        if user:
+        if user and user.is_active == 'YES':
 
             session['user_id'] = user.user_id
+
+            session['username'] = user.username
 
             session['role'] = user.role
 
@@ -718,6 +789,81 @@ def dashboard():
         return redirect(
             url_for('login')
         )
+
+    today = date.today()
+
+    lead_followups = Lead.query.filter(
+        Lead.next_to_call <= today
+    ).all()
+
+    meeting_followups = Meeting.query.filter(
+        Meeting.date_to_call_next <= today
+    ).all()
+
+    proposal_followups = Proposal.query.filter(
+        Proposal.next_to_call <= today
+    ).all()
+
+    service_due_clients = []
+
+    for client in Client.query.all():
+
+        if client.last_service_date:
+
+            due_date = (
+                client.last_service_date
+                + timedelta(
+                    days=client.service_interval_days
+                )
+            )
+
+        elif client.activation_date:
+
+            due_date = (
+                client.activation_date
+                + timedelta(
+                    days=client.service_interval_days
+                )
+            )
+
+        else:
+
+            continue
+
+        if due_date <= today:
+
+            service_due_clients.append(
+                client
+            )
+
+    service_due_clients.sort(
+
+        key=lambda x:
+        x.last_service_date
+        or x.activation_date
+        or date.min
+    )
+
+    cmc_due_clients = Client.query.filter(
+        Client.cmc_applicable == 'YES',
+        Client.next_cmc_renewal_date != None,
+        Client.next_cmc_renewal_date <= today
+    ).order_by(
+        Client.next_cmc_renewal_date.asc()
+    ).all()
+
+    followups_due = (
+        len(lead_followups)
+        + len(meeting_followups)
+        + len(proposal_followups)
+    )
+    services_due = len(
+        service_due_clients
+    )
+
+    cmc_due = len(
+        cmc_due_clients
+    )    
 
     monthly_filters = db.session.query(
         func.sum(
@@ -753,13 +899,182 @@ def dashboard():
     return render_template(
         'index.html',
         monthly_filters=monthly_filters,
-        yearly_filters=yearly_filters
+        yearly_filters=yearly_filters,
+        lead_followups=lead_followups,
+        meeting_followups=meeting_followups,
+        proposal_followups=proposal_followups,
+        service_due_clients=service_due_clients,
+        cmc_due_clients=cmc_due_clients,
+        followups_due=followups_due,
+        services_due=services_due,
+        cmc_due=cmc_due      
+    )
+
+@app.route('/manage-users')
+def manage_users():
+    if session.get('role') != 'ADMIN':
+
+        return redirect(
+            url_for('dashboard')
+        )
+    if session.get('role') != 'ADMIN':
+
+        return redirect(
+            url_for('dashboard')
+        )
+
+    users = User.query.order_by(
+        User.user_id.asc()
+    ).all()
+
+    return render_template(
+
+        'manage_users.html',
+
+        users=users
+
+    )
+
+@app.route(
+    '/add-user',
+    methods=['GET', 'POST']
+)
+def add_user():
+    if session.get('role') != 'ADMIN':
+
+        return redirect(
+            url_for('dashboard')
+        )
+    if request.method == 'POST':
+
+        username = request.form.get(
+            'username'
+        ).strip()
+
+        existing_user = User.query.filter_by(
+
+            username=username
+
+        ).first()
+
+        if existing_user:
+
+            flash(
+                'Username already exists.'
+            )
+
+            return redirect(
+                url_for(
+                    'add_user'
+                )
+            )
+        user = User(
+
+            username=username,
+
+            password=request.form.get(
+                'password'
+            ),
+
+            role=request.form.get(
+                'role'
+            ),
+
+            full_name=request.form.get(
+                'full_name'
+            ),
+
+            email=request.form.get(
+                'email'
+            ),
+
+            is_active='YES'
+
+        )
+
+        db.session.add(
+            user
+        )
+
+        db.session.commit()
+
+        return redirect(
+            url_for(
+                'manage_users'
+            )
+        )
+
+    return render_template(
+        'add_user.html'
+    )
+
+@app.route(
+    '/edit-user/<int:user_id>',
+    methods=['GET', 'POST']
+)
+def edit_user(user_id):
+    if session.get('role') != 'ADMIN':
+
+        return redirect(
+            url_for('dashboard')
+        )
+    if session.get('role') != 'ADMIN':
+
+        return redirect(
+            url_for('dashboard')
+        )
+
+    user = User.query.get_or_404(
+        user_id
+    )
+
+    if request.method == 'POST':
+
+        user.full_name = request.form.get(
+            'full_name'
+        )
+
+        user.email = request.form.get(
+            'email'
+        )
+
+        user.role = request.form.get(
+            'role'
+        )
+
+        user.is_active = request.form.get(
+            'is_active'
+        )
+
+        db.session.commit()
+
+        return redirect(
+            url_for(
+                'manage_users'
+            )
+        )
+
+    return render_template(
+
+        'edit_user.html',
+
+        user=user
+
     )
 
 @app.route('/add-lead',
            methods=['GET','POST'])
 def add_lead():
-    
+
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+
+        return redirect(
+            url_for('dashboard')
+        )
+
     if request.method == 'POST':
         name = request.form['name']
         reference = request.form['reference']
@@ -818,7 +1133,14 @@ def add_lead():
 
 @app.route('/lead/<int:lead_id>')
 def lead_details(lead_id):
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
 
+        return redirect(
+            url_for('dashboard')
+        )
     lead = Lead.query.get_or_404(
         lead_id
     )
@@ -833,7 +1155,14 @@ def lead_details(lead_id):
     methods=['GET','POST']
 )
 def edit_lead(lead_id):
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
 
+        return redirect(
+            url_for('dashboard')
+        )
     lead = Lead.query.get_or_404(
         lead_id
     )
@@ -905,7 +1234,15 @@ def edit_lead(lead_id):
 
 @app.route('/delete-lead/<int:lead_id>')
 def delete_lead(lead_id):
+    if session.get('role') != 'ADMIN':
 
+        flash(
+            'Only Admin can delete records.'
+        )
+
+        return redirect(
+            url_for('add_lead')
+        )
     lead = Lead.query.get_or_404(
         lead_id
     )
@@ -935,6 +1272,16 @@ def delete_lead(lead_id):
 @app.route('/add-meeting',
            methods=['GET','POST'])
 def add_meeting():
+
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+
+        return redirect(
+            url_for('dashboard')
+        )
+
     if request.method == 'POST':
         
         meeting_fixed_by = request.form.get('meeting_fixed_by')
@@ -1073,7 +1420,14 @@ def add_meeting():
 
 @app.route('/meeting/<int:meeting_id>')
 def meeting_details(meeting_id):
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
 
+        return redirect(
+            url_for('dashboard')
+        )
     meeting = Meeting.query.get_or_404(
         meeting_id
     )
@@ -1088,7 +1442,14 @@ def meeting_details(meeting_id):
     methods=['GET', 'POST']
 )
 def edit_meeting(meeting_id):
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
 
+        return redirect(
+            url_for('dashboard')
+        )
     meeting = Meeting.query.get_or_404(
         meeting_id
     )
@@ -1250,7 +1611,15 @@ def edit_meeting(meeting_id):
     '/delete-meeting/<int:meeting_id>'
 )
 def delete_meeting(meeting_id):
+    if session.get('role') != 'ADMIN':
 
+        flash(
+            'Only Admin can delete records.'
+        )
+
+        return redirect(
+            url_for('add_meeting')
+        )
     meeting = Meeting.query.get_or_404(
         meeting_id
     )
@@ -1280,7 +1649,14 @@ def delete_meeting(meeting_id):
 @app.route('/add-visit',
            methods=['GET','POST'])
 def add_visit():
+    if not has_access(
+        'ADMIN',
+        'SALES'
+    ):
 
+        return redirect(
+            url_for('dashboard')
+        )
     if request.method == 'POST':
 
         meeting_id = request.form.get(
@@ -1442,7 +1818,14 @@ def add_visit():
 
 @app.route('/visit/<int:visit_id>')
 def visit_details(visit_id):
+    if not has_access(
+        'ADMIN',
+        'SALES'
+    ):
 
+        return redirect(
+            url_for('dashboard')
+        )
     visit = Visit.query.get_or_404(
         visit_id
     )
@@ -1457,7 +1840,14 @@ def visit_details(visit_id):
     methods=['GET', 'POST']
 )
 def edit_visit(visit_id):
+    if not has_access(
+        'ADMIN',
+        'SALES'
+    ):
 
+        return redirect(
+            url_for('dashboard')
+        )
     visit = Visit.query.get_or_404(
         visit_id
     )
@@ -1549,7 +1939,15 @@ def edit_visit(visit_id):
     '/delete-visit/<int:visit_id>'
 )
 def delete_visit(visit_id):
+    if session.get('role') != 'ADMIN':
 
+        flash(
+            'Only Admin can delete records.'
+        )
+
+        return redirect(
+            url_for('add_visit')
+        )
     visit = Visit.query.get_or_404(
         visit_id
     )
@@ -1579,7 +1977,14 @@ def delete_visit(visit_id):
 @app.route('/add-drawing',
            methods=['GET','POST'])
 def add_drawing():
+    if not has_access(
+        'ADMIN',
+        'SALES'
+    ):
 
+        return redirect(
+            url_for('dashboard')
+        )
     if request.method == 'POST':
 
         visit_id = request.form.get(
@@ -1683,7 +2088,14 @@ def add_drawing():
 
 @app.route('/drawing/<int:drawing_id>')
 def drawing_details(drawing_id):
+    if not has_access(
+        'ADMIN',
+        'SALES'
+    ):
 
+        return redirect(
+            url_for('dashboard')
+        )
     drawing = Drawing.query.get_or_404(
         drawing_id
     )
@@ -1698,7 +2110,14 @@ def drawing_details(drawing_id):
     methods=['GET', 'POST']
 )
 def edit_drawing(drawing_id):
+    if not has_access(
+        'ADMIN',
+        'SALES'
+    ):
 
+        return redirect(
+            url_for('dashboard')
+        )
     drawing = Drawing.query.get_or_404(
         drawing_id
     )
@@ -1792,7 +2211,15 @@ def edit_drawing(drawing_id):
     '/delete-drawing/<int:drawing_id>'
 )
 def delete_drawing(drawing_id):
+    if session.get('role') != 'ADMIN':
 
+        flash(
+            'Only Admin can delete records.'
+        )
+
+        return redirect(
+            url_for('add_drawing')
+        )
     drawing = Drawing.query.get_or_404(
         drawing_id
     )
@@ -1822,6 +2249,16 @@ def delete_drawing(drawing_id):
 @app.route('/add-proposal',
             methods=['GET', 'POST'])
 def add_proposal():
+
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+
+        return redirect(
+            url_for('dashboard')
+        )
+
     if request.method == 'POST':
 
         meeting_id = request.form.get('meeting_id')
@@ -2158,7 +2595,14 @@ def add_proposal():
     methods=['GET', 'POST']
 )
 def edit_proposal(proposal_id):
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
 
+        return redirect(
+            url_for('dashboard')
+        )
     proposal = Proposal.query.get_or_404(
         proposal_id
     )
@@ -2352,7 +2796,15 @@ def edit_proposal(proposal_id):
     '/delete-proposal/<int:proposal_id>'
 )
 def delete_proposal(proposal_id):
+    if session.get('role') != 'ADMIN':
 
+        flash(
+            'Only Admin can delete records.'
+        )
+
+        return redirect(
+            url_for('add_proposal')
+        )
     proposal = Proposal.query.get_or_404(
         proposal_id
     )
@@ -2381,7 +2833,14 @@ def delete_proposal(proposal_id):
 
 @app.route('/proposal/<int:proposal_id>')
 def proposal_details(proposal_id):
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
 
+        return redirect(
+            url_for('dashboard')
+        )
     proposal = Proposal.query.get_or_404(
         proposal_id
     )
@@ -2394,7 +2853,15 @@ def proposal_details(proposal_id):
 @app.route('/add-sales',
            methods=['GET','POST'])
 def add_sales():
+    if not has_access(
+        'ADMIN',
+        'SALES',
+        'COMMERCIALS'
+    ):
 
+        return redirect(
+            url_for('dashboard')
+        )
     if request.method == 'POST':
 
         proposal_id = request.form.get(
@@ -2593,7 +3060,15 @@ def add_sales():
 
 @app.route('/sales/<int:sales_id>')
 def sales_details(sales_id):
+    if not has_access(
+        'ADMIN',
+        'SALES',
+        'COMMERCIALS'
+    ):
 
+        return redirect(
+            url_for('dashboard')
+        )
     sale = SalesPipeline.query.get_or_404(
         sales_id
     )
@@ -2608,7 +3083,15 @@ def sales_details(sales_id):
     methods=['GET', 'POST']
 )
 def edit_sales(sales_id):
+    if not has_access(
+        'ADMIN',
+        'SALES',
+        'COMMERCIALS'
+    ):
 
+        return redirect(
+            url_for('dashboard')
+        )
     sales = SalesPipeline.query.get_or_404(
         sales_id
     )
@@ -2798,7 +3281,15 @@ def edit_sales(sales_id):
     '/delete-sales/<int:sales_id>'
 )
 def delete_sales(sales_id):
+    if session.get('role') != 'ADMIN':
 
+        flash(
+            'Only Admin can delete records.'
+        )
+
+        return redirect(
+            url_for('add_sales')
+        )
     sales = SalesPipeline.query.get_or_404(
         sales_id
     )
@@ -2828,7 +3319,14 @@ def delete_sales(sales_id):
 @app.route('/add-invoice',
            methods=['GET','POST'])
 def add_invoice():
+    if not has_access(
+        'ADMIN',
+        'SALES'
+    ):
 
+        return redirect(
+            url_for('dashboard')
+        )
     if request.method == 'POST':
 
         sales_id = request.form.get(
@@ -3013,7 +3511,14 @@ def add_invoice():
 
 @app.route('/invoice/<int:invoice_id>')
 def invoice_details(invoice_id):
+    if not has_access(
+        'ADMIN',
+        'SALES'
+    ):
 
+        return redirect(
+            url_for('dashboard')
+        )
     invoice = Invoice.query.get_or_404(
         invoice_id
     )
@@ -3028,7 +3533,14 @@ def invoice_details(invoice_id):
     methods=['GET', 'POST']
 )
 def edit_invoice(invoice_id):
+    if not has_access(
+        'ADMIN',
+        'SALES'
+    ):
 
+        return redirect(
+            url_for('dashboard')
+        )
     invoice = Invoice.query.get_or_404(
         invoice_id
     )
@@ -3136,7 +3648,15 @@ def edit_invoice(invoice_id):
     '/delete-invoice/<int:invoice_id>'
 )
 def delete_invoice(invoice_id):
+    if session.get('role') != 'ADMIN':
 
+        flash(
+            'Only Admin can delete records.'
+        )
+
+        return redirect(
+            url_for('add_invoice')
+        )
     invoice = Invoice.query.get_or_404(
         invoice_id
     )
@@ -3166,6 +3686,15 @@ def delete_invoice(invoice_id):
 @app.route('/add-client',
            methods=['GET', 'POST'])
 def add_client():
+
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+
+        return redirect(
+            url_for('dashboard')
+        )    
 
     if request.method == 'POST':
 
@@ -3480,7 +4009,14 @@ def add_client():
 
 @app.route('/client/<int:client_id>')
 def client_details(client_id):
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
 
+        return redirect(
+            url_for('dashboard')
+        )
     client = Client.query.get_or_404(
         client_id
     )
@@ -3495,7 +4031,14 @@ def client_details(client_id):
     methods=['GET', 'POST']
 )
 def edit_client(client_id):
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
 
+        return redirect(
+            url_for('dashboard')
+        )
     client = Client.query.get_or_404(
         client_id
     )
@@ -3754,7 +4297,15 @@ def edit_client(client_id):
     '/delete-client/<int:client_id>'
 )
 def delete_client(client_id):
+    if session.get('role') != 'ADMIN':
 
+        flash(
+            'Only Admin can delete records.'
+        )
+
+        return redirect(
+            url_for('add_client')
+        )
     client = Client.query.get_or_404(
         client_id
     )
@@ -3783,7 +4334,14 @@ def delete_client(client_id):
 
 @app.route('/client-services/<int:client_id>')
 def client_services(client_id):
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
 
+        return redirect(
+            url_for('dashboard')
+        )
     client = Client.query.get_or_404(
         client_id
     )
@@ -3859,7 +4417,14 @@ def client_services(client_id):
     methods=['GET', 'POST']
 )
 def add_service(client_id):
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
 
+        return redirect(
+            url_for('dashboard')
+        )
     client = Client.query.get_or_404(
         client_id
     )
@@ -3992,7 +4557,14 @@ def add_service(client_id):
 
 @app.route('/service/<int:card_id>')
 def service_details(card_id):
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
 
+        return redirect(
+            url_for('dashboard')
+        )
     service = CustomerCareCard.query.get_or_404(
         card_id
     )
@@ -4016,7 +4588,14 @@ def service_details(card_id):
     methods=['GET', 'POST']
 )
 def edit_service(card_id):
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
 
+        return redirect(
+            url_for('dashboard')
+        )
     service = CustomerCareCard.query.get_or_404(
         card_id
     )
@@ -4145,7 +4724,15 @@ def edit_service(card_id):
     '/delete-service/<int:card_id>'
 )
 def delete_service(card_id):
+    if session.get('role') != 'ADMIN':
 
+        flash(
+            'Only Admin can delete records.'
+        )
+
+        return redirect(
+            url_for('client_services')
+        )
     service = CustomerCareCard.query.get_or_404(
         card_id
     )
@@ -4582,6 +5169,294 @@ def global_search():
         invoices=invoices,
         clients=clients,
         services=services
+    )
+
+@app.route('/tasks')
+def tasks():
+
+    if 'user_id' not in session:
+
+        return redirect(
+            url_for('login')
+        )
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+
+        return redirect(
+            url_for('dashboard')
+        )
+    today = date.today()
+
+    lead_followups = Lead.query.filter(
+        Lead.next_to_call <= today
+    ).all()
+
+    meeting_followups = Meeting.query.filter(
+        Meeting.date_to_call_next <= today
+    ).all()
+
+    proposal_followups = Proposal.query.filter(
+        Proposal.next_to_call <= today
+    ).all()
+
+    service_due_clients = []
+
+    for client in Client.query.all():
+
+        if client.last_service_date:
+
+            due_date = (
+                client.last_service_date
+                + timedelta(
+                    days=client.service_interval_days
+                )
+            )
+
+        elif client.activation_date:
+
+            due_date = (
+                client.activation_date
+                + timedelta(
+                    days=client.service_interval_days
+                )
+            )
+
+        else:
+
+            continue
+
+        if due_date <= today:
+
+            service_due_clients.append(
+                client
+            )
+
+    service_due_clients.sort(
+        key=lambda x:
+        x.last_service_date
+        or x.activation_date
+        or date.min
+    )
+
+    cmc_due_clients = Client.query.filter(
+        Client.cmc_applicable == 'YES',
+        Client.next_cmc_renewal_date != None,
+        Client.next_cmc_renewal_date <= today
+    ).order_by(
+        Client.next_cmc_renewal_date.asc()
+    ).all()
+
+    return render_template(
+
+        'tasks.html',
+
+        today=today,
+
+        lead_followups=
+            lead_followups,
+
+        meeting_followups=
+            meeting_followups,
+
+        proposal_followups=
+            proposal_followups,
+
+        service_due_clients=
+            service_due_clients,
+
+        cmc_due_clients=
+            cmc_due_clients
+
+    )
+
+@app.route(
+    '/complete-lead-followup/<int:lead_id>'
+)
+def complete_lead_followup(lead_id):
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+
+        return redirect(
+            url_for('dashboard')
+        )
+    lead = Lead.query.get_or_404(
+        lead_id
+    )
+
+    completed_task = CompletedTask(
+
+        module_type='LEAD',
+
+        record_id=lead.lead_id,
+
+        task_name=lead.name,
+
+        completed_by=session.get(
+            'username'
+        )
+
+    )
+
+    db.session.add(
+        completed_task
+    )
+
+    lead.next_to_call = None
+
+    db.session.commit()
+
+    return redirect(
+        url_for('tasks')
+    )
+
+@app.route(
+    '/complete-meeting-followup/<int:meeting_id>'
+)
+def complete_meeting_followup(meeting_id):
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+
+        return redirect(
+            url_for('dashboard')
+        )
+    meeting = Meeting.query.get_or_404(
+        meeting_id
+    )
+
+    completed_task = CompletedTask(
+
+        module_type='MEETING',
+
+        record_id=meeting.meeting_id,
+
+        task_name=meeting.name,
+
+        completed_by=session.get(
+            'username',
+            'Unknown User'
+        )
+
+    )
+
+    db.session.add(
+        completed_task
+    )
+
+    meeting.date_to_call_next = None
+
+    db.session.commit()
+
+    return redirect(
+        url_for('tasks')
+    )
+
+@app.route(
+    '/complete-proposal-followup/<int:proposal_id>'
+)
+def complete_proposal_followup(
+    proposal_id
+):
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+
+        return redirect(
+            url_for('dashboard')
+        )
+    proposal = Proposal.query.get_or_404(
+        proposal_id
+    )
+
+    completed_task = CompletedTask(
+
+        module_type='PROPOSAL',
+
+        record_id=proposal.proposal_id,
+
+        task_name=proposal.name,
+
+        completed_by=session.get(
+            'username',
+            'Unknown User'
+        )
+
+    )
+
+    db.session.add(
+        completed_task
+    )
+
+    proposal.next_to_call = None
+
+    db.session.commit()
+
+    return redirect(
+        url_for('tasks')
+    )
+
+@app.route('/completed-tasks')
+def completed_tasks():
+
+    if 'user_id' not in session:
+
+        return redirect(
+            url_for('login')
+        )
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+
+        return redirect(
+            url_for('dashboard')
+        )
+    search = request.args.get(
+        'search'
+    )
+
+    query = CompletedTask.query
+
+    if search:
+
+        query = query.filter(
+
+            or_(
+
+                CompletedTask.module_type.ilike(
+                    f'%{search}%'
+                ),
+
+                CompletedTask.task_name.ilike(
+                    f'%{search}%'
+                ),
+
+                CompletedTask.completed_by.ilike(
+                    f'%{search}%'
+                )
+
+            )
+
+        )
+
+    tasks = query.order_by(
+        CompletedTask.completed_on.desc()
+    ).all()
+
+    return render_template(
+
+        'completed_tasks.html',
+
+        tasks=tasks,
+
+        search=search
+
     )
 
 if __name__ == '__main__':

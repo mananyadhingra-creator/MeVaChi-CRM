@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>
+
+        Today's Tasks
+
+    </title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container py-5">
+
+    <div class="d-flex justify-content-between mb-4">
+
+        <h1>
+
+            Today's Tasks
+
+        </h1>
+
+        <a href="{{ url_for('dashboard') }}"
+           class="btn btn-secondary">
+
+            Back To Dashboard
+
+        </a>
+
+    </div>
+    <div class="card mb-4">
+
+        <div class="card-header">
+
+            Followups Due
+
+        </div>
+
+        <div class="card-body">
+
+            <ul class="list-group">
+
+                {% for lead in lead_followups %}
+
+                <li class="list-group-item d-flex
+                           justify-content-between
+                           align-items-center">
+
+                    <div>
+
+                        <strong>
+
+                            [Lead]
+
+                        </strong>
+
+                        <a href="{{ url_for(
+                            'edit_lead',
+                            lead_id=lead.lead_id
+                        ) }}">
+
+                            {{ lead.name }}
+
+                            {% if lead.next_to_call < today %}
+
+                            <span class="badge bg-danger">
+
+                                Overdue
+
+                            </span>
+
+                            {% endif %}
+
+                        </a>
+
+                    </div>
+
+                    <a href="{{ url_for(
+                        'complete_lead_followup',
+                        lead_id=lead.lead_id
+                    ) }}"
+                        class="btn btn-success btn-sm">
+
+                        Complete
+
+                    </a>
+
+                </li>
+
+                {% endfor %}
+
+                {% for meeting in meeting_followups %}
+
+                <li class="list-group-item d-flex
+                           justify-content-between
+                           align-items-center">
+
+                    <div>
+
+                        <strong>
+
+                            [Meeting]
+
+                        </strong>
+
+                        <a href="{{ url_for(
+                            'edit_meeting',
+                            meeting_id=meeting.meeting_id
+                        ) }}">
+
+                            {{ meeting.name }}
+                            -
+                            {{ meeting.firm_name }}
+
+                            {% if meeting.date_to_call_next < today %}
+
+                            <span class="badge bg-danger">
+
+                                Overdue
+
+                            </span>
+
+                            {% endif %}
+
+                        </a>
+
+                    </div>
+
+                    <a href="{{ url_for(
+                        'complete_meeting_followup',
+                        meeting_id=meeting.meeting_id
+                    ) }}"
+                        class="btn btn-success btn-sm">
+
+                        Complete
+
+                    </a>
+
+                </li>
+
+                {% endfor %}
+
+                {% for proposal in proposal_followups %}
+
+                <li class="list-group-item d-flex
+                           justify-content-between
+                           align-items-center">
+
+                    <div>
+
+                        <strong>
+
+                            [Proposal]
+
+                        </strong>
+
+                        <a href="{{ url_for(
+                            'edit_proposal',
+                            proposal_id=proposal.proposal_id
+                        ) }}">
+
+                            {{ proposal.reference_no }}
+                            -
+                            {{ proposal.name }}
+
+                            {% if proposal.next_to_call < today %}
+
+                            <span class="badge bg-danger">
+
+                                Overdue
+
+                            </span>
+
+                            {% endif %}
+
+                        </a>
+ 
+                    </div>
+
+                    <a href="{{ url_for(
+                        'complete_proposal_followup',
+                        proposal_id=proposal.proposal_id
+                    ) }}"
+                        class="btn btn-success btn-sm">
+
+                        Complete
+
+                    </a>
+
+                </li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+    </div>
+    <div class="card mb-4">
+
+        <div class="card-header">
+
+            Services Due
+
+        </div>
+
+        <div class="card-body">
+
+            <ul class="list-group">
+
+                {% for client in service_due_clients %}
+
+                <li class="list-group-item">
+
+                    <a href="{{ url_for(
+                        'edit_client',
+                        client_id=client.client_id
+                    ) }}">
+
+                        {{ client.client_name }}
+
+                    </a>
+
+                </li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+    </div>
+    <div class="card mb-4">
+
+        <div class="card-header">
+
+            CMC Renewals Due
+
+        </div>
+
+        <div class="card-body">
+
+            <ul class="list-group">
+
+                {% for client in cmc_due_clients %}
+
+                <li class="list-group-item">
+
+                    <a href="{{ url_for(
+                        'edit_client',
+                        client_id=client.client_id
+                    ) }}">
+
+                        {{ client.client_name }}
+
+                    </a>
+
+                </li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
