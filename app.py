@@ -5,8 +5,10 @@ import os
 from werkzeug.utils import secure_filename
 from sqlalchemy import func, extract
 from sqlalchemy import or_
-from werkzeug.security import generate_password_hash
-from werkzeug.security import check_password_hash
+from werkzeug.security import (
+    generate_password_hash,
+    check_password_hash
+)
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'static'
@@ -90,6 +92,12 @@ class User(db.Model):
     is_active = db.Column(
         db.String(10)
     )
+
+    must_change_password = db.Column(
+        db.String(10),
+        default='YES'
+    )
+
 
 class Lead(db.Model):
 
@@ -660,8 +668,6 @@ class Client(db.Model):
         db.ForeignKey('invoices.invoice_id')
    )
 
-
-
 class CustomerCareCard(db.Model):
 
     __tablename__ = 'customer_care_card'
@@ -771,7 +777,6 @@ class ActivityLog(db.Model):
         db.String(500)
     )
 
-
 class DeleteRequest(db.Model):
 
     __tablename__ = 'delete_requests'
@@ -781,7 +786,7 @@ class DeleteRequest(db.Model):
         primary_key=True
     )
 
-    module_type = db.Column(
+    module_name = db.Column(
         db.String(50)
     )
 
@@ -803,6 +808,10 @@ class DeleteRequest(db.Model):
         default='PENDING'
     )
 
+    reason = db.Column(
+        db.String(500)
+    )
+
 with app.app_context():
 
     db.create_all()
@@ -821,20 +830,43 @@ def login():
 
         username = request.form['username']
 
-        password = request.form['password']
+        password=request.form['password']
+
 
         user = User.query.filter_by(
             username=username,
-            password=password
         ).first()
 
-        if user and user.is_active == 'YES':
+        if (
+
+            user
+
+            and
+
+            check_password_hash(
+                user.password,
+                password
+            )
+
+            and
+
+            user.is_active == 'YES'
+
+        ):
 
             session['user_id'] = user.user_id
 
             session['username'] = user.username
 
             session['role'] = user.role
+
+            if user.must_change_password == 'YES':
+
+                return redirect(
+                    url_for(
+                        'change_password'
+                    )
+                )
 
             return redirect(
                 url_for('dashboard')
@@ -1037,8 +1069,12 @@ def add_user():
 
             username=username,
 
-            password=request.form.get(
+            password=generate_password_hash(
+
+                request.form.get(
                 'password'
+                )
+
             ),
 
             role=request.form.get(
@@ -1053,7 +1089,9 @@ def add_user():
                 'email'
             ),
 
-            is_active='YES'
+            is_active='YES',
+
+            must_change_password='YES'
 
         )
 
@@ -1144,6 +1182,118 @@ def edit_user(user_id):
         user=user
 
     )
+
+@app.route(
+    '/change-password',
+    methods=['GET', 'POST']
+)
+def change_password():
+
+    if 'user_id' not in session:
+
+        return redirect(
+            url_for('login')
+        )
+
+    user = User.query.get(
+        session['user_id']
+    )
+
+    if request.method == 'POST':
+
+        new_password = request.form.get(
+            'new_password'
+        )
+
+        confirm_password = request.form.get(
+            'confirm_password'
+        )
+
+        if new_password != confirm_password:
+
+            flash(
+                'Passwords do not match.'
+            )
+
+            return redirect(
+                url_for(
+                    'change_password'
+                )
+            )
+
+        user.password = generate_password_hash(
+            new_password
+        )
+
+        user.must_change_password = 'NO'
+
+        db.session.commit()
+
+        flash(
+            'Password changed successfully.'
+        )
+
+        return redirect(
+            url_for(
+                'dashboard'
+            )
+        )
+
+    return render_template(
+        'change_password.html'
+    )
+
+@app.route(
+    '/reset-password/<int:user_id>'
+)
+def reset_password(user_id):
+
+    if session.get('role') != 'ADMIN':
+
+        return redirect(
+            url_for('dashboard')
+        )
+
+    user = User.query.get_or_404(
+        user_id
+    )
+
+    temp_password = 'Temp@123'
+
+    user.password = generate_password_hash(
+        temp_password
+    )
+
+    user.must_change_password = 'YES'
+
+    db.session.flush()
+     
+    log_activity(
+
+        'USER',
+
+        user.user_id,
+
+        'PASSWORD RESET',
+
+        f'Password reset for {user.username}'
+
+    )
+
+    db.session.commit()
+
+    flash(
+
+        f'Temporary Password: {temp_password}'
+
+    )
+
+    return redirect(
+        url_for(
+            'manage_users'
+        )
+    )
+
 
 @app.route('/add-lead',
            methods=['GET','POST'])
@@ -1334,51 +1484,70 @@ def edit_lead(lead_id):
         lead=lead
     )
 
-@app.route('/delete-lead/<int:lead_id>')
-def delete_lead(lead_id):
-    if session.get('role') != 'ADMIN':
+@app.route(
+    '/request-delete-lead/<int:lead_id>',
+    methods=['GET', 'POST']
+)
+def request_delete_lead(lead_id):
 
-        flash(
-            'Only Admin can delete records.'
+    if request.method == 'POST':
+
+        delete_request = DeleteRequest(
+
+            module_name='LEAD',
+
+            record_id=lead_id,
+
+            requested_by=session[
+                'username'
+            ],
+
+            reason=request.form.get(
+                'reason'
+            )
+
         )
 
-        return redirect(
-            url_for('add_lead')
-        )
-    lead = Lead.query.get_or_404(
-        lead_id
-    )
-
-    try:
-
-        db.session.delete(
-            lead
+        db.session.add(
+            delete_request
         )
         db.session.flush()
         log_activity(
 
             'LEAD',
 
-            lead.lead_id,
+            lead_id,
 
-            'DELETED'
+            'DELETE REQUESTED',
+
+            request.form.get(
+                'reason'
+            )
 
         )
+
         db.session.commit()
 
-    except:
-
-        db.session.rollback()
-
         flash(
-            'Cannot delete lead because it is linked to other records.'
+            'Delete request sent.'
         )
 
-    return redirect(
-        url_for(
-            'add_lead'
+        return redirect(
+            url_for(
+                'add_lead'
+            )
         )
+
+    return render_template(
+
+        'delete_request.html',
+
+        module='LEAD',
+
+        record_id=lead_id
+
     )
+
 
 @app.route('/add-meeting',
            methods=['GET','POST'])
@@ -1738,51 +1907,67 @@ def edit_meeting(meeting_id):
     )
 
 @app.route(
-    '/delete-meeting/<int:meeting_id>'
+    '/request-delete-meeting/<int:meeting_id>',
+    methods=['GET', 'POST']
 )
-def delete_meeting(meeting_id):
-    if session.get('role') != 'ADMIN':
+def request_delete_meeting(meeting_id):
 
-        flash(
-            'Only Admin can delete records.'
+    if request.method == 'POST':
+
+        delete_request = DeleteRequest(
+
+            module_name='MEETING',
+
+            record_id=meeting_id,
+
+            requested_by=session[
+                'username'
+            ],
+
+            reason=request.form.get(
+                'reason'
+            )
+
         )
 
-        return redirect(
-            url_for('add_meeting')
-        )
-    meeting = Meeting.query.get_or_404(
-        meeting_id
-    )
-
-    try:
-
-        db.session.delete(
-            meeting
+        db.session.add(
+            delete_request
         )
         db.session.flush()
         log_activity(
 
             'MEETING',
 
-            meeting.meeting_id,
+            meeting_id,
 
-            'DELETED'
+            'DELETE REQUESTED',
 
-        )  
+            request.form.get(
+                'reason'
+            )
+
+        )
+
         db.session.commit()
 
-    except:
-
-        db.session.rollback()
-
         flash(
-            'Cannot delete this meeting because it is linked to a proposal.'
+            'Delete request sent.'
         )
 
-    return redirect(
-        url_for(
-            'add_meeting'
+        return redirect(
+            url_for(
+                'add_meeting'
+            )
         )
+
+    return render_template(
+
+        'delete_request.html',
+
+        module='MEETING',
+
+        record_id=meeting_id
+
     )
 
 @app.route('/add-visit',
@@ -2093,51 +2278,67 @@ def edit_visit(visit_id):
     )
 
 @app.route(
-    '/delete-visit/<int:visit_id>'
+    '/request-delete-visit/<int:visit_id>',
+    methods=['GET', 'POST']
 )
-def delete_visit(visit_id):
-    if session.get('role') != 'ADMIN':
+def request_delete_visit(visit_id):
 
-        flash(
-            'Only Admin can delete records.'
+    if request.method == 'POST':
+
+        delete_request = DeleteRequest(
+
+            module_name='VISIT',
+
+            record_id=visit_id,
+
+            requested_by=session[
+                'username'
+            ],
+
+            reason=request.form.get(
+                'reason'
+            )
+
         )
 
-        return redirect(
-            url_for('add_visit')
-        )
-    visit = Visit.query.get_or_404(
-        visit_id
-    )
-
-    try:
-
-        db.session.delete(
-            visit
+        db.session.add(
+            delete_request
         )
         db.session.flush()
         log_activity(
 
             'VISIT',
 
-            visit.visit_id,
+            visit_id,
 
-            'DELETED'
+            'DELETE REQUESTED',
 
-        )  
+            request.form.get(
+                'reason'
+            )
+
+        )
+
         db.session.commit()
 
-    except Exception:
-
-        db.session.rollback()
-
         flash(
-            'Cannot delete this visit because it is linked to other records.'
+            'Delete request sent.'
         )
 
-    return redirect(
-        url_for(
-            'add_visit'
+        return redirect(
+            url_for(
+                'add_visit'
+            )
         )
+
+    return render_template(
+
+        'delete_request.html',
+
+        module='VISIT',
+
+        record_id=visit_id
+
     )
 
 @app.route('/add-drawing',
@@ -2392,51 +2593,67 @@ def edit_drawing(drawing_id):
     )
 
 @app.route(
-    '/delete-drawing/<int:drawing_id>'
+    '/request-delete-drawing/<int:drawing_id>',
+    methods=['GET', 'POST']
 )
-def delete_drawing(drawing_id):
-    if session.get('role') != 'ADMIN':
+def request_delete_drawing(drawing_id):
 
-        flash(
-            'Only Admin can delete records.'
+    if request.method == 'POST':
+
+        delete_request = DeleteRequest(
+
+            module_name='DRAWING',
+
+            record_id=drawing_id,
+
+            requested_by=session[
+                'username'
+            ],
+
+            reason=request.form.get(
+                'reason'
+            )
+
         )
 
-        return redirect(
-            url_for('add_drawing')
-        )
-    drawing = Drawing.query.get_or_404(
-        drawing_id
-    )
-
-    try:
-
-        db.session.delete(
-            drawing
+        db.session.add(
+            delete_request
         )
         db.session.flush()
         log_activity(
 
             'DRAWING',
 
-            drawing.drawing_id,
+            drawing_id,
 
-            'DELETED'
+            'DELETE REQUESTED',
 
-        )  
+            request.form.get(
+                'reason'
+            )
+
+        )
+
         db.session.commit()
 
-    except Exception:
-
-        db.session.rollback()
-
         flash(
-            'Cannot delete this drawing because it is linked to other records.'
+            'Delete request sent.'
         )
 
-    return redirect(
-        url_for(
-            'add_drawing'
+        return redirect(
+            url_for(
+                'add_drawing'
+            )
         )
+
+    return render_template(
+
+        'delete_request.html',
+
+        module='DRAWING',
+
+        record_id=drawing_id
+
     )
 
 @app.route('/add-proposal',
@@ -3003,53 +3220,68 @@ def edit_proposal(proposal_id):
         meetings=all_meetings,
         drawings=all_drawings
     )
-
 @app.route(
-    '/delete-proposal/<int:proposal_id>'
+    '/request-delete-proposal/<int:proposal_id>',
+    methods=['GET', 'POST']
 )
-def delete_proposal(proposal_id):
-    if session.get('role') != 'ADMIN':
+def request_delete_proposal(proposal_id):
 
-        flash(
-            'Only Admin can delete records.'
+    if request.method == 'POST':
+
+        delete_request = DeleteRequest(
+
+            module_name='PROPOSAL',
+
+            record_id=proposal_id,
+
+            requested_by=session[
+                'username'
+            ],
+
+            reason=request.form.get(
+                'reason'
+            )
+
         )
 
-        return redirect(
-            url_for('add_proposal')
-        )
-    proposal = Proposal.query.get_or_404(
-        proposal_id
-    )
-
-    try:
-
-        db.session.delete(
-            proposal
+        db.session.add(
+            delete_request
         )
         db.session.flush()
         log_activity(
 
             'PROPOSAL',
 
-            proposal.proposal_id,
+            proposal_id,
 
-            'DELETED'
+            'DELETE REQUESTED',
 
-        )  
+            request.form.get(
+                'reason'
+            )
+
+        )
+
         db.session.commit()
 
-    except Exception:
-
-        db.session.rollback()
-
         flash(
-            'Cannot delete proposal because it is linked to sales records.'
+            'Delete request sent.'
         )
 
-    return redirect(
-        url_for(
-            'add_proposal'
+        return redirect(
+            url_for(
+                'add_proposal'
+            )
         )
+
+    return render_template(
+
+        'delete_request.html',
+
+        module='PROPOSAL',
+
+        record_id=proposal_id
+
     )
 
 @app.route('/proposal/<int:proposal_id>')
@@ -3517,51 +3749,67 @@ def edit_sales(sales_id):
     )
 
 @app.route(
-    '/delete-sales/<int:sales_id>'
+    '/request-delete-sales/<int:sales_id>',
+    methods=['GET', 'POST']
 )
-def delete_sales(sales_id):
-    if session.get('role') != 'ADMIN':
+def request_delete_sales(sales_id):
 
-        flash(
-            'Only Admin can delete records.'
+    if request.method == 'POST':
+
+        delete_request = DeleteRequest(
+
+            module_name='SALES',
+
+            record_id=sales_id,
+
+            requested_by=session[
+                'username'
+            ],
+
+            reason=request.form.get(
+                'reason'
+            )
+
         )
 
-        return redirect(
-            url_for('add_sales')
-        )
-    sales = SalesPipeline.query.get_or_404(
-        sales_id
-    )
-
-    try:
-
-        db.session.delete(
-            sales
+        db.session.add(
+            delete_request
         )
         db.session.flush()
         log_activity(
 
             'SALES',
 
-            sales.sales_id,
+            sales_id,
 
-            'DELETED'
+            'DELETE REQUESTED',
 
-        )  
+            request.form.get(
+                'reason'
+            )
+
+        )
+
         db.session.commit()
 
-    except Exception:
-
-        db.session.rollback()
-
         flash(
-            'Cannot delete this sales record because it is linked to invoices.'
+            'Delete request sent.'
         )
 
-    return redirect(
-        url_for(
-            'add_sales'
+        return redirect(
+            url_for(
+                'add_sales'
+            )
         )
+
+    return render_template(
+
+        'delete_request.html',
+
+        module='SALES',
+
+        record_id=sales_id
+
     )
 
 @app.route('/add-invoice',
@@ -3911,51 +4159,67 @@ def edit_invoice(invoice_id):
     )
 
 @app.route(
-    '/delete-invoice/<int:invoice_id>'
+    '/request-delete-invoice/<int:invoice_id>',
+    methods=['GET', 'POST']
 )
-def delete_invoice(invoice_id):
-    if session.get('role') != 'ADMIN':
+def request_delete_invoice(invoice_id):
 
-        flash(
-            'Only Admin can delete records.'
+    if request.method == 'POST':
+
+        delete_request = DeleteRequest(
+
+            module_name='INVOICE',
+
+            record_id=invoice_id,
+
+            requested_by=session[
+                'username'
+            ],
+
+            reason=request.form.get(
+                'reason'
+            )
+
         )
 
-        return redirect(
-            url_for('add_invoice')
-        )
-    invoice = Invoice.query.get_or_404(
-        invoice_id
-    )
-
-    try:
-
-        db.session.delete(
-            invoice
+        db.session.add(
+            delete_request
         )
         db.session.flush()
         log_activity(
 
             'INVOICE',
 
-            invoice.invoice_id,
+            invoice_id,
 
-            'DELETED'
+            'DELETE REQUESTED',
 
-        )  
+            request.form.get(
+                'reason'
+            )
+
+        )
+
         db.session.commit()
 
-    except Exception:
-
-        db.session.rollback()
-
         flash(
-            'Cannot delete this invoice because it is linked to other records.'
+            'Delete request sent.'
         )
 
-    return redirect(
-        url_for(
-            'add_invoice'
+        return redirect(
+            url_for(
+                'add_invoice'
+            )
         )
+
+    return render_template(
+
+        'delete_request.html',
+
+        module='INVOICE',
+
+        record_id=invoice_id
+
     )
 
 @app.route('/add-client',
@@ -4587,51 +4851,67 @@ def edit_client(client_id):
     )        
 
 @app.route(
-    '/delete-client/<int:client_id>'
+    '/request-delete-client/<int:client_id>',
+    methods=['GET', 'POST']
 )
-def delete_client(client_id):
-    if session.get('role') != 'ADMIN':
+def request_delete_client(client_id):
 
-        flash(
-            'Only Admin can delete records.'
+    if request.method == 'POST':
+
+        delete_request = DeleteRequest(
+
+            module_name='CLIENT',
+
+            record_id=client_id,
+
+            requested_by=session[
+                'username'
+            ],
+
+            reason=request.form.get(
+                'reason'
+            )
+
         )
 
-        return redirect(
-            url_for('add_client')
-        )
-    client = Client.query.get_or_404(
-        client_id
-    )
-
-    try:
-
-        db.session.delete(
-            client
+        db.session.add(
+            delete_request
         )
         db.session.flush()
         log_activity(
 
             'CLIENT',
 
-            client.client_id,
+            client_id,
 
-            'DELETED'
+            'DELETE REQUESTED',
 
-        )  
+            request.form.get(
+                'reason'
+            )
+
+        )
+
         db.session.commit()
 
-    except Exception:
-
-        db.session.rollback()
-
         flash(
-            'Cannot delete this client because it is linked to service records.'
+            'Delete request sent.'
         )
 
-    return redirect(
-        url_for(
-            'add_client'
+        return redirect(
+            url_for(
+                'add_client'
+            )
         )
+
+    return render_template(
+
+        'delete_request.html',
+
+        module='CLIENT',
+
+        record_id=client_id
+
     )
 
 @app.route('/client-services/<int:client_id>')
@@ -5012,6 +5292,7 @@ def edit_service(card_id):
             client.last_service_date=None
 
             client.last_service_days=0
+        db.session.flush()
         log_activity(
 
             'SERVICE',
@@ -5040,74 +5321,75 @@ def edit_service(card_id):
     )
 
 @app.route(
-    '/delete-service/<int:card_id>'
+    '/request-delete-service/<int:card_id>',
+    methods=['GET', 'POST']
 )
-def delete_service(card_id):
-    if session.get('role') != 'ADMIN':
+def request_delete_service(card_id):
+
+    if request.method == 'POST':
+
+        delete_request = DeleteRequest(
+
+            module_name='SERVICE',
+
+            record_id=card_id,
+
+            requested_by=session[
+                'username'
+            ],
+
+            reason=request.form.get(
+                'reason'
+            )
+
+        )
+
+        db.session.add(
+            delete_request
+        )
+        db.session.flush()
+        log_activity(
+
+            'SERVICE',
+
+            card_id,
+
+            'DELETE REQUESTED',
+
+            request.form.get(
+                'reason'
+            )
+
+        )
+
+        db.session.commit()
 
         flash(
-            'Only Admin can delete records.'
+            'Delete request sent.'
+        )
+        service = CustomerCareCard.query.get_or_404(
+            card_id
         )
 
         return redirect(
-            url_for('client_services')
-        )
-    service = CustomerCareCard.query.get_or_404(
-        card_id
-    )
+            url_for(
 
-    client_id = service.client_id
+                'client_services',
 
-    db.session.delete(
-        service
-    )
-    db.session.flush()
-    log_activity(
+                client_id=service.client_id
 
-        'SERVICE',
-
-        service.client_id,
-
-        'DELETED'
-
-    )  
-    db.session.commit()
-
-    client = Client.query.get(
-        client_id
-    )
-
-    latest_service = CustomerCareCard.query.filter_by(
-        client_id=client_id
-    ).order_by(
-        CustomerCareCard.service_date.desc()
-    ).first()
-
-    if latest_service:
-
-        client.last_service_date = (
-            latest_service.service_date
+            )
         )
 
-        client.last_service_days = 0
 
-        client.service_due = 'NO'
+    return render_template(
 
-    else:
+        'delete_request.html',
 
-        client.last_service_date = None
+        module='SERVICE',
 
-        client.last_service_days = 0
+        record_id=card_id
 
-        client.service_due = 'YES'
-
-    db.session.commit()
-
-    return redirect(
-        url_for(
-            'client_services',
-            client_id=client_id
-        )
     )
 
 @app.route('/global-search')
@@ -5867,6 +6149,392 @@ def activity_logs():
         search=search
 
     )
+
+@app.route('/productivity')
+def productivity():
+
+    if session.get('role') != 'ADMIN':
+
+        return redirect(
+            url_for('dashboard')
+        )
+
+    today = date.today()
+
+    week_start = today - timedelta(
+        days=today.weekday()
+    )
+
+    month_start = today.replace(
+        day=1
+    )
+
+    search = request.args.get(
+    'search'
+)
+
+    query = User.query.filter(
+        User.is_active == 'YES'
+    )
+
+    if search:
+
+        query = query.filter(
+
+            or_(
+
+                User.username.ilike(
+                    f'%{search}%'
+                ),
+
+                User.full_name.ilike(
+                    f'%{search}%'
+                ),
+
+                User.role.ilike(
+                    f'%{search}%'
+                )
+
+            )
+
+        )
+
+    users = query.all()
+
+    productivity_data = []
+
+    for user in users:
+
+        today_count = ActivityLog.query.filter(
+
+            ActivityLog.performed_by ==
+            user.username,
+
+            func.date(
+                ActivityLog.performed_on
+            ) == today
+
+        ).count()
+
+        week_count = ActivityLog.query.filter(
+
+            ActivityLog.performed_by ==
+            user.username,
+
+            ActivityLog.performed_on >=
+            week_start
+
+        ).count()
+
+        month_count = ActivityLog.query.filter(
+
+            ActivityLog.performed_by ==
+            user.username,
+
+            ActivityLog.performed_on >=
+            month_start
+
+        ).count()
+
+        productivity_data.append({
+
+            'username':
+                user.username,
+
+            'full_name':
+                user.full_name,
+
+            'role':
+                user.role,
+
+            'today':
+                today_count,
+
+            'week':
+                week_count,
+
+            'month':
+                month_count
+
+        })
+
+    return render_template(
+
+        'productivity.html',
+
+        productivity_data=
+            productivity_data,
+
+        search=search
+
+    )
+
+@app.route(
+    '/employee-activity/<username>'
+)
+def employee_activity(username):
+
+    if session.get('role') != 'ADMIN':
+
+        return redirect(
+            url_for('dashboard')
+        )
+
+    search = request.args.get(
+        'search'
+    )
+
+    query = ActivityLog.query.filter(
+
+        ActivityLog.performed_by ==
+        username
+
+    )
+
+    if search:
+
+        query = query.filter(
+
+            or_(
+
+                ActivityLog.module_name.ilike(
+                    f'%{search}%'
+                ),
+
+                ActivityLog.action.ilike(
+                    f'%{search}%'
+                ),
+
+                ActivityLog.details.ilike(
+                    f'%{search}%'
+                )
+
+            )
+
+        )
+
+    logs = query.order_by(
+
+        ActivityLog.performed_on.desc()
+
+    ).all()
+    return render_template(
+
+        'employee_activity.html',
+
+        logs=logs,
+
+        username=username,
+
+        search=search
+
+    )
+
+@app.route('/delete-requests')
+def delete_requests():
+
+    if session.get('role') != 'ADMIN':
+
+        return redirect(
+            url_for('dashboard')
+        )
+
+    search = request.args.get(
+        'search'
+    )
+
+    query = DeleteRequest.query
+
+    if search:
+
+        query = query.filter(
+
+            or_(
+
+                DeleteRequest.module_name.ilike(
+                    f'%{search}%'
+                ),
+
+                DeleteRequest.requested_by.ilike(
+                    f'%{search}%'
+                ),
+
+                DeleteRequest.status.ilike(
+                    f'%{search}%'
+                ),
+
+                DeleteRequest.reason.ilike(
+                    f'%{search}%'
+                )
+
+            )
+
+        )
+
+    requests = query.order_by(
+
+        DeleteRequest.requested_on.desc()
+
+    ).all()
+
+    return render_template(
+
+        'delete_requests.html',
+
+        requests=requests,
+
+        search=search
+
+    )
+
+@app.route(
+    '/reject-delete-request/<int:request_id>'
+)
+def reject_delete_request(request_id):
+
+    if session.get('role') != 'ADMIN':
+
+        return redirect(
+            url_for('dashboard')
+        )
+
+    request_obj = DeleteRequest.query.get_or_404(
+        request_id
+    )
+
+    request_obj.status = 'REJECTED'
+    db.session.flush()
+    log_activity(
+
+        request_obj.module_name,
+
+        request_obj.record_id,
+
+        'DELETE REJECTED'
+
+    )
+
+    db.session.commit()
+
+    return redirect(
+        url_for(
+            'delete_requests'
+        )
+    )
+
+@app.route(
+    '/approve-delete-request/<int:request_id>'
+)
+def approve_delete_request(request_id):
+
+    if session.get('role') != 'ADMIN':
+
+        return redirect(
+            url_for('dashboard')
+        )
+
+    request_obj = DeleteRequest.query.get_or_404(
+        request_id
+    )
+
+    if request_obj.module_name == 'LEAD':
+
+        record = Lead.query.get(
+            request_obj.record_id
+        )
+
+    elif request_obj.module_name == 'MEETING':
+
+        record = Meeting.query.get(
+            request_obj.record_id
+        )
+
+    elif request_obj.module_name == 'PROPOSAL':
+
+        record = Proposal.query.get(
+            request_obj.record_id
+        )
+
+    elif request_obj.module_name == 'VISIT':
+
+        record = Visit.query.get(
+            request_obj.record_id
+        )
+
+    elif request_obj.module_name == 'DRAWING':
+
+        record = Drawing.query.get(
+            request_obj.record_id
+        )
+
+    elif request_obj.module_name == 'SALES':
+
+        record = SalesPipeline.query.get(
+            request_obj.record_id
+        )
+
+    elif request_obj.module_name == 'INVOICE':
+
+        record = Invoice.query.get(
+            request_obj.record_id
+        )
+
+    elif request_obj.module_name == 'CLIENT':
+
+        record = Client.query.get(
+            request_obj.record_id
+        )
+
+    elif request_obj.module_name == 'SERVICE':
+
+        record = CustomerCareCard.query.get(
+            request_obj.record_id
+        )
+
+    else:
+
+        record = None
+
+    try:
+
+        if record:
+
+            db.session.delete(
+                record
+            )
+
+        request_obj.status = 'APPROVED'
+
+        db.session.flush()
+
+        log_activity(
+
+            request_obj.module_name,
+
+            request_obj.record_id,
+
+            'DELETE APPROVED'
+
+        )
+
+        db.session.commit()
+
+    except Exception:
+
+        db.session.rollback()
+
+        flash(
+
+            'Cannot delete because record is linked.'
+
+        )
+
+        return redirect(
+            url_for(
+                'delete_requests'
+            )
+        )
+
 
 if __name__ == '__main__':
 

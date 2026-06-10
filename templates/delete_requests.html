@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>
+
+        Delete Requests
+
+    </title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+</head>
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div class="alert alert-danger">
+
+                {{ message }}
+
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+{% endwith %}
+<body class="bg-light">
+
+<div class="container mt-5">
+    <a href="/dashboard"
+        class="btn btn-secondary mb-3">
+
+        Back To Dashboard
+
+    </a>
+    <div class="card shadow p-4">
+
+        <h2 class="text-center mb-4">
+
+            Delete Requests
+
+        </h2>
+        <form method="GET"
+              class="mb-3">
+            <div class="input-group">
+                <input type="text"
+                       name="search"
+                       value="{{request.args.get('search','')}}"
+                       class="form-control"
+                       placeholder="Search">
+                <button type="submit"
+                        class="btn btn-dark">
+                    Search
+                </button>
+                <a href="{{ url_for('delete_requests') }}"
+                   class="btn btn-secondary">
+                    Clear
+                </a>
+            </div>
+        </form>
+
+
+        <table class="table table-bordered table-striped">
+
+            <thead>
+
+                <tr>
+
+                    <th>ID</th>
+
+                    <th>Module</th>
+
+                    <th>Record ID</th>
+
+                    <th>Requested By</th>
+
+                    <th>Reason</th>
+
+                    <th>Status</th>
+
+                    <th>Date</th>
+
+                    <th>Action</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for request in requests %}
+
+                <tr>
+
+                    <td>{{ request.request_id }}</td>
+
+                    <td>{{ request.module_name }}</td>
+
+                    <td>{{ request.record_id }}</td>
+
+                    <td>{{ request.requested_by }}</td>
+
+                    <td>{{ request.reason }}</td>
+
+                    <td>{{ request.status }}</td>
+
+                    <td>{{ request.requested_on }}</td>
+
+                    <td>
+
+                        {% if request.status == 'PENDING' %}
+
+                        <a href="{{ url_for(
+                            'approve_delete_request',
+                            request_id=request.request_id
+                        ) }}"
+                           class="btn btn-success btn-sm">
+
+                            Approve
+
+                        </a>
+
+                        <a href="{{ url_for(
+                            'reject_delete_request',
+                            request_id=request.request_id
+                        ) }}"
+                           class="btn btn-danger btn-sm">
+
+                            Reject
+
+                        </a>
+
+                        {% endif %}
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
