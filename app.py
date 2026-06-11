@@ -1,4 +1,4 @@
-from flask import Flask, flash, render_template, request, redirect, url_for, session
+from flask import Flask, flash, render_template, request, redirect, url_for, session, send_file
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta, date, UTC
 import os
@@ -9,6 +9,8 @@ from werkzeug.security import (
     generate_password_hash,
     check_password_hash
 )
+from docxtpl import DocxTemplate
+from num2words import num2words
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'static'
@@ -810,6 +812,42 @@ class DeleteRequest(db.Model):
 
     reason = db.Column(
         db.String(500)
+    )
+
+def indian_format(number):
+
+    number = int(float(number))
+
+    s = str(number)
+
+    if len(s) <= 3:
+
+        return s
+
+    last3 = s[-3:]
+
+    rest = s[:-3]
+
+    parts = []
+
+    while len(rest) > 2:
+
+        parts.insert(
+            0,
+            rest[-2:]
+        )
+
+        rest = rest[:-2]
+
+    if rest:
+
+        parts.insert(
+            0,
+            rest
+        )
+
+    return ",".join(
+        parts + [last3]
     )
 
 with app.app_context():
@@ -6535,6 +6573,184 @@ def approve_delete_request(request_id):
             )
         )
 
+@app.route(
+    '/generate-proposal/<int:proposal_id>'
+)
+def generate_proposal(proposal_id):
+
+    proposal = Proposal.query.get_or_404(
+        proposal_id
+    )
+
+    template_path = os.path.join(
+
+        app.root_path,
+
+        'templates',
+
+        'proposal_template.docx'
+
+    )
+
+    doc = DocxTemplate(
+        template_path
+    )
+
+    total_mvd_cost = (
+
+        proposal.no_of_mvd_units *
+
+        float(
+            proposal.cost_total_per_unit
+        )
+
+    )
+
+    amount_in_words = (
+
+        num2words(
+
+            int(
+                proposal.total_amount
+            ),
+
+            lang='en_IN'
+
+        )
+
+        .replace(',', '')
+
+        .title()
+
+        + ' Rupees Only'
+
+    )
+
+    no_of_mvd_units_in_words = (
+
+        num2words(
+
+            proposal.no_of_mvd_units
+
+        ).title()
+
+    )
+
+    context = {
+
+        'reference_no':
+        proposal.reference_no,
+
+        'name':
+        proposal.name,
+
+        'site_address':
+        proposal.site_address,
+
+        'date_of_proposal_sent':
+        proposal.date_of_proposal_sent.strftime(
+            '%d-%m-%Y'
+        )
+        if proposal.date_of_proposal_sent
+        else '',
+
+        'total_area_sqft':
+        indian_format(
+            proposal.total_area_sqft
+        ),
+
+        'no_of_mvd_units':
+        proposal.no_of_mvd_units,
+
+        'no_of_mvd_units_in_words':
+        no_of_mvd_units_in_words,
+
+        'total_no_of_units':
+        proposal.total_no_of_units,
+
+        'cost_total_per_unit':
+        indian_format(
+            proposal.cost_total_per_unit
+        ),
+
+        'total_mvd_cost':
+        indian_format(
+            total_mvd_cost
+        ),
+
+        'cmc_starting_period':
+        proposal.cmc_starting_period,
+
+        'per_unit_cost':
+        indian_format(
+            proposal.per_unit_cost
+        ),
+
+        'cmc_cost':
+        indian_format(
+            proposal.cmc_cost
+        ),
+
+        'installation_cost':
+        indian_format(
+            proposal.installation_cost
+        ),
+
+        'amount_in_words':
+        amount_in_words,
+
+        'total_amount':
+        indian_format(
+            proposal.total_amount
+        )
+
+    }
+
+    doc.render(
+        context
+    )
+
+    output_folder = os.path.join(
+
+        app.root_path,
+
+        'generated_proposals'
+
+    )
+
+    os.makedirs(
+
+        output_folder,
+
+        exist_ok=True
+
+    )
+
+    filename = (
+
+        f'Proposal_{proposal.proposal_id}.docx'
+
+    )
+
+    output_path = os.path.join(
+
+        output_folder,
+
+        filename
+
+    )
+
+    doc.save(
+        output_path
+    )
+
+    return send_file(
+
+        output_path,
+
+        as_attachment=True
+
+    )        
 
 if __name__ == '__main__':
 

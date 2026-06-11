@@ -182,7 +182,7 @@
             </tr>
 
             <tr>
-                <th>Per Unit Cost</th>
+                <th>CMC Per Unit Cost</th>
                 <td>{{ proposal.per_unit_cost }}</td>
             </tr>
 
@@ -315,6 +315,15 @@
     </div>
 
     <br>
+    <a href="{{ url_for(
+            'generate_proposal',
+            proposal_id=proposal.proposal_id
+        ) }}"
+       class="btn btn-success">
+
+        Generate Proposal
+
+    </a>
 
     <a href="/add-proposal"
        class="btn btn-secondary">
