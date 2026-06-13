@@ -180,117 +180,103 @@ body{
 
     <!-- TASKS -->
 
+    {% if session['role'] == 'SALES' %}
+
     <div class="row justify-content-center">
 
-        <!-- Followups -->
-        <div class="col-md-3 justify-content-center">
-            {% if session['role'] in [
-                'ADMIN',
-                'COMMERCIALS'
-            ] %}  
+        <div class="col-md-4">
+
             <a href="{{ url_for('tasks') }}"
-               style="text-decoration:none;
-                      color:inherit;">
+               style="text-decoration:none; color:inherit;">
 
                 <div class="card text-center small-stat-card">
 
                     <div class="card-body">
 
-                        <h5>
+                        <h5>Followups</h5>
 
-                            Followups Due
-
-                        </h5>
-
-                        <h4>
-
-                            {{ followups_due }}
-
-                        </h4>
+                        <h4>{{ overdue_count + today_count }}</h4>
 
                     </div>
 
                 </div>
 
             </a>
-            {% endif %}
 
         </div>
-
-        <!-- Services -->
-
-        <div class="col-md-3 justify-content-center">
-            {% if session['role'] in [
-                'ADMIN',
-                'COMMERCIALS'
-            ] %}  
-            <a href="{{ url_for('tasks') }}"
-               style="text-decoration:none;
-                      color:inherit;">
-
-                <div class="card text-center small-stat-card">
-
-                    <div class="card-body">
-
-                        <h5>
-
-                            Services Due
-
-                        </h5>
-
-                        <h4>
-
-                            {{ services_due }}
-
-                        </h4>
-
-                    </div>
-
-                </div>
-
-            </a>
-            {% endif %}
-
-        </div>
-
-        <!-- CMC -->
-
-        <div class="col-md-3 justify-content-center">
-            {% if session['role'] in [
-                'ADMIN',
-                'COMMERCIALS'
-            ] %}  
-            <a href="{{ url_for('tasks') }}"
-               style="text-decoration:none;
-                      color:inherit;">
-
-                <div class="card text-center small-stat-card">
-
-                    <div class="card-body">
-
-                        <h5>
-
-                            CMC Due
-
-                        </h5>
-
-                        <h4>
-
-                            {{ cmc_due }}
-
-                        </h4>
-
-                    </div>
-
-                </div>
-
-            </a>
-            {% endif %}
-
-        </div>
-
 
     </div>
+
+    {% else %}
+
+    <div class="row justify-content-center">
+
+        <div class="col-md-3">
+
+            <a href="{{ url_for('tasks') }}"
+               style="text-decoration:none; color:inherit;">
+
+                <div class="card text-center small-stat-card">
+
+                    <div class="card-body">
+
+                        <h5>Followups</h5>
+
+                        <h4>{{ overdue_count + today_count }}</h4>
+
+                    </div>
+
+                </div>
+
+            </a>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <a href="{{ url_for('service_due') }}"
+               style="text-decoration:none; color:inherit;">
+
+                <div class="card text-center small-stat-card">
+
+                    <div class="card-body">
+
+                        <h5>Services Due</h5>
+
+                        <h4>{{ services_due }}</h4>
+
+                    </div>
+
+                </div>
+
+            </a>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <a href="{{ url_for('cmc_due') }}"
+               style="text-decoration:none; color:inherit;">
+
+                <div class="card text-center small-stat-card">
+
+                    <div class="card-body">
+
+                        <h5>CMC Due</h5>
+
+                        <h4>{{ cmc_due }}</h4>
+
+                    </div>
+
+                </div>
+
+            </a>
+
+        </div>
+
+    </div>
+
+    {% endif %}
 
     <!-- MODULES -->
 
@@ -298,7 +284,8 @@ body{
     <div class="row justify-content-center g-3">
         {% if session['role'] in [
             'ADMIN',
-            'COMMERCIALS'
+            'COMMERCIALS',
+            'SALES'
         ] %}
         <div class="col-lg-3 col-md-4 col-sm-6">
 
@@ -309,7 +296,8 @@ body{
         {% endif %}
         {% if session['role'] in [
             'ADMIN',
-            'COMMERCIALS'
+            'COMMERCIALS',
+            'SALES'
         ] %}  
         <div class="col-lg-3 col-md-4 col-sm-6">
           
@@ -320,7 +308,8 @@ body{
         {% endif %}
         {% if session['role'] in [
             'ADMIN',
-            'SALES'
+            'SALES',
+            'COMMERCIALS'
         ] %}
         <div class="col-lg-3 col-md-4 col-sm-6">
 
@@ -332,7 +321,8 @@ body{
         {% endif %}
         {% if session['role'] in [
             'ADMIN',
-            'SALES'
+            'SALES',
+            'COMMERCIALS'
         ] %}
         <div class="col-lg-3 col-md-4 col-sm-6">
 
@@ -345,7 +335,8 @@ body{
         {% endif %}
         {% if session['role'] in [
             'ADMIN',
-            'COMMERCIALS'
+            'COMMERCIALS',
+            'SALES'
         ] %}  
         <div class="col-lg-3 col-md-4 col-sm-6">
           
@@ -367,7 +358,8 @@ body{
         {% endif %}
         {% if session['role'] in [
             'ADMIN',
-            'SALES'
+            'SALES',
+            'COMMERCIALS'
         ] %}
         <div class="col-lg-3 col-md-4 col-sm-6">
 
@@ -392,7 +384,8 @@ body{
         {% endif %}
         {% if session['role'] in [
             'ADMIN',
-            'COMMERCIALS'
+            'COMMERCIALS',
+            'SALES'
         ] %} 
          <div class="col-md-3 mb-2">
  
