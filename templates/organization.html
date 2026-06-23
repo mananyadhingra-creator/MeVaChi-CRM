@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>
+
+        Organization
+
+    </title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container py-5">
+    <a href="javascript:history.back()"
+       class="btn btn-outline-secondary">
+
+        Back
+
+    </a>
+    <a href="/dashboard"
+        class="btn btn-dark">
+
+        Back To Dashboard
+
+    </a>    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <h2>
+
+            Organization View
+
+        </h2>
+
+
+
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-md-3">
+
+            <a href="{{ url_for(
+                'organization_leads'
+            ) }}"
+               class="card p-4 text-center text-decoration-none">
+
+                Leads
+                <br>
+
+                <small>
+                    {{ total_leads }}
+                </small>
+            </a>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <a href="{{ url_for(
+                'organization_meetings'
+            ) }}"
+               class="card p-4 text-center text-decoration-none">
+
+                Meetings
+                <br>
+
+                <small>
+                    {{ total_meetings }}
+                </small>
+            </a>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <a href="{{ url_for(
+                'organization_visits'
+            ) }}"
+               class="card p-4 text-center text-decoration-none">
+
+                Visits
+                <br>
+
+                <small>
+                    {{ total_visits }}
+                </small>
+            </a>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <a href="{{ url_for(
+                'organization_drawings'
+            ) }}"
+               class="card p-4 text-center text-decoration-none">
+
+                Drawings
+                <br>
+
+                <small>
+                    {{ total_drawings }}
+                </small>
+            </a>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <a href="{{ url_for(
+                'organization_proposals'
+            ) }}"
+               class="card p-4 text-center text-decoration-none">
+
+                Proposals
+                <br>
+
+                <small>
+                    {{ total_proposals }}
+                </small>
+            </a>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <a href="{{ url_for(
+                'organization_sales'
+            ) }}"
+               class="card p-4 text-center text-decoration-none">
+
+                Sales
+                <br>
+
+                <small>
+                    {{ total_sales }}
+                </small>
+            </a>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <a href="{{ url_for(
+                'organization_invoices'
+            ) }}"
+               class="card p-4 text-center text-decoration-none">
+
+                Invoices
+                <br>
+
+                <small>
+                    {{ total_invoices }}
+                </small>
+            </a>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <a href="{{ url_for(
+                'organization_clients'
+            ) }}"
+               class="card p-4 text-center text-decoration-none">
+
+                Clients
+                <br>
+
+                <small>
+                    {{ total_clients }}
+                </small>
+            </a>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <a href="{{ url_for('activity_logs') }}"
+               class="card p-4 text-center text-decoration-none">
+
+                Activity Logs
+
+            </a>
+
+        </div>
+                <div class="col-md-3">
+
+            <a href="{{ url_for('productivity') }}"
+               class="card p-4 text-center text-decoration-none">
+
+                Productivity
+
+            </a>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <a href="{{ url_for('completed_tasks') }}"
+               class="card p-4 text-center text-decoration-none">
+
+                Completed Tasks
+
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

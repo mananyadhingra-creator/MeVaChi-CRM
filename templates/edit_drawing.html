@@ -13,12 +13,18 @@
 <body class="bg-light">
 
 <div class="container mt-4">
+    <a href="javascript:history.back()"
+       class="btn btn-outline-secondary">
+
+        Back
+
+    </a>
     <a href="/dashboard"
-        class="btn btn-secondary mb-3">
+        class="btn btn-dark">
 
         Back To Dashboard
 
-    </a>
+    </a>    
     <div class="card shadow p-4">
 
         <h2 class="text-center mb-4">
@@ -157,6 +163,8 @@
 
                         <br>
 
+                        {% if drawing.drawing_pdf %}
+
                         <a href="{{ url_for(
                             'static',
                             filename=drawing.drawing_pdf
@@ -166,6 +174,16 @@
                             View Current PDF
 
                         </a>
+
+                        {% else %}
+
+                        <span class="text-muted">
+
+                            No PDF Uploaded
+
+                        </span>
+
+                        {% endif %}
 
                         <br><br>
 

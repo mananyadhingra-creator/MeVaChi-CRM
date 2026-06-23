@@ -68,6 +68,23 @@ def can_access_record(owner):
 
     return False
 
+def can_view_record(
+    record_owner
+):
+
+    if session.get(
+        'role'
+    ) in [
+        'ADMIN',
+        'COMMERCIALS'
+    ]:
+
+        return True
+
+    return session.get(
+        'username'
+    ) == record_owner
+
 def log_activity(
 
     module_name,
@@ -1048,7 +1065,19 @@ def dashboard():
 
         proposal_base = Proposal.query
 
+    commercial_count = (
 
+        lead_base.count()
+
+        +
+
+        meeting_base.count()
+
+        +
+
+        proposal_base.count()
+
+    )
     # OVERDUE
 
     overdue_leads = lead_base.filter(
@@ -1220,7 +1249,9 @@ def dashboard():
     ).scalar()
 
     yearly_filters = yearly_filters or 0
-
+    pending_delete_requests = DeleteRequest.query.filter_by(
+        status='PENDING'
+    ).count()
     return render_template(
         'index.html',
         monthly_filters=monthly_filters,
@@ -1248,7 +1279,8 @@ def dashboard():
         service_due_clients=service_due_clients,
         cmc_due_clients=cmc_due_clients,
         services_due=services_due,
-        cmc_due=cmc_due      
+        cmc_due=cmc_due,
+        pending_delete_requests=pending_delete_requests      
     )
 
 @app.route('/manage-users')
@@ -1668,6 +1700,7 @@ def add_lead():
 
 @app.route('/lead/<int:lead_id>')
 def lead_details(lead_id):
+
     if not has_access(
         'ADMIN',
         'COMMERCIALS',
@@ -1675,12 +1708,16 @@ def lead_details(lead_id):
     ):
 
         return redirect(
-            url_for('dashboard')
+            url_for(
+                'dashboard'
+            )
         )
+
     lead = Lead.query.get_or_404(
         lead_id
     )
-    if not can_access_record(
+
+    if not can_view_record(
 
         lead.record_owner
 
@@ -2133,6 +2170,7 @@ def add_meeting():
 
 @app.route('/meeting/<int:meeting_id>')
 def meeting_details(meeting_id):
+
     if not has_access(
         'ADMIN',
         'COMMERCIALS',
@@ -2140,12 +2178,16 @@ def meeting_details(meeting_id):
     ):
 
         return redirect(
-            url_for('dashboard')
+            url_for(
+                'dashboard'
+            )
         )
+
     meeting = Meeting.query.get_or_404(
         meeting_id
     )
-    if not can_access_record(
+
+    if not can_view_record(
 
         meeting.record_owner
 
@@ -2156,6 +2198,7 @@ def meeting_details(meeting_id):
                 'dashboard'
             )
         )
+
     return render_template(
         'meeting_details.html',
         meeting=meeting
@@ -2743,7 +2786,7 @@ def visit_details(visit_id):
     visit = Visit.query.get_or_404(
         visit_id
     )
-    if not can_access_record(
+    if not can_view_record(
 
         visit.record_owner
 
@@ -3212,10 +3255,8 @@ def drawing_details(drawing_id):
     drawing = Drawing.query.get_or_404(
         drawing_id
     )
-    if not can_access_record(
-
+    if not can_view_record(
         drawing.record_owner
-
     ):
 
         return redirect(
@@ -3956,7 +3997,7 @@ def proposal_details(proposal_id):
     proposal = Proposal.query.get_or_404(
         proposal_id
     )
-    if not can_access_record(
+    if not can_view_record(
 
         proposal.record_owner
 
@@ -4649,7 +4690,7 @@ def sales_details(sales_id):
     sale = SalesPipeline.query.get_or_404(
         sales_id
     )
-    if not can_access_record(
+    if not can_view_record(
 
         sale.record_owner
 
@@ -5283,7 +5324,7 @@ def invoice_details(invoice_id):
     invoice = Invoice.query.get_or_404(
         invoice_id
     )
-    if not can_access_record(
+    if not can_view_record(
 
         invoice.record_owner
 
@@ -6708,6 +6749,1367 @@ def request_delete_service(card_id):
 
     )
 
+@app.route('/sales-department')
+def sales_department():
+
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+
+        return redirect(
+            url_for(
+                'dashboard'
+            )
+        )
+
+    sales_users = User.query.filter_by(
+        role='SALES'
+    ).all()
+
+    return render_template(
+        'sales_department.html',
+        sales_users=sales_users
+    )
+
+@app.route(
+    '/sales-employee/<username>'
+)
+def sales_employee(
+    username
+):
+
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+
+        return redirect(
+            url_for(
+                'dashboard'
+            )
+        )
+
+    user = User.query.filter_by(
+        username=username
+    ).first_or_404()
+
+    lead_count = Lead.query.filter_by(
+        record_owner=username
+    ).count()
+
+    meeting_count = Meeting.query.filter_by(
+        record_owner=username
+    ).count()
+
+    visit_count = Visit.query.filter_by(
+        record_owner=username
+    ).count()
+
+    drawing_count = Drawing.query.filter_by(
+        record_owner=username
+    ).count()
+
+    proposal_count = Proposal.query.filter_by(
+        record_owner=username
+    ).count()
+
+    sales_count = SalesPipeline.query.filter_by(
+        record_owner=username
+    ).count()
+
+    invoice_count = Invoice.query.filter_by(
+        record_owner=username
+    ).count()
+
+    return render_template(
+
+        'sales_employee.html',
+
+        user=user,
+
+        lead_count=lead_count,
+
+        meeting_count=meeting_count,
+
+        visit_count=visit_count,
+
+        drawing_count=drawing_count,
+
+        proposal_count=proposal_count,
+
+        sales_count=sales_count,
+
+        invoice_count=invoice_count
+
+    )
+
+@app.route(
+    '/employee-leads/<username>'
+)
+def employee_leads(
+    username
+):
+
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+
+        return redirect(
+            url_for(
+                'dashboard'
+            )
+        )
+
+    user = User.query.filter_by(
+        username=username
+    ).first_or_404()
+
+    search = request.args.get(
+        'search'
+    )
+
+    query = Lead.query.filter_by(
+        record_owner=username
+    )
+
+    if search:
+
+        query = query.filter(
+            or_(
+                Lead.name.ilike(
+                    f'%{search}%'
+                ),
+                Lead.reference.ilike(
+                    f'%{search}%'
+                ),
+                Lead.location.ilike(
+                    f'%{search}%'
+                ),
+                Lead.phone.ilike(
+                    f'%{search}%'
+                )
+            )
+        )
+
+    leads = query.order_by(
+        Lead.lead_id.desc()
+    ).all()
+
+    return render_template(
+
+        'employee_leads.html',
+
+        user=user,
+
+        leads=leads,
+
+        search=search
+
+    )
+
+
+@app.route(
+    '/employee-meetings/<username>'
+)
+def employee_meetings(
+    username
+):
+
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+
+        return redirect(
+            url_for(
+                'dashboard'
+            )
+        )
+
+    user = User.query.filter_by(
+        username=username
+    ).first_or_404()
+
+    search = request.args.get(
+        'search'
+    )
+
+    query = Meeting.query.filter_by(
+        record_owner=username
+    )
+
+    if search:
+
+        query = query.filter(
+            or_(
+                Meeting.name.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.reference.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.firm_name.ilike(
+                    f'%{search}%'
+                ),
+                Meeting.contact_no.ilike(
+                    f'%{search}%'
+                )
+            )
+        )
+
+    meetings = query.order_by(
+        Meeting.meeting_id.desc()
+    ).all()
+
+    return render_template(
+
+        'employee_meetings.html',
+
+        user=user,
+
+        meetings=meetings,
+
+        search=search
+
+    )
+
+@app.route(
+    '/employee-visits/<username>'
+)
+def employee_visits(
+    username
+):
+
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+
+        return redirect(
+            url_for(
+                'dashboard'
+            )
+        )
+
+    user = User.query.filter_by(
+        username=username
+    ).first_or_404()
+
+    search = request.args.get(
+        'search'
+    )
+
+    query = Visit.query.filter_by(
+        record_owner=username
+    )
+
+    if search:
+
+        query = query.filter(
+            or_(
+                Visit.company_name.ilike(
+                    f'%{search}%'
+                ),
+                Visit.person_name.ilike(
+                    f'%{search}%'
+                ),
+                Visit.contact_no.ilike(
+                    f'%{search}%'
+                ),
+                Visit.state.ilike(
+                    f'%{search}%'
+                )
+            )
+        )
+
+    visits = query.order_by(
+        Visit.visit_id.desc()
+    ).all()
+
+    return render_template(
+
+        'employee_visits.html',
+
+        user=user,
+
+        visits=visits,
+
+        search=search
+
+    )
+
+@app.route(
+    '/employee-drawings/<username>'
+)
+def employee_drawings(
+    username
+):
+
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+
+        return redirect(
+            url_for(
+                'dashboard'
+            )
+        )
+
+    user = User.query.filter_by(
+        username=username
+    ).first_or_404()
+
+    search = request.args.get(
+        'search'
+    )
+
+    query = Drawing.query.filter_by(
+        record_owner=username
+    )
+
+    if search:
+
+        query = query.filter(
+            or_(
+                Drawing.name.ilike(
+                    f'%{search}%'
+                ),
+                Drawing.address.ilike(
+                    f'%{search}%'
+                ),
+                Drawing.moca.ilike(
+                    f'%{search}%'
+                )
+            )
+        )
+
+    drawings = query.order_by(
+        Drawing.drawing_id.desc()
+    ).all()
+
+    return render_template(
+
+        'employee_drawings.html',
+
+        user=user,
+
+        drawings=drawings,
+
+        search=search
+
+    )
+
+@app.route(
+    '/employee-proposals/<username>'
+)
+def employee_proposals(
+    username
+):
+
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+
+        return redirect(
+            url_for(
+                'dashboard'
+            )
+        )
+
+    user = User.query.filter_by(
+        username=username
+    ).first_or_404()
+
+    search = request.args.get(
+        'search'
+    )
+
+    query = Proposal.query.filter_by(
+        record_owner=username
+    )
+
+    if search:
+
+        query = query.filter(
+            or_(
+                Proposal.name.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.reference_no.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.address.ilike(
+                    f'%{search}%'
+                ),
+                Proposal.contact_no.ilike(
+                    f'%{search}%'
+                )
+            )
+        )
+
+    proposals = query.order_by(
+        Proposal.proposal_id.desc()
+    ).all()
+
+    return render_template(
+
+        'employee_proposals.html',
+
+        user=user,
+
+        proposals=proposals,
+
+        search=search
+
+    )
+
+@app.route(
+    '/employee-sales/<username>'
+)
+def employee_sales(
+    username
+):
+
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+
+        return redirect(
+            url_for(
+                'dashboard'
+            )
+        )
+
+    user = User.query.filter_by(
+        username=username
+    ).first_or_404()
+
+    search = request.args.get(
+        'search'
+    )
+
+    query = SalesPipeline.query.filter_by(
+        record_owner=username
+    )
+
+    if search:
+
+        query = query.filter(
+            or_(
+                SalesPipeline.name.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.reference_no.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.project_stage.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.contact_no.ilike(
+                    f'%{search}%'
+                )
+            )
+        )
+
+    sales = query.order_by(
+        SalesPipeline.sales_id.desc()
+    ).all()
+
+    return render_template(
+
+        'employee_sales.html',
+
+        user=user,
+
+        sales=sales,
+
+        search=search
+
+    )
+
+@app.route(
+    '/employee-invoices/<username>'
+)
+def employee_invoices(
+    username
+):
+
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+
+        return redirect(
+            url_for(
+                'dashboard'
+            )
+        )
+
+    user = User.query.filter_by(
+        username=username
+    ).first_or_404()
+
+    search = request.args.get(
+        'search'
+    )
+
+    query = Invoice.query.filter_by(
+        record_owner=username
+    )
+
+    if search:
+
+        query = query.filter(
+            or_(
+                Invoice.name.ilike(
+                    f'%{search}%'
+                ),
+                Invoice.invoice_no.ilike(
+                    f'%{search}%'
+                ),
+                Invoice.gst_no.ilike(
+                    f'%{search}%'
+                ),
+                Invoice.product_sold.ilike(
+                    f'%{search}%'
+                )
+            )
+        )
+
+    invoices = query.order_by(
+        Invoice.invoice_id.desc()
+    ).all()
+
+    return render_template(
+
+        'employee_invoices.html',
+
+        user=user,
+
+        invoices=invoices,
+
+        search=search
+
+    )
+
+@app.route(
+    '/commercial-department'
+)
+def commercial_department():
+
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+
+        return redirect(
+            url_for(
+                'dashboard'
+            )
+        )
+
+    return render_template(
+        'commercial_department.html'
+    )
+
+@app.route(
+    '/commercial-leads'
+)
+def commercial_leads():
+
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+
+        return redirect(
+            url_for(
+                'dashboard'
+            )
+        )
+
+    commercial_users = User.query.filter_by(
+        role='COMMERCIALS'
+    ).all()
+
+    usernames = [
+        user.username
+        for user in commercial_users
+    ]
+
+    leads = Lead.query.filter(
+        Lead.record_owner.in_(
+            usernames
+        )
+    ).all()
+
+    return render_template(
+
+        'add_lead.html',
+
+        leads=leads,
+
+        admin_view=(
+            session.get('role')
+            == 'ADMIN'
+        )
+
+    )
+
+@app.route('/commercial-meetings')
+def commercial_meetings():
+
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+        return redirect(
+            url_for('dashboard')
+        )
+
+    commercial_users = User.query.filter_by(
+        role='COMMERCIALS'
+    ).all()
+
+    usernames = [
+        user.username
+        for user in commercial_users
+    ]
+
+    meetings = Meeting.query.filter(
+        Meeting.record_owner.in_(
+            usernames
+        )
+    ).all()
+
+    leads = Lead.query.filter(
+        Lead.record_owner.in_(
+            usernames
+        )
+    ).all()
+
+    return render_template(
+
+        'add_meeting.html',
+
+        meetings=meetings,
+
+        leads=leads,
+
+        admin_view=(
+            session.get('role')
+            == 'ADMIN'
+        )
+
+    )
+
+@app.route('/commercial-visits')
+def commercial_visits():
+
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+        return redirect(
+            url_for('dashboard')
+        )
+
+    commercial_users = User.query.filter_by(
+        role='COMMERCIALS'
+    ).all()
+
+    usernames = [
+        user.username
+        for user in commercial_users
+    ]
+
+    visits = Visit.query.filter(
+        Visit.record_owner.in_(
+            usernames
+        )
+    ).all()
+
+    meetings = Meeting.query.filter(
+        Meeting.record_owner.in_(
+            usernames
+        )
+    ).all()
+
+    return render_template(
+
+        'add_visit.html',
+
+        visits=visits,
+
+        meetings=meetings,
+
+        admin_view=(
+            session.get('role')
+            == 'ADMIN'
+        )
+
+    )
+
+@app.route('/commercial-drawings')
+def commercial_drawings():
+
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+        return redirect(
+            url_for('dashboard')
+        )
+
+    commercial_users = User.query.filter_by(
+        role='COMMERCIALS'
+    ).all()
+
+    usernames = [
+        user.username
+        for user in commercial_users
+    ]
+
+    drawings = Drawing.query.filter(
+        Drawing.record_owner.in_(
+            usernames
+        )
+    ).all()
+
+    visits = Visit.query.filter(
+        Visit.record_owner.in_(
+            usernames
+        )
+    ).all()
+
+    return render_template(
+
+        'add_drawing.html',
+
+        drawings=drawings,
+
+        visits=visits,
+
+        admin_view=(
+            session.get('role')
+            == 'ADMIN'
+        )
+
+    )
+
+@app.route('/commercial-proposals')
+def commercial_proposals():
+
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+        return redirect(
+            url_for('dashboard')
+        )
+
+    commercial_users = User.query.filter_by(
+        role='COMMERCIALS'
+    ).all()
+
+    usernames = [
+        user.username
+        for user in commercial_users
+    ]
+
+    proposals = Proposal.query.filter(
+        Proposal.record_owner.in_(
+            usernames
+        )
+    ).all()
+
+    meetings = Meeting.query.filter(
+        Meeting.record_owner.in_(
+            usernames
+        )
+    ).all()
+
+    drawings = Drawing.query.filter(
+        Drawing.record_owner.in_(
+            usernames
+        )
+    ).all()
+
+    return render_template(
+
+        'add_proposal.html',
+
+        proposals=proposals,
+
+        meetings=meetings,
+
+        drawings=drawings,
+
+        admin_view=(
+            session.get('role')
+            == 'ADMIN'
+        )
+
+    )
+
+@app.route('/commercial-sales')
+def commercial_sales():
+
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+        return redirect(
+            url_for('dashboard')
+        )
+
+    commercial_users = User.query.filter_by(
+        role='COMMERCIALS'
+    ).all()
+
+    usernames = [
+        user.username
+        for user in commercial_users
+    ]
+
+    sales = SalesPipeline.query.filter(
+        SalesPipeline.record_owner.in_(
+            usernames
+        )
+    ).all()
+
+    proposals = Proposal.query.filter(
+        Proposal.record_owner.in_(
+            usernames
+        )
+    ).all()
+
+    return render_template(
+
+        'add_sales.html',
+
+        sales=sales,
+
+        proposals=proposals,
+
+        admin_view=(
+            session.get('role')
+            == 'ADMIN'
+        )
+
+    )
+
+@app.route('/commercial-invoices')
+def commercial_invoices():
+
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+        return redirect(
+            url_for('dashboard')
+        )
+
+    commercial_users = User.query.filter_by(
+        role='COMMERCIALS'
+    ).all()
+
+    usernames = [
+        user.username
+        for user in commercial_users
+    ]
+
+    invoices = Invoice.query.filter(
+        Invoice.record_owner.in_(
+            usernames
+        )
+    ).all()
+
+    sales = SalesPipeline.query.filter(
+        SalesPipeline.record_owner.in_(
+            usernames
+        )
+    ).all()
+
+    return render_template(
+
+        'add_invoice.html',
+
+        invoices=invoices,
+
+        sales=sales,
+
+        admin_view=(
+            session.get('role')
+            == 'ADMIN'
+        )
+
+    )
+
+@app.route('/commercial-clients')
+def commercial_clients():
+
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS'
+    ):
+        return redirect(
+            url_for('dashboard')
+        )
+
+    clients = Client.query.all()
+
+    proposals = Proposal.query.all()
+
+    invoices = Invoice.query.all()
+
+    return render_template(
+
+        'add_client.html',
+
+        clients=clients,
+
+        proposals=proposals,
+
+        invoices=invoices,
+
+        admin_view=(
+            session.get('role')
+            == 'ADMIN'
+        )
+
+    )
+
+@app.route(
+    '/organization'
+)
+def organization():
+
+    if session.get(
+        'role'
+    ) != 'ADMIN':
+
+        return redirect(
+            url_for(
+                'dashboard'
+            )
+        )
+    total_leads = Lead.query.count()
+    total_meetings = Meeting.query.count()
+    total_visits = Visit.query.count()
+    total_drawings = Drawing.query.count()
+    total_proposals = Proposal.query.count()
+    total_sales = SalesPipeline.query.count()
+    total_invoices = Invoice.query.count()
+    total_clients = Client.query.count()
+    return render_template(
+        'organization.html',
+        total_leads=total_leads,
+        total_meetings=total_meetings,
+        total_visits=total_visits,
+        total_drawings=total_drawings,
+        total_proposals=total_proposals,
+        total_sales=total_sales,
+        total_invoices=total_invoices,
+        total_clients=total_clients
+    )
+
+@app.route(
+    '/organization-leads'
+)
+def organization_leads():
+
+    if session.get(
+        'role'
+    ) != 'ADMIN':
+
+        return redirect(
+            url_for(
+                'dashboard'
+            )
+        )
+
+    search = request.args.get(
+        'search'
+    )
+
+    query = Lead.query
+
+    if search:
+
+        query = query.filter(
+
+            or_(
+
+                Lead.name.ilike(
+                    f'%{search}%'
+                ),
+
+                Lead.reference.ilike(
+                    f'%{search}%'
+                ),
+
+                Lead.location.ilike(
+                    f'%{search}%'
+                ),
+
+                Lead.phone.ilike(
+                    f'%{search}%'
+                ),
+
+                Lead.record_owner.ilike(
+                    f'%{search}%'
+                )
+
+            )
+
+        )
+
+    leads = query.all()
+
+    return render_template(
+
+        'organization_leads.html',
+
+        leads=leads,
+
+        search=search
+
+    )
+
+@app.route('/organization-meetings')
+def organization_meetings():
+
+    if session.get('role') != 'ADMIN':
+        return redirect(url_for('dashboard'))
+
+    search = request.args.get('search')
+
+    query = Meeting.query
+
+    if search:
+
+        query = query.filter(
+
+            or_(
+
+                Meeting.name.ilike(
+                    f'%{search}%'
+                ),
+
+                Meeting.firm_name.ilike(
+                    f'%{search}%'
+                ),
+
+                Meeting.contact_no.ilike(
+                    f'%{search}%'
+                ),
+
+                Meeting.record_owner.ilike(
+                    f'%{search}%'
+                )
+
+            )
+
+        )
+
+    meetings = query.all()
+
+    return render_template(
+
+        'organization_meetings.html',
+
+        meetings=meetings,
+
+        search=search
+
+    )
+
+@app.route('/organization-visits')
+def organization_visits():
+
+    if session.get('role') != 'ADMIN':
+        return redirect(url_for('dashboard'))
+
+    search = request.args.get('search')
+
+    query = Visit.query
+
+    if search:
+
+        query = query.filter(
+
+            or_(
+
+                Visit.company_name.ilike(
+                    f'%{search}%'
+                ),
+
+                Visit.person_name.ilike(
+                    f'%{search}%'
+                ),
+
+                Visit.contact_no.ilike(
+                    f'%{search}%'
+                ),
+
+                Visit.record_owner.ilike(
+                    f'%{search}%'
+                )
+
+            )
+
+        )
+
+    visits = query.all()
+
+    return render_template(
+
+        'organization_visits.html',
+
+        visits=visits,
+
+        search=search
+
+    )
+
+@app.route('/organization-drawings')
+def organization_drawings():
+
+    if session.get('role') != 'ADMIN':
+        return redirect(url_for('dashboard'))
+
+    search = request.args.get('search')
+
+    query = Drawing.query
+
+    if search:
+
+        query = query.filter(
+
+            or_(
+
+                Drawing.name.ilike(
+                    f'%{search}%'
+                ),
+
+                Drawing.address.ilike(
+                    f'%{search}%'
+                ),
+
+                Drawing.record_owner.ilike(
+                    f'%{search}%'
+                )
+
+            )
+
+        )
+
+    drawings = query.all()
+
+    return render_template(
+
+        'organization_drawings.html',
+
+        drawings=drawings,
+
+        search=search
+
+    )
+
+@app.route('/organization-proposals')
+def organization_proposals():
+
+    if session.get('role') != 'ADMIN':
+        return redirect(url_for('dashboard'))
+
+    search = request.args.get('search')
+
+    query = Proposal.query
+
+    if search:
+
+        query = query.filter(
+
+            or_(
+
+                Proposal.reference_no.ilike(
+                    f'%{search}%'
+                ),
+
+                Proposal.name.ilike(
+                    f'%{search}%'
+                ),
+
+                Proposal.phone_no_client.ilike(
+                    f'%{search}%'
+                ),
+
+                Proposal.record_owner.ilike(
+                    f'%{search}%'
+                )
+
+            )
+
+        )
+
+    proposals = query.all()
+
+    return render_template(
+
+        'organization_proposals.html',
+
+        proposals=proposals,
+
+        search=search
+
+    )
+
+@app.route('/organization-sales')
+def organization_sales():
+
+    if session.get('role') != 'ADMIN':
+        return redirect(url_for('dashboard'))
+
+    search = request.args.get('search')
+
+    query = SalesPipeline.query
+
+    if search:
+
+        query = query.filter(
+
+            or_(
+
+                SalesPipeline.name.ilike(
+                    f'%{search}%'
+                ),
+
+                SalesPipeline.contact_no.ilike(
+                    f'%{search}%'
+                ),
+
+                SalesPipeline.project_stage.ilike(
+                    f'%{search}%'
+                ),
+
+                SalesPipeline.record_owner.ilike(
+                    f'%{search}%'
+                )
+
+            )
+
+        )
+
+    sales = query.all()
+
+    return render_template(
+
+        'organization_sales.html',
+
+        sales=sales,
+
+        search=search
+
+    )
+
+@app.route('/organization-invoices')
+def organization_invoices():
+
+    if session.get('role') != 'ADMIN':
+        return redirect(url_for('dashboard'))
+
+    search = request.args.get('search')
+
+    query = Invoice.query
+
+    if search:
+
+        query = query.filter(
+
+            or_(
+
+                Invoice.name.ilike(
+                    f'%{search}%'
+                ),
+
+                Invoice.invoice_no.ilike(
+                    f'%{search}%'
+                ),
+
+                Invoice.record_owner.ilike(
+                    f'%{search}%'
+                )
+
+            )
+
+        )
+
+    invoices = query.all()
+
+    return render_template(
+
+        'organization_invoices.html',
+
+        invoices=invoices,
+
+        search=search
+
+    )
+
+@app.route('/organization-clients')
+def organization_clients():
+
+    if session.get('role') != 'ADMIN':
+        return redirect(url_for('dashboard'))
+
+    search = request.args.get('search')
+
+    query = Client.query
+
+    if search:
+
+        query = query.filter(
+
+            or_(
+
+                Client.client_name.ilike(
+                    f'%{search}%'
+                ),
+
+                Client.mobile_no.ilike(
+                    f'%{search}%'
+                ),
+
+                Client.product.ilike(
+                    f'%{search}%'
+                ),
+
+                Client.record_owner.ilike(
+                    f'%{search}%'
+                )
+
+            )
+
+        )
+
+    clients = query.all()
+
+    return render_template(
+
+        'organization_clients.html',
+
+        clients=clients,
+
+        search=search
+
+    )
+
 @app.route('/global-search')
 def global_search():
 
@@ -7936,12 +9338,18 @@ def reject_delete_request(request_id):
 @app.route(
     '/approve-delete-request/<int:request_id>'
 )
-def approve_delete_request(request_id):
+def approve_delete_request(
+    request_id
+):
 
-    if session.get('role') != 'ADMIN':
+    if session.get(
+        'role'
+    ) != 'ADMIN':
 
         return redirect(
-            url_for('dashboard')
+            url_for(
+                'dashboard'
+            )
         )
 
     request_obj = DeleteRequest.query.get_or_404(
@@ -8016,8 +9424,6 @@ def approve_delete_request(request_id):
 
         request_obj.status = 'APPROVED'
 
-        db.session.flush()
-
         log_activity(
 
             request_obj.module_name,
@@ -8030,6 +9436,12 @@ def approve_delete_request(request_id):
 
         db.session.commit()
 
+        flash(
+
+            'Delete request approved successfully.'
+
+        )
+
     except Exception:
 
         db.session.rollback()
@@ -8040,11 +9452,11 @@ def approve_delete_request(request_id):
 
         )
 
-        return redirect(
-            url_for(
-                'delete_requests'
-            )
+    return redirect(
+        url_for(
+            'delete_requests'
         )
+    )
 
 @app.route(
     '/generate-proposal/<int:proposal_id>'

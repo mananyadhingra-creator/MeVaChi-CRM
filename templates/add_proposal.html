@@ -30,13 +30,19 @@
 
 <div class="container mt-4">
 
+    <a href="javascript:history.back()"
+       class="btn btn-outline-secondary">
+
+        Back
+
+    </a>
     <a href="/dashboard"
-        class="btn btn-secondary mb-3">
+        class="btn btn-dark">
 
         Back To Dashboard
 
-    </a>
-
+    </a>    
+    {% if not admin_view %}
     <div class="card shadow p-4">
 
         <h2 class="text-center mb-4">
@@ -45,7 +51,8 @@
 
         </h2>
 
-        <form method="POST"
+        <form action="{{ url_for('add_proposal') }}"
+              method="POST"
               enctype="multipart/form-data">
 
         <div class="card shadow-sm p-4 mb-4">
@@ -812,7 +819,7 @@
         </form>
 
     </div>
-
+    {% endif %}
     <br>
 
     <div class="card shadow p-4">

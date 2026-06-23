@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>
+
+        Organization Clients
+
+    </title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container py-5">
+    <a href="javascript:history.back()"
+       class="btn btn-outline-secondary">
+
+        Back
+
+    </a>
+    <a href="/dashboard"
+        class="btn btn-dark">
+
+        Back To Dashboard
+
+    </a>    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="mb-1">
+
+                Organization Clients
+
+            </h2>
+
+            <small class="text-muted">
+
+                All Client Records
+
+            </small>
+
+        </div>
+
+
+
+    </div>
+
+    <div class="card shadow-sm">
+
+        <div class="card-body">
+
+            <form method="GET"
+                  class="mb-3">
+
+                <div class="input-group">
+
+                    <input type="text"
+                           name="search"
+                           class="form-control"
+                           placeholder="Search Clients"
+                           value="{{ search or '' }}">
+
+                    <button class="btn btn-dark"
+                            type="submit">
+
+                        Search
+
+                    </button>
+
+                    <a href="{{ url_for(
+                        'organization_clients'
+                    ) }}"
+                       class="btn btn-outline-secondary">
+
+                        Clear
+
+                    </a>
+
+                </div>
+
+            </form>
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle">
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th>ID</th>
+
+                            <th>Client Name</th>
+
+                            <th>Product</th>
+
+                            <th>Mobile</th>
+
+                            <th>CMC Due</th>
+
+                            <th>Service Due</th>
+
+                            <th>Owner</th>
+
+                            <th>Action</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for client in clients %}
+
+                        <tr>
+
+                            <td>
+
+                                {{ client.client_id }}
+
+                            </td>
+
+                            <td>
+
+                                <a href="/client-services/{{ client.client_id }}">
+
+                                    {{ client.client_name }}
+
+                                </a>
+
+                            </td>
+
+                            <td>
+
+                                {{ client.product }}
+
+                            </td>
+
+                            <td>
+
+                                {{ client.mobile_no }}
+
+                            </td>
+
+                            <td>
+
+                                {{ client.cmc_due }}
+
+                            </td>
+
+                            <td>
+
+                                {{ client.service_due }}
+
+                            </td>
+
+                            <td>
+
+                                <span class="badge bg-dark">
+
+                                    {{ client.record_owner }}
+
+                                </span>
+
+                            </td>
+
+                            <td>
+
+                                <a href="/client/{{ client.client_id }}"
+                                   class="btn btn-sm btn-outline-secondary">
+
+                                    View
+
+                                </a>
+
+                                <a href="/edit-client/{{ client.client_id }}"
+                                   class="btn btn-sm btn-dark">
+
+                                    Edit
+
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                        {% if not clients %}
+
+                        <tr>
+
+                            <td colspan="8"
+                                class="text-center text-muted">
+
+                                No clients found.
+
+                            </td>
+
+                        </tr>
+
+                        {% endif %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

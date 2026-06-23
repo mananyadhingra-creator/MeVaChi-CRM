@@ -29,14 +29,19 @@
 <body class="bg-light">
 
 <div class="container mt-5">
+    <a href="javascript:history.back()"
+       class="btn btn-outline-secondary">
 
+        Back
+
+    </a>
     <a href="/dashboard"
-        class="btn btn-secondary mb-3">
+        class="btn btn-dark">
 
         Back To Dashboard
 
     </a>    
-
+    {% if not admin_view %}
     <div class="card shadow p-4">
 
         <h2 class="text-center mb-4">
@@ -46,7 +51,8 @@
         </h2>
 
 
-        <form method="POST">
+        <form action="{{ url_for('add_client') }}"
+              method="POST">
 
             <!-- SELECT PROPOSAL & INVOICE -->
 
@@ -714,6 +720,7 @@
         </form>
 
     </div>
+    {% endif %}
 
 </div>
 

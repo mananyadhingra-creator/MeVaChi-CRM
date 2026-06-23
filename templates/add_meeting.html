@@ -35,22 +35,29 @@
 
 <div class="container mt-5">
 
+    <a href="javascript:history.back()"
+       class="btn btn-outline-secondary">
+
+        Back
+
+    </a>
     <a href="/dashboard"
-        class="btn btn-secondary mb-3">
+        class="btn btn-dark">
 
         Back To Dashboard
 
-    </a>
-
+    </a>    
+    {% if not admin_view %}
     <div class="card shadow p-4">
 
         <h2 class="text-center mb-4">
 
-            Add Meeting
+            Meeting Management
 
         </h2>
-
-        <form method="POST">
+        
+        <form action="{{ url_for('add_meeting') }}"
+              method="POST">
 
             <div class="row">
 
@@ -466,9 +473,10 @@
 
 
         </form>
+        
 
     </div>
-
+    {% endif %}
     <br>
 
     <div class="card shadow p-4">

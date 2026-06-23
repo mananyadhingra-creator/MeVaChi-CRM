@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>
+
+        Organization Meetings
+
+    </title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container py-5">
+    <a href="javascript:history.back()"
+       class="btn btn-outline-secondary">
+
+        Back
+
+    </a>
+    <a href="/dashboard"
+        class="btn btn-dark">
+
+        Back To Dashboard
+
+    </a>    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="mb-1">
+
+                Organization Meetings
+
+            </h2>
+
+            <small class="text-muted">
+
+                All Meeting Records
+
+            </small>
+
+        </div>
+
+
+
+    </div>
+
+    <div class="card shadow-sm">
+
+        <div class="card-body">
+
+            <form method="GET"
+                  class="mb-3">
+
+                <div class="input-group">
+
+                    <input type="text"
+                           name="search"
+                           class="form-control"
+                           placeholder="Search Meetings"
+                           value="{{ search or '' }}">
+
+                    <button class="btn btn-dark"
+                            type="submit">
+
+                        Search
+
+                    </button>
+
+                    <a href="{{ url_for(
+                        'organization_meetings'
+                    ) }}"
+                       class="btn btn-outline-secondary">
+
+                        Clear
+
+                    </a>
+
+                </div>
+
+            </form>
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle">
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th>ID</th>
+
+                            <th>Name</th>
+
+                            <th>Firm Name</th>
+
+                            <th>Contact</th>
+
+                            <th>Meeting Date</th>
+
+                            <th>Status</th>
+
+                            <th>Owner</th>
+
+                            <th>Actions</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for meeting in meetings %}
+
+                        <tr>
+
+                            <td>
+
+                                {{ meeting.meeting_id }}
+
+                            </td>
+
+                            <td>
+
+                                {{ meeting.name }}
+
+                            </td>
+
+                            <td>
+
+                                {{ meeting.firm_name }}
+
+                            </td>
+
+                            <td>
+
+                                {{ meeting.contact_no }}
+
+                            </td>
+
+                            <td>
+
+                                {{ meeting.date_of_meeting }}
+
+                            </td>
+
+                            <td>
+
+                                {{ meeting.meeting_status }}
+
+                            </td>
+
+                            <td>
+
+                                <span class="badge bg-dark">
+
+                                    {{ meeting.record_owner }}
+
+                                </span>
+
+                            </td>
+
+                            <td>
+
+                                <a href="{{ url_for(
+                                    'meeting_details',
+                                    meeting_id=meeting.meeting_id
+                                ) }}"
+                                   class="btn btn-sm btn-outline-secondary">
+
+                                    View
+
+                                </a>
+
+                                <a href="{{ url_for(
+                                    'edit_meeting',
+                                    meeting_id=meeting.meeting_id
+                                ) }}"
+                                   class="btn btn-sm btn-dark">
+
+                                    Edit
+
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                        {% if not meetings %}
+
+                        <tr>
+
+                            <td colspan="8"
+                                class="text-center text-muted">
+
+                                No meetings found.
+
+                            </td>
+
+                        </tr>
+
+                        {% endif %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

@@ -278,13 +278,59 @@ body{
 
     {% endif %}
 
+
     <!-- MODULES -->
 
 
     <div class="row justify-content-center g-3">
+
         {% if session['role'] in [
             'ADMIN',
-            'COMMERCIALS',
+            'COMMERCIALS'
+        ] %}
+        <div class="col-lg-3 col-md-4 col-sm-6">
+
+            <a href="{{ url_for(
+                'sales_department'
+            ) }}"
+               class="card module-card text-center">
+
+                Sales Department
+
+            </a>
+
+        </div>
+
+        <div class="col-lg-3 col-md-4 col-sm-6">
+
+            <a href="{{ url_for(
+                'commercial_department'
+            ) }}"
+               class="card module-card text-center">
+
+                Commercial Department
+
+            </a>
+
+        </div>
+        {% endif %}
+        {% if session['role'] in [
+            'ADMIN'
+        ] %}        
+        <div class="col-lg-3 col-md-4 col-sm-6">
+
+            <a href="{{ url_for(
+                'organization'
+            ) }}"
+               class="card module-card text-center">
+
+                Organization
+
+            </a>
+
+        </div>
+        {% endif %}
+        {% if session['role'] in [
             'SALES'
         ] %}
         <div class="col-lg-3 col-md-4 col-sm-6">
@@ -293,24 +339,15 @@ body{
                 Leads
             </a>            
         </div>
-        {% endif %}
-        {% if session['role'] in [
-            'ADMIN',
-            'COMMERCIALS',
-            'SALES'
-        ] %}  
+
+
         <div class="col-lg-3 col-md-4 col-sm-6">
           
             <a href="/add-meeting" class="card module-card">
                 Meetings
             </a>
         </div>
-        {% endif %}
-        {% if session['role'] in [
-            'ADMIN',
-            'SALES',
-            'COMMERCIALS'
-        ] %}
+
         <div class="col-lg-3 col-md-4 col-sm-6">
 
 
@@ -318,12 +355,7 @@ body{
                 Visits
             </a>
         </div>
-        {% endif %}
-        {% if session['role'] in [
-            'ADMIN',
-            'SALES',
-            'COMMERCIALS'
-        ] %}
+
         <div class="col-lg-3 col-md-4 col-sm-6">
 
 
@@ -332,35 +364,20 @@ body{
             </a>
         
         </div>
-        {% endif %}
-        {% if session['role'] in [
-            'ADMIN',
-            'COMMERCIALS',
-            'SALES'
-        ] %}  
+
         <div class="col-lg-3 col-md-4 col-sm-6">
           
             <a href="/add-proposal" class="card module-card">
                 Proposals
             </a>
         </div>
-        {% endif %}
-        {% if session['role'] in [
-            'ADMIN',
-            'SALES',
-            'COMMERCIALS'
-        ] %}
+
         <div class="col-lg-3 col-md-4 col-sm-6">
             <a href="/add-sales" class="card module-card">
                 Sales
             </a>
         </div>
-        {% endif %}
-        {% if session['role'] in [
-            'ADMIN',
-            'SALES',
-            'COMMERCIALS'
-        ] %}
+
         <div class="col-lg-3 col-md-4 col-sm-6">
 
 
@@ -369,25 +386,7 @@ body{
             </a>
             
         </div>
-        {% endif %}
-        {% if session['role'] in [
-            'ADMIN',
-            'COMMERCIALS'
-        ] %}  
         <div class="col-lg-3 col-md-4 col-sm-6">
-                      
-            <a href="/add-client" class="card module-card">
-                Clients
-            </a>
-            
-        </div>
-        {% endif %}
-        {% if session['role'] in [
-            'ADMIN',
-            'COMMERCIALS',
-            'SALES'
-        ] %} 
-         <div class="col-md-3 mb-2">
  
             <a href="{{ url_for(
                     'completed_tasks'
@@ -399,8 +398,21 @@ body{
             </a>
             
 
-        </div>
+        </div>       
         {% endif %}
+        {#{% if session['role'] in [
+            'ADMIN',
+            'COMMERCIALS'
+        ] %}  
+        <div class="col-lg-3 col-md-4 col-sm-6">
+                      
+            <a href="/add-client" class="card module-card">
+                Clients
+            </a>
+            
+        </div>
+        {% endif %}#}
+
         {% if session['role'] == 'ADMIN' %}
 
         <div class="col-lg-3 col-md-4 col-sm-6">
@@ -414,7 +426,7 @@ body{
 
         </div>
         {% endif %}
-        {% if session['role'] == 'ADMIN' %}
+        {#{% if session['role'] == 'ADMIN' %}
 
         <div class="col-lg-3 col-md-4 col-sm-6">
 
@@ -445,7 +457,7 @@ body{
 
         </div>
 
-        {% endif %}
+        {% endif %}#}
         {% if session['role'] == 'ADMIN' %}
 
         <div class="col-lg-3 col-md-4 col-sm-6">
@@ -456,7 +468,14 @@ body{
                class="card module-card">
 
                 Delete Requests
+                <br>
 
+                <small>
+
+                    {{ pending_delete_requests }}
+                    Pending
+
+                </small>
             </a>
 
         </div>
@@ -468,7 +487,10 @@ body{
 
     <!-- ANALYTICS -->
 
-
+    {% if session['role'] in [
+        'ADMIN',
+        'COMMERCIALS'
+    ] %}  
     <div class="row justify-content-center">
 
         <div class="col-md-4">
@@ -520,6 +542,7 @@ body{
         </div>
 
     </div>
+    {% endif %}
 
 </div>
 
