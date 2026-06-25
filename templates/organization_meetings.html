@@ -17,18 +17,20 @@
 <body class="bg-light">
 
 <div class="container py-5">
-    <a href="javascript:history.back()"
-       class="btn btn-outline-secondary">
+    <div class="d-flex justify-content-end gap-1">
+        <a href="javascript:history.back()"
+           class="btn btn-outline-secondary">
 
-        Back
+            Back
 
-    </a>
-    <a href="/dashboard"
-        class="btn btn-dark">
+        </a>
+        <a href="/dashboard"
+           class="btn btn-dark">
 
-        Back To Dashboard
+            Back To Dashboard
 
-    </a>    
+        </a>  
+    </div>  
     <div class="d-flex justify-content-between align-items-center mb-4">
 
         <div>
@@ -168,25 +170,27 @@
 
                             <td>
 
-                                <a href="{{ url_for(
-                                    'meeting_details',
-                                    meeting_id=meeting.meeting_id
-                                ) }}"
-                                   class="btn btn-sm btn-outline-secondary">
+                                <a href="/meeting/{{ meeting.meeting_id }}"
+                                   class="btn btn-dark btn-sm">
 
-                                    View
+                                    View Details
 
                                 </a>
-
-                                <a href="{{ url_for(
-                                    'edit_meeting',
-                                    meeting_id=meeting.meeting_id
-                                ) }}"
-                                   class="btn btn-sm btn-dark">
+                                
+                                <a href="/edit-meeting/{{ meeting.meeting_id }}"
+                                   class="btn btn-warning btn-sm">
 
                                     Edit
 
                                 </a>
+
+                                <a href="/request-delete-meeting/{{ meeting.meeting_id }}"
+                                   class="btn btn-danger btn-sm"
+                                   onclick="return confirm('Are you sure you want to delete this meeting?');">
+
+                                    Delete
+                                </a>
+                                
 
                             </td>
 

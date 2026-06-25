@@ -335,6 +335,8 @@
 
     {% endif %}
 
+
+
     {% if clients %}
 
     <div class="card mb-4">
@@ -356,9 +358,9 @@
                     <a href="{{ url_for('edit_client',
                                         client_id=client.client_id) }}">
 
-                        {{ client.name }}
+                        {{ client.client_name }}
                         -
-                        {{ client.product }}
+                        {{ client.client_id }}
                     </a>
 
                 </li>
@@ -413,6 +415,45 @@
 
     {% endif %}
 
+    {% if installations %}
+
+    <div class="card mb-4">
+
+        <div class="card-header">
+
+            Installations ({{ installations|length }})
+
+        </div>
+
+        <div class="card-body">
+
+            <ul>
+
+                {% for installation in installations %}
+
+                <li>
+
+                    <a href="{{ url_for('edit_installation',
+                                        installation_id=installation.installation_id) }}">
+
+                        {{ installation.sales.name }}
+                        -
+                        {{ installation.sales.reference_no }}
+                        
+                    </a>
+
+                </li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
     {% if search
     and not leads
     and not meetings
@@ -422,7 +463,8 @@
     and not sales
     and not invoices
     and not clients
-    and not services %}
+    and not services
+    and not installations %}
 
     <div class="alert alert-warning">
 

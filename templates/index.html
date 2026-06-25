@@ -315,6 +315,23 @@ body{
         </div>
         {% endif %}
         {% if session['role'] in [
+            
+            'COMMERCIALS'
+        ] %}        
+        <div class="col-lg-3 col-md-4 col-sm-6">
+
+            <a href="{{ url_for(
+                'add_installation'
+            ) }}"
+               class="card module-card text-center">
+
+                Installation
+
+            </a>
+
+        </div>
+        {% endif %}
+        {% if session['role'] in [
             'ADMIN'
         ] %}        
         <div class="col-lg-3 col-md-4 col-sm-6">
@@ -385,6 +402,18 @@ body{
                 Invoices
             </a>
             
+        </div>
+        <div class="col-lg-3 col-md-4 col-sm-6">
+
+            <a href="{{ url_for(
+                'add_installation'
+            ) }}"
+               class="card module-card">
+
+                Installation
+
+            </a>
+
         </div>
         <div class="col-lg-3 col-md-4 col-sm-6">
  

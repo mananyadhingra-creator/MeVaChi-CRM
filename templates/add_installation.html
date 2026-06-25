@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>
+
+        Installation
+
+    </title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container py-4">
+    <div class="d-flex justify-content-end gap-1">
+        <a href="javascript:history.back()"
+           class="btn btn-outline-secondary">
+
+            Back
+
+        </a>
+        <a href="/dashboard"
+           class="btn btn-dark">
+
+            Back To Dashboard
+
+        </a>  
+    </div>
+    <h2>
+
+        Installation Module
+
+    </h2>
+      
+    {% if session['role'] != 'ADMIN' %}
+    <form method="POST"
+          enctype="multipart/form-data">
+
+        <div class="mb-3">
+
+            <label>
+
+                Sales Record
+
+            </label>
+
+            <select name="sales_id"
+                    class="form-select">
+
+                {% for sale in sales %}
+
+                <option value="{{ sale.sales_id }}">
+
+                    {{ sale.reference_no }}
+                    -
+                    {{ sale.name }}
+
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+        <div class="mb-3">
+
+            <label>
+
+                Installation For
+
+            </label>
+
+            <input type="text"
+                   name="installation_for"
+                   class="form-control">
+
+        </div>
+        <hr>
+
+        <h5>
+
+            Type of Installation
+
+        </h5>
+
+        <div id="cutting-container">
+
+            <div class="row mb-2 cutting-row">
+
+                <div class="col-md-4">
+
+                    <select name="cutting_type[]"
+                            class="form-select cutting-type"
+                            onchange="toggleSize(this)">
+
+                        <option value="Core Cutting">
+
+                            Core Cutting
+
+                        </option>
+
+                        <option value="Glass Cutting">
+
+                            Glass Cutting
+
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div class="col-md-4">
+
+                    <div class="size-section">
+
+                        <select name="size[]"
+                                class="form-select core-size">
+
+                            <option value='4"'>4"</option>
+
+                            <option value='6"'>6"</option>
+
+                            <option value='9.5"'>9.5"</option>
+
+                            <option value='10"'>10"</option>
+
+                            <option value='Not Sure'>
+
+                                Not Sure
+
+                            </option>
+
+                        </select>
+
+                        <input type="text"
+                               name="size[]"
+                               class="form-control glass-size mt-2"
+                               placeholder="Enter Shape and Size"
+                               style="display:none;">
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-2">
+
+                    <input type="number"
+                           name="quantity[]"
+                           class="form-control"
+                           value="1"
+                           min="1">
+
+                </div>
+
+                <div class="col-md-2">
+
+                    <button type="button"
+                            class="btn btn-danger"
+                            onclick="removeCutting(this)">
+
+                        X
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <button type="button"
+                class="btn btn-dark mb-3"
+                onclick="addCutting()">
+
+            + Add Cutting
+
+        </button>
+        <div class="mb-3">
+
+            <label>
+
+                Piping Type
+
+            </label>
+
+            <select name="piping_type"
+                    class="form-select">
+
+                <option>PVC</option>
+
+                <option>Flexible</option>
+
+                <option>50% Flexible</option>
+
+                <option>Not Sure</option>
+
+            </select>
+
+        </div>
+
+        <div class="mb-3">
+
+            <label>
+
+                Machine Position
+
+            </label>
+
+            <select name="machine_position"
+                    class="form-select">
+
+                <option>Ground</option>
+
+                <option>Wall</option>
+
+                <option>Ceiling Mounted</option>
+
+            </select>
+
+        </div>
+
+        <div class="mb-3">
+
+            <label>
+
+                Status
+
+            </label>
+
+            <select name="installation_status"
+                    class="form-select">
+
+                <option>Pending</option>
+
+                <option>Shared with Team</option>
+
+                <option>Installed</option>
+
+            </select>
+
+        </div>
+
+        <div class="mb-3">
+
+            <label>
+
+                Notes
+
+            </label>
+
+            <textarea name="installation_notes"
+                      class="form-control"></textarea>
+
+        </div>
+        <div class="card shadow-sm mb-3">
+
+            <div class="card-body">
+
+                <h5>
+
+                    Upload Images
+
+                </h5>
+
+                <hr>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Diffuser
+
+                    </label>
+
+                    <input type="file"
+                           name="diffuser_files"
+                           class="form-control"
+                           multiple>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Machine Files
+
+                    </label>
+
+                    <input type="file"
+                           name="machine_files"
+                           class="form-control"
+                           multiple>
+
+                </div>
+
+            </div>
+
+        </div>
+        <button type="submit"
+                class="btn btn-dark">
+
+            Save
+
+        </button>
+
+    </form>
+    {% endif %}
+    <hr>
+
+    <h4>
+
+        Existing Installations
+
+    </h4>
+    <form method="GET"
+          class="mb-3">
+
+        <div class="input-group">
+
+            <input type="text"
+                   name="search"
+                   class="form-control"
+                   placeholder="Search Installations"
+                   value="{{ search or '' }}">
+
+            <button class="btn btn-dark"
+                    type="submit">
+
+                Search
+
+            </button>
+
+            <a href="{{ url_for(
+                'add_installation'
+            ) }}"
+               class="btn btn-outline-secondary">
+
+                Clear
+
+            </a>
+
+        </div>
+
+    </form>
+    <table class="table table-bordered table-striped">
+
+        <thead>
+
+            <tr>
+
+                <th>ID</th>
+
+                <th>Sales Ref</th>
+
+                <th>Installation For</th>
+
+                <th>Piping</th>
+
+                <th>Position</th>
+
+                <th>Status</th>
+
+                <th>Created By</th>
+
+                <th>Action</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            {% for installation in installations %}
+
+            <tr>
+
+                <td>
+
+                    {{ installation.installation_id }}
+
+                </td>
+
+                <td>
+
+                    {% if installation.sales %}
+
+                        {{ installation.sales.name }}
+
+                        <br>
+
+                        <small class="text-muted">
+
+                            {{ installation.sales.reference_no }}
+
+                        </small>
+
+                    {% endif %}
+
+                </td>
+
+                <td>
+
+                    {{ installation.installation_for }}
+
+                </td>
+
+                <td>
+
+                    {{ installation.piping_type }}
+
+                </td>
+
+                <td>
+
+                    {{ installation.machine_position }}
+
+                </td>
+
+                <td>
+
+                    {{ installation.installation_status }}
+
+                </td>
+
+                <td>
+
+                    {{ installation.created_by }}
+
+                </td>
+
+                <td>
+
+                    <a href="/installation/{{ installation.installation_id }}"
+                       class="btn btn-dark btn-sm">
+
+                        View
+
+                    </a>
+
+                    <a href="/edit-installation/{{ installation.installation_id }}"
+                       class="btn btn-warning btn-sm">
+
+                        Edit
+
+                    </a>
+
+                    <a href="/request-delete-installation/{{ installation.installation_id }}"
+                       class="btn btn-danger btn-sm"
+                       onclick="return confirm(
+                            'Delete this installation record?'
+                       )">
+
+                        Delete
+
+                    </a>
+
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+<script>
+function toggleSize(select) {
+
+    let row = select.closest(
+        '.cutting-row'
+    );
+
+    let dropdown = row.querySelector(
+        '.core-size'
+    );
+
+    let textbox = row.querySelector(
+        '.glass-size'
+    );
+
+    if (
+
+        select.value ==
+        "Glass Cutting"
+
+    ) {
+
+        dropdown.style.display =
+            "none";
+
+        textbox.style.display =
+            "block";
+
+    }
+
+    else {
+
+        dropdown.style.display =
+            "block";
+
+        textbox.style.display =
+            "none";
+
+    }
+
+}
+function addCutting() {
+
+    let container = document.getElementById(
+        'cutting-container'
+    );
+
+    let row = document.querySelector(
+        '.cutting-row'
+    );
+
+    let clone = row.cloneNode(
+        true
+    );
+
+    clone.querySelector(
+        'input[name="quantity[]"]'
+    ).value = 1;
+
+    container.appendChild(
+        clone
+    );
+
+    toggleSize(
+        clone.querySelector(
+            '.cutting-type'
+        )
+    );
+
+}
+
+function removeCutting(button) {
+
+    let rows = document.querySelectorAll(
+        '.cutting-row'
+    );
+
+    if (rows.length > 1) {
+
+        button.closest(
+            '.cutting-row'
+        ).remove();
+
+    }
+
+}
+
+document.getElementById(
+    'installation_files'
+).addEventListener(
+    'change',
+    function() {
+
+        let output =
+            document.getElementById(
+                'selected-files'
+            );
+
+        output.innerHTML = '';
+
+        for (
+            let i = 0;
+            i < this.files.length;
+            i++
+        ) {
+
+            output.innerHTML +=
+
+                '<div>' +
+
+                this.files[i].name +
+
+                '</div>';
+
+        }
+
+    }
+);
+
+document.querySelectorAll(
+
+    '.cutting-type'
+
+).forEach(
+
+    function(select){
+
+        toggleSize(
+            select
+        );
+
+    }
+
+);
+</script>
+</body>
+
+</html>

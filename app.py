@@ -675,6 +675,141 @@ class Invoice(db.Model):
         db.String(100)
     )
 
+class Installation(db.Model):
+
+    __tablename__ = 'installation'
+
+    installation_id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    sales_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            'sales_pipeline.sales_id'
+        )
+    )
+
+    installation_for = db.Column(
+        db.String(200)
+    )
+
+    installation_type = db.Column(
+        db.String(100)
+    )
+
+    piping_type = db.Column(
+        db.String(100)
+    )
+
+    machine_position = db.Column(
+        db.String(100)
+    )
+
+    installation_status = db.Column(
+        db.String(50),
+        default='PENDING'
+    )
+
+    installation_notes = db.Column(
+        db.Text
+    )
+
+    created_by = db.Column(
+        db.String(100)
+    )
+
+    created_on = db.Column(
+        db.DateTime,
+        default=datetime.now
+    )
+
+    record_owner = db.Column(
+        db.String(100)
+    )
+
+    files = db.relationship(
+        'InstallationFile',
+        backref='installation',
+        cascade='all, delete-orphan'
+    )
+
+    cuttings = db.relationship(
+
+        'InstallationCutting',
+
+        backref='installation',
+
+        cascade='all, delete-orphan'
+
+    )
+
+    sales = db.relationship(
+
+        'SalesPipeline',
+
+        backref='installations'
+
+    )
+
+class InstallationFile(db.Model):
+
+    __tablename__ = 'installation_files'
+
+    file_id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    installation_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            'installation.installation_id'
+        )
+    )
+
+    file_name = db.Column(
+        db.String(255)
+    )
+
+    file_path = db.Column(
+        db.String(500)
+    )
+
+    file_type = db.Column(
+        db.String(50)
+    )
+
+class InstallationCutting(db.Model):
+
+    __tablename__ = 'installation_cuttings'
+
+    cutting_id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    installation_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            'installation.installation_id'
+        )
+    )
+
+    cutting_type = db.Column(
+        db.String(50)
+    )
+
+    size = db.Column(
+        db.String(150)
+    )
+
+    quantity = db.Column(
+        db.Integer,
+        default=1
+    )
+
 class Client(db.Model):
 
     __tablename__ = 'client'
@@ -5575,6 +5710,703 @@ def request_delete_invoice(invoice_id):
 
     )
 
+@app.route(
+    '/add-installation',
+    methods=['GET', 'POST']
+)
+def add_installation():
+
+    if not has_access(
+        'ADMIN',
+        'SALES',
+        'COMMERCIALS'
+    ):
+
+        return redirect(
+            url_for(
+                'dashboard'
+            )
+        )
+
+    if request.method == 'POST':
+
+        installation = Installation(
+
+            sales_id=request.form.get(
+                'sales_id'
+            ),
+
+            installation_for=request.form.get(
+                'installation_for'
+            ),
+
+            piping_type=request.form.get(
+                'piping_type'
+            ),
+
+            machine_position=request.form.get(
+                'machine_position'
+            ),
+
+            installation_status=request.form.get(
+                'installation_status'
+            ),
+
+            installation_notes=request.form.get(
+                'installation_notes'
+            ),
+
+            created_by=session[
+                'username'
+            ]
+
+        )
+
+        db.session.add(
+            installation
+        )
+
+        db.session.flush()
+        diffuser_files = request.files.getlist(
+            'diffuser_files'
+        )
+
+        machine_files = request.files.getlist(
+            'machine_files'
+        )
+        for file in diffuser_files:
+
+            if file and file.filename:
+
+                filename = secure_filename(
+                    file.filename
+                )
+
+                file_path = os.path.join(
+                    'installations',
+                    filename
+                )
+
+                file.save(
+
+                    os.path.join(
+
+                        app.config[
+                            'UPLOAD_FOLDER'
+                        ],
+
+                        file_path
+
+                    )
+
+                )
+
+                installation_file = InstallationFile(
+
+                    installation_id=
+                        installation.installation_id,
+
+                    file_name=
+                        filename,
+
+                    file_path=
+                        file_path,
+
+                    file_type=
+                        'DIFFUSER'
+
+                )
+
+                db.session.add(
+                    installation_file
+                )
+        for file in machine_files:
+
+            if file and file.filename:
+
+                filename = secure_filename(
+                    file.filename
+                )
+
+                file_path = os.path.join(
+                    'installations',
+                    filename
+                )
+
+                file.save(
+
+                    os.path.join(
+
+                        app.config[
+                            'UPLOAD_FOLDER'
+                        ],
+
+                        file_path
+
+                    )
+
+                )
+
+                installation_file = InstallationFile(
+
+                    installation_id=
+                        installation.installation_id,
+
+                    file_name=
+                        filename,
+
+                    file_path=
+                        file_path,
+
+                    file_type=
+                        'MACHINE'
+
+                )
+
+                db.session.add(
+                    installation_file
+                )
+        cutting_types = request.form.getlist(
+            'cutting_type[]'
+        )
+
+        core_sizes = request.form.getlist(
+            'core_size[]'
+        )
+
+        glass_sizes = request.form.getlist(
+            'glass_size[]'
+        )
+
+        quantities = request.form.getlist(
+            'quantity[]'
+        )
+
+        for i in range(
+            len(cutting_types)
+        ):
+
+            if cutting_types[i] == 'Core Cutting':
+
+                cutting_size = core_sizes[i]
+
+            else:
+
+                cutting_size = glass_sizes[i]
+
+            cutting = InstallationCutting(
+
+                installation_id=
+                    installation.installation_id,
+
+                cutting_type=
+                    cutting_types[i],
+
+                size=
+                    cutting_size,
+
+                quantity=
+                    int(
+                        quantities[i]
+                    )
+
+            )
+
+            db.session.add(
+                cutting
+            )
+        log_activity(
+
+            'INSTALLATION',
+
+            installation.installation_id,
+
+            'CREATED'
+
+        )
+            
+        db.session.commit()
+
+        return redirect(
+            url_for(
+                'add_installation'
+            )
+        )
+
+    search = request.args.get(
+        'search'
+    )
+
+    query = Installation.query.join(
+        SalesPipeline,
+        Installation.sales_id ==
+        SalesPipeline.sales_id
+    )
+
+    if search:
+
+        query = query.filter(
+
+            or_(
+
+                Installation.installation_for.ilike(
+                    f'%{search}%'
+                ),
+
+                Installation.piping_type.ilike(
+                    f'%{search}%'
+                ),
+
+                Installation.machine_position.ilike(
+                    f'%{search}%'
+                ),
+
+                Installation.installation_status.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.name.ilike(
+                    f'%{search}%'
+                ),
+
+                SalesPipeline.reference_no.ilike(
+                    f'%{search}%'
+                )
+
+            )
+
+        )
+
+    installations = query.order_by(
+
+        Installation.created_on.asc()
+
+    ).all()
+
+    sales_records = SalesPipeline.query.all()
+
+    return render_template(
+
+        'add_installation.html',
+
+        installations=installations,
+
+        sales=sales_records,
+
+        search=search
+
+    )
+
+@app.route(
+    '/installation/<int:installation_id>'
+)
+def installation_details(
+    installation_id
+):
+
+    if not has_access(
+
+        'ADMIN',
+        'SALES',
+        'COMMERCIALS'
+
+    ):
+
+        return redirect(
+            url_for(
+                'dashboard'
+            )
+        )
+
+    installation = Installation.query.get_or_404(
+
+        installation_id
+
+    )
+
+    diffuser_files = InstallationFile.query.filter_by(
+        installation_id=installation_id,
+        file_type='DIFFUSER'
+    ).all()
+
+    machine_files = InstallationFile.query.filter_by(
+        installation_id=installation_id,
+        file_type='MACHINE'
+    ).all()
+
+    cuttings = InstallationCutting.query.filter_by(
+
+        installation_id=installation_id
+
+    ).all()
+
+    return render_template(
+
+        'installation_details.html',
+
+        installation=installation,
+
+        diffuser_files=diffuser_files,
+
+        machine_files=machine_files,
+
+        cuttings=cuttings
+
+    )
+
+@app.route(
+    '/edit-installation/<int:installation_id>',
+    methods=['GET', 'POST']
+)
+def edit_installation(
+    installation_id
+):
+
+    if not has_access(
+        'ADMIN',
+        'SALES',
+        'COMMERCIALS'
+    ):
+
+        return redirect(
+            url_for(
+                'dashboard'
+            )
+        )
+
+    installation = Installation.query.get_or_404(
+        installation_id
+    )
+
+    sales_records = SalesPipeline.query.all()
+
+    cuttings = InstallationCutting.query.filter_by(
+        installation_id=installation_id
+    ).all()
+
+    diffuser_files = InstallationFile.query.filter_by(
+        installation_id=installation_id,
+        file_type='DIFFUSER'
+    ).all()
+
+    machine_files = InstallationFile.query.filter_by(
+        installation_id=installation_id,
+        file_type='MACHINE'
+    ).all()
+
+    if request.method == 'POST':
+
+        installation.sales_id = request.form.get(
+            'sales_id'
+        )
+
+        installation.installation_for = request.form.get(
+            'installation_for'
+        )
+
+        installation.piping_type = request.form.get(
+            'piping_type'
+        )
+
+        installation.machine_position = request.form.get(
+            'machine_position'
+        )
+
+        installation.installation_status = request.form.get(
+            'installation_status'
+        )
+
+        installation.installation_notes = request.form.get(
+            'installation_notes'
+        )
+
+        files_to_delete = request.form.getlist(
+            'delete_files'
+        )
+
+        for file_id in files_to_delete:
+
+            file_record = InstallationFile.query.get(
+                file_id
+            )
+
+            if file_record:
+
+                try:
+
+                    os.remove(
+                        os.path.join(
+                            app.config[
+                                'UPLOAD_FOLDER'
+                            ],
+                            file_record.file_path
+                        )
+                    )
+
+                except:
+
+                    pass
+
+                db.session.delete(
+                    file_record
+                )
+
+        InstallationCutting.query.filter_by(
+            installation_id=installation_id
+        ).delete()
+
+        cutting_types = request.form.getlist(
+            'cutting_type[]'
+        )
+
+        core_sizes = request.form.getlist(
+            'core_size[]'
+        )
+
+        glass_sizes = request.form.getlist(
+            'glass_size[]'
+        )
+
+        quantities = request.form.getlist(
+            'quantity[]'
+        )
+
+        for i in range(
+            len(cutting_types)
+        ):
+
+            if cutting_types[i] == 'Core Cutting':
+
+                cutting_size = core_sizes[i]
+
+            else:
+
+                cutting_size = glass_sizes[i]
+
+            db.session.add(
+
+                InstallationCutting(
+
+                    installation_id=
+                        installation_id,
+
+                    cutting_type=
+                        cutting_types[i],
+
+                    size=
+                        cutting_size,
+
+                    quantity=
+                        int(
+                            quantities[i]
+                        )
+
+                )
+
+            )
+        diffuser_uploads = request.files.getlist(
+            'diffuser_files'
+        )
+
+        for file in diffuser_uploads:
+
+            if file and file.filename:
+
+                filename = secure_filename(
+                    file.filename
+                )
+
+                file_path = (
+                    'installations/' +
+                    filename
+                )
+
+                file.save(
+
+                    os.path.join(
+
+                        app.config[
+                            'UPLOAD_FOLDER'
+                        ],
+
+                        file_path
+
+                    )
+
+                )
+
+                db.session.add(
+
+                    InstallationFile(
+
+                        installation_id=
+                            installation.installation_id,
+
+                        file_name=
+                            filename,
+
+                        file_path=
+                            file_path,
+
+                        file_type=
+                            'DIFFUSER'
+
+                    )
+
+                )
+
+        machine_uploads = request.files.getlist(
+            'machine_files'
+        )
+
+        for file in machine_uploads:
+
+            if file and file.filename:
+
+                filename = secure_filename(
+                    file.filename
+                )
+
+                file_path = (
+                    'installations/' +
+                    filename
+                )
+
+                file.save(
+
+                    os.path.join(
+
+                        app.config[
+                            'UPLOAD_FOLDER'
+                        ],
+
+                        file_path
+
+                    )
+
+                )
+
+                db.session.add(
+
+                    InstallationFile(
+
+                        installation_id=
+                            installation.installation_id,
+
+                        file_name=
+                            filename,
+
+                        file_path=
+                            file_path,
+
+                        file_type=
+                            'MACHINE'
+
+                    )
+
+                )
+
+        log_activity(
+
+            'INSTALLATION',
+
+            installation.installation_id,
+
+            'UPDATED'
+
+        )
+
+        db.session.commit()
+
+        return redirect(
+
+            url_for(
+
+                'add_installation'
+
+            )
+
+        )
+
+    return render_template(
+
+        'edit_installation.html',
+
+        installation=installation,
+
+        sales=sales_records,
+
+        cuttings=cuttings,
+
+        diffuser_files=diffuser_files,
+
+        machine_files=machine_files
+
+    )
+
+@app.route(
+    '/request-delete-installation/<int:installation_id>',
+    methods=['GET', 'POST']
+)
+def request_delete_installation(installation_id):
+
+    if request.method == 'POST':
+
+        delete_request = DeleteRequest(
+
+            module_name='INSTALLATION',
+
+            record_id=installation_id,
+
+            requested_by=session[
+                'username'
+            ],
+
+            reason=request.form.get(
+                'reason'
+            )
+
+        )
+
+        db.session.add(
+            delete_request
+        )
+        db.session.flush()
+        log_activity(
+
+            'INSTALLATION',
+
+            installation_id,
+
+            'DELETE REQUESTED',
+
+            request.form.get(
+                'reason'
+            )
+
+        )
+
+        db.session.commit()
+
+        flash(
+            'Delete request sent.'
+        )
+
+        return redirect(
+            url_for(
+                'add_installation'
+            )
+        )
+
+    return render_template(
+
+        'delete_request.html',
+
+        module='INSTALLATION',
+
+        record_id=installation_id
+
+    )
+
 @app.route('/add-client',
            methods=['GET', 'POST'])
 def add_client():
@@ -8483,7 +9315,36 @@ def global_search():
             )
 
         ).all()
-    
+        installations = Installation.query.filter(
+
+            or_(
+
+                Installation.installation_for.ilike(
+                    f'%{search}%'
+                ),
+
+                Installation.piping_type.ilike(
+                    f'%{search}%'
+                ),
+
+                Installation.machine_position.ilike(
+                    f'%{search}%'
+                ),
+
+                Installation.installation_status.ilike(
+                    f'%{search}%'
+                ),
+                SalesPipeline.name.ilike(
+                    f'%{search}%'
+                ),
+
+                SalesPipeline.reference_no.ilike(
+                    f'%{search}%'
+                )
+
+            )
+
+        ).all()    
 
     return render_template(
         'global_search.html',
@@ -8496,7 +9357,8 @@ def global_search():
         sales=sales,
         invoices=invoices,
         clients=clients,
-        services=services
+        services=services,
+        installations=installations
     )
 
 @app.route('/tasks')
@@ -9407,6 +10269,12 @@ def approve_delete_request(
     elif request_obj.module_name == 'SERVICE':
 
         record = CustomerCareCard.query.get(
+            request_obj.record_id
+        )
+
+    elif request_obj.module_name == 'INSTALLATION':
+
+        record = Installation.query.get(
             request_obj.record_id
         )
 

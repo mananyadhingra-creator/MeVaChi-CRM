@@ -17,18 +17,20 @@
 <body class="bg-light">
 
 <div class="container py-5">
-    <a href="javascript:history.back()"
-       class="btn btn-outline-secondary">
+    <div class="d-flex justify-content-end gap-1">
+        <a href="javascript:history.back()"
+           class="btn btn-outline-secondary">
 
-        Back
+            Back
 
-    </a>
-    <a href="/dashboard"
-        class="btn btn-dark">
+        </a>
+        <a href="/dashboard"
+           class="btn btn-dark">
 
-        Back To Dashboard
+            Back To Dashboard
 
-    </a>    
+        </a>  
+    </div>
     <div class="d-flex justify-content-between align-items-center mb-4">
 
         <div>
@@ -57,51 +59,38 @@
 
             <form method="GET"
                   class="mb-3">
-
                 <div class="input-group">
-
                     <input type="text"
                            name="search"
+                           value="{{request.args.get('search','')}}"
                            class="form-control"
-                           placeholder="Search Meetings"
-                           value="{{ search or '' }}">
-
-                    <button class="btn btn-dark"
-                            type="submit">
-
+                           placeholder="Search">
+                    <button type="submit"
+                            class="btn btn-dark">
                         Search
-
                     </button>
-                    <a href="{{ url_for(
-                        request.endpoint,
-                        username=user.username
-                    ) }}"
-                       class="btn btn-outline-secondary">
-
+                    <a href="{{ url_for('add_meeting') }}"
+                       class="btn btn-secondary">
                         Clear
-
                     </a>
                 </div>
-
             </form>
 
             <div class="table-responsive">
 
-                <table class="table table-hover">
+                <table class="table table-bordered">
 
-                    <thead class="table-light">
+                    <thead>
 
                         <tr>
 
+                            <th>ID</th>
                             <th>Name</th>
-
-                            <th>Reference</th>
-
-                            <th>Firm</th>
-
+                            <th>Firm Name</th>
                             <th>Contact</th>
-
-                            <th>Actions</th>
+                            <th>Meeting Date</th>
+                            <th>Status</th>
+                            <th>Action</th>
 
                         </tr>
 
@@ -113,76 +102,46 @@
 
                         <tr>
 
-                            <td>
+                            <td>{{ meeting.meeting_id }}</td>
 
-                                {{ meeting.name }}
+                            <td>{{ meeting.name }}</td>
 
-                            </td>
+                            <td>{{ meeting.firm_name }}</td>
 
-                            <td>
+                            <td>{{ meeting.contact_no }}</td>
 
-                                {{ meeting.reference }}
+                            <td>{{ meeting.date_of_meeting }}</td>
 
-                            </td>
-
-                            <td>
-
-                                {{ meeting.firm_name }}
-
-                            </td>
+                            <td>{{ meeting.meeting_status }}</td>
 
                             <td>
 
-                                {{ meeting.contact_no }}
+                                <a href="/meeting/{{ meeting.meeting_id }}"
+                                   class="btn btn-dark btn-sm">
 
-                            </td>
+                                    View Details
 
-                            <td>
-
+                                </a>
                                 {% if session['role'] == 'ADMIN' %}
-
-                                <a href="{{ url_for(
-                                    'edit_meeting',
-                                    meeting_id=meeting.meeting_id
-                                ) }}"
-                                   class="btn btn-sm btn-dark">
+                                <a href="/edit-meeting/{{ meeting.meeting_id }}"
+                                   class="btn btn-warning btn-sm">
 
                                     Edit
 
                                 </a>
 
-                                {% endif %}
+                                <a href="/request-delete-meeting/{{ meeting.meeting_id }}"
+                                   class="btn btn-danger btn-sm"
+                                   onclick="return confirm('Are you sure you want to delete this meeting?');">
 
-                                <a href="{{ url_for(
-                                    'meeting_details',
-                                    meeting_id=meeting.meeting_id
-                                ) }}"
-                                   class="btn btn-sm btn-outline-secondary">
-
-                                    View
-
+                                    Delete
                                 </a>
-
+                                {% endif %}
                             </td>
 
                         </tr>
 
                         {% endfor %}
-
-                        {% if not meetings %}
-
-                        <tr>
-
-                            <td colspan="5"
-                                class="text-center text-muted">
-
-                                No meetings found.
-
-                            </td>
-
-                        </tr>
-
-                        {% endif %}
 
                     </tbody>
 

@@ -17,18 +17,20 @@
 <body class="bg-light">
 
 <div class="container py-5">
-    <a href="javascript:history.back()"
-       class="btn btn-outline-secondary">
+    <div class="d-flex justify-content-end gap-1">
+        <a href="javascript:history.back()"
+           class="btn btn-outline-secondary">
 
-        Back
+            Back
 
-    </a>
-    <a href="/dashboard"
-        class="btn btn-dark">
+        </a>
+        <a href="/dashboard"
+           class="btn btn-dark">
 
-        Back To Dashboard
+            Back To Dashboard
 
-    </a>    
+        </a>  
+    </div>  
     <div class="d-flex justify-content-between align-items-center mb-4">
 
         <div>
@@ -57,148 +59,110 @@
 
             <form method="GET"
                   class="mb-3">
-
                 <div class="input-group">
-
                     <input type="text"
                            name="search"
+                           value="{{request.args.get('search','')}}"
                            class="form-control"
-                           placeholder="Search Drawings"
-                           value="{{ search or '' }}">
-
-                    <button class="btn btn-dark"
-                            type="submit">
-
+                           placeholder="Search">
+                    <button type="submit"
+                            class="btn btn-dark">
                         Search
-
                     </button>
-
-                    <a href="{{ url_for(
-                        'employee_drawings',
-                        username=user.username
-                    ) }}"
-                       class="btn btn-outline-secondary">
-
+                    <a href="{{ url_for('add_drawing') }}"
+                       class="btn btn-secondary">
                         Clear
-
                     </a>
-
                 </div>
-
             </form>
 
-            <div class="table-responsive">
+            <table class="table table-bordered table-striped">
 
-                <table class="table table-hover">
+                <thead>
 
-                    <thead class="table-light">
+                    <tr>
 
-                        <tr>
+                        <th>ID</th>
 
-                            <th>
+                        <th>Name</th>
 
-                                Name
+                        <th>Iteration</th>
 
-                            </th>
+                        <th>MOCA</th>
 
-                            <th>
+                        <th>Drawing PDF</th>
 
-                                Address
+                        <th>Action</th>
 
-                            </th>
+                    </tr>
 
-                            <th>
+                </thead>
 
-                                MOCA
+                <tbody>
 
-                            </th>
+                {% for drawing in drawings %}
 
-                            <th>
+                    <tr>
 
-                                Actions
+                        <td>{{ drawing.drawing_id }}</td>
 
-                            </th>
+                        <td>{{ drawing.name }}</td>
 
-                        </tr>
+                        <td>{{ drawing.iterations }}</td>
 
-                    </thead>
+                        <td>{{ drawing.moca }}</td>
 
-                    <tbody>
+                        <td>
 
-                        {% for drawing in drawings %}
+                            {% if drawing.drawing_pdf %}
 
-                        <tr>
+                            <a href="{{ url_for('static',
+                                                 filename=drawing.drawing_pdf) }}"
+                                target="_blank">
 
-                            <td>
+                                View PDF
 
-                                {{ drawing.name }}
+                            </a>
 
-                            </td>
+                            {% endif %}
 
-                            <td>
+                        </td>
 
-                                {{ drawing.address }}
+                        <td>
 
-                            </td>
+                            <a href="/drawing/{{ drawing.drawing_id }}"
+                               class="btn btn-dark btn-sm">
 
-                            <td>
+                                View
 
-                                {{ drawing.moca }}
+                            </a>
+                            {% if session['role'] == 'ADMIN' %}
+                            <a href="/edit-drawing/{{ drawing.drawing_id }}"
+                               class="btn btn-warning btn-sm">
 
-                            </td>
+                                Edit
 
-                            <td>
+                            </a>
+                            <a href="/request-delete-drawing/{{ drawing.drawing_id }}"
+                               class="btn btn-danger btn-sm"
+                               onclick="return confirm(
+                                   'Delete this drawing?'
+                               )">
 
-                                {% if session['role'] == 'ADMIN' %}
+                                Delete
+                            </a>
+                            {% endif %}
+                        </td>
 
-                                <a href="{{ url_for(
-                                    'edit_drawing',
-                                    drawing_id=drawing.drawing_id
-                                ) }}"
-                                   class="btn btn-sm btn-dark">
+                    </tr>
 
-                                    Edit
+                    {% endfor %}
 
-                                </a>
+                </tbody>
 
-                                {% endif %}
+            </table>
 
-                                <a href="{{ url_for(
-                                    'drawing_details',
-                                    drawing_id=drawing.drawing_id
-                                ) }}"
-                                   class="btn btn-sm btn-outline-secondary">
-
-                                    View
-
-                                </a>
-
-                            </td>
-
-                        </tr>
-
-                        {% endfor %}
-
-                        {% if not drawings %}
-
-                        <tr>
-
-                            <td colspan="4"
-                                class="text-center text-muted">
-
-                                No drawings found.
-
-                            </td>
-
-                        </tr>
-
-                        {% endif %}
-
-                    </tbody>
-
-                </table>
-
-            </div>
+            
 
         </div>
 

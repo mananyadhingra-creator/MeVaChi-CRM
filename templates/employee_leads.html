@@ -17,18 +17,20 @@
 <body class="bg-light">
 
 <div class="container py-5">
-    <a href="javascript:history.back()"
-       class="btn btn-outline-secondary">
+    <div class="d-flex justify-content-end gap-1">
+        <a href="javascript:history.back()"
+           class="btn btn-outline-secondary">
 
-        Back
+            Back
 
-    </a>
-    <a href="/dashboard"
-        class="btn btn-dark">
+        </a>
+        <a href="/dashboard"
+           class="btn btn-dark">
 
-        Back To Dashboard
+            Back To Dashboard
 
-    </a>    
+        </a>  
+    </div>    
     <div class="d-flex justify-content-between align-items-center mb-4">
 
         <div>
@@ -61,165 +63,109 @@
 
                     <input type="text"
                            name="search"
+                           value="{{ request.args.get('search', '') }}"
                            class="form-control"
-                           placeholder="Search Leads"
-                           value="{{ search or '' }}">
+                           placeholder="Search">
 
-                    <button class="btn btn-dark"
-                            type="submit">
+                    <button type="submit"
+                            class="btn btn-dark">
 
                         Search
 
                     </button>
-                    <a href="{{ url_for(
-                        request.endpoint,
-                        username=user.username
-                    ) }}"
-                       class="btn btn-outline-secondary">
-
-                        Clear
-
+                    <a href="{{ url_for('add_lead') }}"
+                       class="btn btn-secondary">
+                       Clear
                     </a>
+
+
                 </div>
 
             </form>
 
-            <div class="table-responsive">
+            <table class="table table-bordered table-striped">
 
-                <table class="table table-hover align-middle">
+                <thead>
 
-                    <thead class="table-light">
+                    <tr>
 
-                        <tr>
+                        <th>ID</th>
 
-                            <th>
+                        <th>Name</th>
 
-                                Name
+                        <th>Reference</th>
 
-                            </th>
+                        <th>Location</th>
 
-                            <th>
+                        <th>Phone</th>
 
-                                Reference
+                        <th>Next To Call</th>
 
-                            </th>
+                        <th>Recent Remarks</th>
 
-                            <th>
+                        <th>Action</th>
 
-                                Location
+                    </tr>
 
-                            </th>
+                </thead>
 
-                            <th>
+                <tbody>
 
-                                Phone
+                    {% for lead in leads %}
 
-                            </th>
+                    <tr>
 
-                            <th>
+                        <td>{{ lead.lead_id }}</td>
 
-                                Actions
+                        <td>{{ lead.name }}</td>
 
-                            </th>
+                        <td>{{ lead.reference }}</td>
 
-                        </tr>
+                        <td>{{ lead.location }}</td>
 
-                    </thead>
+                        <td>{{ lead.phone }}</td>
 
-                    <tbody>
+                        <td>{{ lead.next_to_call }}</td>
 
-                        {% for lead in leads %}
+                        <td>{{ lead.recent }}</td>
 
-                        <tr>
+                        <td>
 
-                            <td>
+                            <a href="/lead/{{ lead.lead_id }}"
+                               class="btn btn-dark btn-sm">
 
-                                {{ lead.name }}
+                                View
 
-                            </td>
+                            </a>
+                            {% if session['role'] == 'ADMIN' %}
+                            <a href="/edit-lead/{{ lead.lead_id }}"
+                               class="btn btn-warning btn-sm">
 
-                            <td>
+                                Edit
 
-                                {{ lead.reference }}
+                            </a>
 
-                            </td>
+                            <a href="/request-delete-lead/{{ lead.lead_id }}"
+                               class="btn btn-danger btn-sm"
+                               onclick="return confirm(
+                                   'Delete this lead?'
+                               )">
 
-                            <td>
+                                Delete
 
-                                {{ lead.location }}
+                            </a>
+                            {% endif %}
+                        </td>
 
-                            </td>
+                    </tr>
 
-                            <td>
+                    {% endfor %}
 
-                                {{ lead.phone }}
+                </tbody>
 
-                            </td>
+            </table>
 
-                            <td>
-
-                                {% if session['role'] == 'ADMIN' %}
-
-                                <a href="{{ url_for(
-                                    'edit_lead',
-                                    lead_id=lead.lead_id
-                                ) }}"
-                                   class="btn btn-sm btn-dark">
-
-                                    Edit
-
-                                </a>
-
-                                <a href="{{ url_for(
-                                    'lead_details',
-                                    lead_id=lead.lead_id
-                                ) }}"
-                                   class="btn btn-sm btn-outline-secondary">
-
-                                    View
-
-                                </a>
-
-                                {% else %}
-
-                                <a href="{{ url_for(
-                                    'lead_details',
-                                    lead_id=lead.lead_id
-                                ) }}"
-                                   class="btn btn-sm btn-outline-secondary">
-
-                                    View
-
-                                </a>
-
-                                {% endif %}
-
-                            </td>
-
-                        </tr>
-
-                        {% endfor %}
-
-                        {% if not leads %}
-
-                        <tr>
-
-                            <td colspan="5"
-                                class="text-center text-muted">
-
-                                No leads found.
-
-                            </td>
-
-                        </tr>
-
-                        {% endif %}
-
-                    </tbody>
-
-                </table>
-
-            </div>
+            
 
         </div>
 

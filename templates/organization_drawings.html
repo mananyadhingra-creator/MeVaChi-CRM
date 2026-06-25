@@ -17,18 +17,20 @@
 <body class="bg-light">
 
 <div class="container py-5">
-    <a href="javascript:history.back()"
-       class="btn btn-outline-secondary">
+    <div class="d-flex justify-content-end gap-1">
+        <a href="javascript:history.back()"
+           class="btn btn-outline-secondary">
 
-        Back
+            Back
 
-    </a>
-    <a href="/dashboard"
-        class="btn btn-dark">
+        </a>
+        <a href="/dashboard"
+           class="btn btn-dark">
 
-        Back To Dashboard
+            Back To Dashboard
 
-    </a>    
+        </a>  
+    </div>    
     <div class="d-flex justify-content-between align-items-center mb-4">
 
         <div>
@@ -175,24 +177,26 @@
 
                             <td>
 
-                                <a href="{{ url_for(
-                                    'drawing_details',
-                                    drawing_id=drawing.drawing_id
-                                ) }}"
-                                   class="btn btn-sm btn-outline-secondary">
+                                <a href="/drawing/{{ drawing.drawing_id }}"
+                                   class="btn btn-dark btn-sm">
 
                                     View
 
                                 </a>
-
-                                <a href="{{ url_for(
-                                    'edit_drawing',
-                                    drawing_id=drawing.drawing_id
-                                ) }}"
-                                   class="btn btn-sm btn-dark">
+                            
+                                <a href="/edit-drawing/{{ drawing.drawing_id }}"
+                                   class="btn btn-warning btn-sm">
 
                                     Edit
 
+                                </a>
+                                <a href="/request-delete-drawing/{{ drawing.drawing_id }}"
+                                   class="btn btn-danger btn-sm"
+                                   onclick="return confirm(
+                                       'Delete this drawing?'
+                                   )">
+
+                                    Delete
                                 </a>
 
                             </td>
