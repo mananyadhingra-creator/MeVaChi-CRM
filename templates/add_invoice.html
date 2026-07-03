@@ -30,20 +30,23 @@
 
 <div class="container mt-5">
 
-    <div class="d-flex justify-content-end gap-1">
+    <div class="d-flex justify-content-end gap-2 mb-3">
+
         <a href="javascript:history.back()"
            class="btn btn-outline-secondary">
 
             Back
 
         </a>
+
         <a href="/dashboard"
            class="btn btn-dark">
 
-            Back To Dashboard
+            Back to Dashboard
 
-        </a>  
-    </div> 
+        </a>
+
+    </div>
     {% if not admin_view %}
     <div class="card shadow p-4">
 
@@ -207,13 +210,14 @@
 
                         <label class="form-label">
 
-                            Invoice PDF
+                            Invoice Files
 
                         </label>
 
                         <input type="file"
-                            name="invoice_pdf"
-                        class="form-control">
+                               name="invoice_files"
+                               class="form-control"
+                               multiple>
 
                     </div>
 
@@ -430,7 +434,7 @@
 
                     <th>Total Revenue</th>
 
-                    <th>PDF</th>
+                    
 
                     <th>Action</th>
 
@@ -454,27 +458,7 @@
 
                     <td>{{ invoice.total_revenue }}</td>
 
-                    <td>
-                        {% if invoice.invoice_pdf %}
 
-                        <a href="{{ url_for(
-                                        'static',
-                                        filename=invoice.invoice_pdf
-                                    ) }}"
-                            target="_blank"
-                            class="btn btn-dark btn-sm">
-
-                            View PDF
-
-                        </a>
-
-                        {% else %}
-
-                            No PDF
-
-                        {% endif %}
-
-                    </td>
 
                     <td>
 

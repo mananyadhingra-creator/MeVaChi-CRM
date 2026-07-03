@@ -1,73 +1,96 @@
 <!DOCTYPE html>
+
 <html>
 
 <head>
 
-    <title>Visit Management</title>
+    <title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-          rel="stylesheet">
+        Add Visit
+
+    </title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
 </head>
-
-{% with messages = get_flashed_messages() %}
-    {% if messages %}
-
-        {% for message in messages %}
-
-            <div class="alert alert-danger">
-
-                {{ message }}
-
-            </div>
-
-        {% endfor %}
-
-    {% endif %}
-{% endwith %}
 
 <body class="bg-light">
 
 <div class="container mt-4">
-    <div class="d-flex justify-content-end gap-1">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            {% for category, message in messages %}
+
+                <div class="alert alert-{{ category }} alert-dismissible fade show">
+
+                    {{ message }}
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert">
+
+                    </button>
+
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+    <div class="d-flex justify-content-end gap-2 mb-3">
+
         <a href="javascript:history.back()"
            class="btn btn-outline-secondary">
 
             Back
 
         </a>
+
         <a href="/dashboard"
            class="btn btn-dark">
 
-            Back To Dashboard
+            Back to Dashboard
 
-        </a>  
+        </a>
+
     </div>
-    {% if not admin_view %}
-    <div class="card shadow p-4">
 
-        <h2 class="text-center mb-4">
+    <form
+        method="POST">
 
-            Visit Management
+        <div class="card shadow p-4 mb-4">
 
-        </h2>
+            <h3 class="mb-4">
 
-        <form action="{{ url_for('add_visit') }}"
-              method="POST">
+                Select Meeting
 
-            <!-- SELECT MEETING -->
+            </h3>
 
-            <div class="card shadow-sm p-4 mb-4">
+            <div class="mb-3">
 
-                <h4>
+                <label class="form-label">
 
-                    Select Meeting
+                    Meeting
 
-                </h4>
+                </label>
 
-                <select name="meeting_id"
-                        id="meeting_id"
-                        class="form-select">
+                <select
+                    id="meeting_id"
+                    name="meeting_id"
+                    class="form-select"
+                    required>
 
                     <option value="">
 
@@ -83,17 +106,19 @@
 
                         data-company="{{ meeting.firm_name }}"
 
+                        data-address="{{ meeting.address }}"
+
+                        data-state="{{ meeting.state }}"
+
                         data-person="{{ meeting.name }}"
 
                         data-designation="{{ meeting.designation }}"
 
-                        data-contact="{{ meeting.contact_no }}"
+                        data-contact="{{ meeting.contact_no }}"    
 
-                        data-address="{{ meeting.address }}"
+                        data-owner="{{ meeting.record_owner }}">
 
-                        data-state="{{ meeting.state }}">
-
-                        {{ meeting.name }}
+                        {{ meeting.firm_name }}
 
                     </option>
 
@@ -103,336 +128,421 @@
 
             </div>
 
-            <!-- VISIT DETAILS -->
+        </div>
 
-            <div class="card shadow-sm p-4 mb-4">
+        <div class="card shadow p-4 mb-4">
 
-                <h4>
+            <h3 class="mb-4">
+
+                Company Information
+
+            </h3>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+
+                    <label>
+
+                        Company Name
+
+                    </label>
+
+                    <input
+                        id="company_name"
+                        name="company_name"
+                        class="form-control"
+                        readonly>
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <label>
+
+                        State
+
+                    </label>
+
+                    <input
+                        id="state"
+                        name="state"
+                        class="form-control"
+                        readonly>
+
+                </div>
+
+            </div>
+
+            <div class="mb-3">
+
+                <label>
+
+                    Address
+
+                </label>
+
+                <textarea
+                    id="address"
+                    name="address"
+                    rows="2"
+                    class="form-control"
+                    readonly></textarea>
+
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-6">
+
+                    <label>
+
+                        Region
+
+                    </label>
+
+                    <input
+                        name="region"
+                        class="form-control">
+
+                </div>
+
+                <div class="col-md-6">
+
+                    <label>
+
+                        ABC
+
+                    </label>
+
+                    <input
+                        name="abc"
+                        class="form-control">
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="card shadow p-4 mb-4">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <h3>
 
                     Visit Details
 
-                </h4>
+                </h3>
 
-                <div class="row">
+            </div>
 
-                    <div class="col-md-6 mb-3">
+            <div id="visitContainer">
 
-                        <label class="form-label">
+                <div class="visit-form border rounded p-3 mb-3 position-relative">
 
-                            Company Name
+                    <button
+                        type="button"
+                        class="btn btn-outline-danger btn-sm position-absolute top-0 end-0 m-2 removeVisit"
+                        style="display:none;">
 
-                        </label>
+                        <i class="bi bi-trash"></i>
 
-                        <input type="text"
-                               id="company_name"
-                               name="company_name"
-                               class="form-control">
+                    </button>
 
-                    </div>
+                    <div class="row">
 
-                    <div class="col-md-6 mb-3">
+                        <div class="col-md-6 mb-3">
 
-                        <label class="form-label">
+                            <label class="form-label">
 
-                            Person Name
+                                Person Name
 
-                        </label>
+                            </label>
 
-                        <input type="text"
-                               id="person_name"
-                               name="person_name"
-                               class="form-control">
+                            <input
+                                type="text"
+                                name="person_name[]"
+                                class="form-control"
+                                required>
 
-                    </div>
+                        </div>
 
-                </div>
+                        <div class="col-md-6 mb-3">
 
-                <div class="row">
+                            <label class="form-label">
 
-                    <div class="col-md-6 mb-3">
+                                Designation
 
-                        <label class="form-label">
+                            </label>
 
-                            Designation
+                            <input
+                                type="text"
+                                name="designation[]"
+                                class="form-control">
 
-                        </label>
-
-                        <input type="text"
-                               id="designation"
-                               name="designation"
-                               class="form-control">
-
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-
-                            Contact No
-
-                        </label>
-
-                        <input type="text"
-                               id="contact_no"
-                               name="contact_no"
-                               class="form-control">
+                        </div>
 
                     </div>
 
-                </div>
+                    <div class="row">
 
-                <div class="mb-3">
+                        <div class="col-md-6 mb-3">
 
-                    <label class="form-label">
+                            <label class="form-label">
 
-                        Address
+                                Contact Number
 
-                    </label>
+                            </label>
 
-                    <textarea id="address"
-                              name="address"
-                              rows="3"
-                              class="form-control"></textarea>
+                            <input
+                                type="text"
+                                name="contact_no[]"
+                                class="form-control">
 
-                </div>
+                        </div>
 
-                <div class="row">
+                        <div class="col-md-6 mb-3">
 
-                    <div class="col-md-4 mb-3">
+                            <label class="form-label">
 
-                        <label class="form-label">
+                                Visit Date
 
-                            State
+                            </label>
 
-                        </label>
+                            <input
+                                type="date"
+                                name="visit_date[]"
+                                class="form-control"
+                                required>
 
-                        <input type="text"
-                               id="state"
-                               name="state"
-                               class="form-control">
-
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-
-                        <label class="form-label">
-
-                            Region
-
-                        </label>
-
-                        <input type="text"
-                               name="region"
-                               class="form-control">
+                        </div>
 
                     </div>
 
-                    <div class="col-md-4 mb-3">
+                    <div class="row">
 
-                        <label class="form-label">
+                        <div class="col-md-6 mb-3">
 
-                            ABC
+                            <label class="form-label">
 
-                        </label>
+                                Leads Generated
 
-                        <input type="text"
-                               name="abc"
-                               class="form-control">
+                            </label>
 
-                    </div>
+                            <input
+                                type="number"
+                                name="leads_generated[]"
+                                value="0"
+                                class="form-control">
 
-                </div>
-
-                <div class="row">
-
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-
-                            Visit Date
-
-                        </label>
-
-                        <input type="date"
-                               name="visit_date"
-                               class="form-control">
+                        </div>
 
                     </div>
 
-                    <div class="col-md-6 mb-3">
+                    <div class="mb-3">
 
                         <label class="form-label">
 
-                            Leads Generated
+                            Brief
 
                         </label>
 
-                        <input type="number"
-                               name="leads_generated"
-                               class="form-control">
+                        <textarea
+                            name="brief[]"
+                            rows="3"
+                            class="form-control"></textarea>
 
                     </div>
-
-                </div>
-
-                <div class="mb-3">
-
-                    <label class="form-label">
-
-                        Brief
-
-                    </label>
-
-                    <textarea name="brief"
-                              rows="3"
-                              class="form-control"></textarea>
-
-                </div>
-
-                <div class="mb-3">
-
-                    <label class="form-label">
-
-                        M2
-
-                    </label>
-
-                    <textarea name="m2"
-                              rows="3"
-                              class="form-control"></textarea>
-
-                </div>
-
-                <div class="mb-3">
-
-                    <label class="form-label">
-
-                        M3
-
-                    </label>
-
-                    <textarea name="m3"
-                              rows="3"
-                              class="form-control"></textarea>
 
                 </div>
 
             </div>
-                        <div class="text-center">
 
-                <button type="submit"
-                        class="btn btn-dark">
+            {#<div class="d-flex gap-2 mt-3">
 
-                    Save Visit
+                <button
+                    type="button"
+                    id="addVisit"
+                    class="btn btn-outline-primary">
+
+                    <i class="bi bi-plus-circle"></i>
+
+                    Add One More Visit
 
                 </button>
 
+            </div>#}
 
-            </div>
+        </div>
 
-        </form>
+        <div class="d-flex justify-content-end mt-4">
 
-    </div>
-    {% endif %}
-    <br>
+            <button
+                type="submit"
+                class="btn btn-success btn">
+
+                <i class="bi bi-floppy"></i>
+
+                Save Visit
+
+            </button>
+
+        </div>
+
+    </form>
+
+    <hr class="my-5">
 
     <div class="card shadow p-4">
 
-        <h3 class="mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-4">
 
-            All Visits
+            <h3>
 
-        </h3>
-        <form method="GET"
-              class="mb-3">
-            <div class="input-group">
-                <input type="text"
-                       name="search"
-                       value="{{request.args.get('search','')}}"
-                       class="form-control"
-                       placeholder="Search">
-                <button type="submit"
-                        class="btn btn-dark">
+                All Visits
+
+            </h3>
+
+            <form
+                method="GET"
+                class="d-flex">
+
+                <input
+                    type="text"
+                    name="search"
+                    value="{{ request.args.get('search','') }}"
+                    class="form-control me-2"
+                    placeholder="Search Visits">
+
+                <button
+                    class="btn btn-outline-primary">
+
                     Search
+
                 </button>
-                <a href="{{ url_for('add_visit') }}"
-                   class="btn btn-secondary">
-                    Clear
-                </a>
-            </div>
-        </form>
 
-        <table class="table table-bordered table-striped">
+            </form>
 
-            <thead>
+        </div>
 
-                <tr>
+        <div class="table-responsive">
 
-                    <th>ID</th>
+            <table class="table table-bordered table-hover align-middle">
 
-                    <th>Company</th>
+                <thead class="table-light">
 
-                    <th>Person</th>
+                    <tr>
 
-                    <th>Contact</th>
+                        <th>
 
-                    <th>State</th>
+                            Company
 
-                    <th>Visit Date</th>
+                        </th>
 
-                    <th>Action</th>
+                        <th>
 
-                </tr>
+                            Person
 
-            </thead>
+                        </th>
 
-            <tbody>
+                        <th>
 
-                {% for visit in visits %}
+                            Visit Date
 
-                <tr>
+                        </th>
 
-                    <td>{{ visit.visit_id }}</td>
+                        <th>
 
-                    <td>{{ visit.company_name }}</td>
+                            Leads
 
-                    <td>{{ visit.person_name }}</td>
+                        </th>
 
-                    <td>{{ visit.contact_no }}</td>
+                        <th>
 
-                    <td>{{ visit.state }}</td>
+                            Actions
 
-                    <td>{{ visit.visit_date }}</td>
+                        </th>
 
-                    <td>
+                    </tr>
 
-                        <a href="/visit/{{ visit.visit_id }}"
-                           class="btn btn-dark btn-sm">
+                </thead>
 
-                            View
+                <tbody>
 
-                        </a>
-                        <a href="/edit-visit/{{ visit.visit_id }}"
-                           class="btn btn-warning btn-sm">
+                    {% for visit in visits %}
 
-                            Edit
-                        </a>
-                        <a href="/request-delete-visit/{{ visit.visit_id }}"
-                           class="btn btn-danger btn-sm"
-                           onclick="return confirm('Are you sure you want to delete this visit?');">
+                    <tr>
 
-                            Delete
-                        </a>
+                        <td>
 
-                    </td>
+                            {{ visit.company_name }}
 
-                </tr>
+                        </td>
 
-                {% endfor %}
+                        <td>
 
-            </tbody>
+                            {{ visit.person_name }}
 
-        </table>
+                        </td>
+
+                        <td>
+
+                            {{ visit.visit_date }}
+
+                        </td>
+
+                        <td>
+
+                            {{ visit.leads_generated }}
+
+                        </td>
+
+                        <td>
+
+                            <a
+                                href="{{ url_for(
+                                    'visit_details',
+                                    visit_id=visit.visit_id
+                                ) }}"
+                                class="btn btn-outline-dark btn-sm">
+
+                                <i class="bi bi-eye"></i>
+
+                            </a>
+
+                            <a
+                                href="{{ url_for(
+                                    'edit_visit',
+                                    visit_id=visit.visit_id
+                                ) }}"
+                                class="btn btn-outline-warning btn-sm">
+
+                                <i class="bi bi-pencil"></i>
+
+                            </a>
+
+                            <a href="{{ url_for(
+                                'request_delete_visit',
+                                visit_id=visit.visit_id
+                            ) }}"
+                               class="btn btn-outline-danger btn-sm">
+
+                                <i class="bi bi-trash"></i>
+
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
 
     </div>
 
@@ -440,51 +550,201 @@
 
 <script>
 
-document.getElementById(
+const meetingSelect = document.getElementById(
+
     'meeting_id'
-).addEventListener(
+
+);
+
+meetingSelect.addEventListener(
+
     'change',
+
     function () {
 
-        let selected =
-            this.options[
-                this.selectedIndex
-            ];
+        const selected = this.options[
+
+            this.selectedIndex
+
+        ];
 
         document.getElementById(
+
             'company_name'
-        ).value =
-            selected.dataset.company || '';
+
+        ).value = selected.dataset.company || '';
 
         document.getElementById(
-            'person_name'
-        ).value =
-            selected.dataset.person || '';
 
-        document.getElementById(
-            'designation'
-        ).value =
-            selected.dataset.designation || '';
-
-        document.getElementById(
-            'contact_no'
-        ).value =
-            selected.dataset.contact || '';
-
-        document.getElementById(
             'address'
-        ).value =
-            selected.dataset.address || '';
+
+        ).value = selected.dataset.address || '';
 
         document.getElementById(
+
             'state'
-        ).value =
-            selected.dataset.state || '';
+
+        ).value = selected.dataset.state || '';
+
+        const firstPerson = document.querySelector(
+
+            'input[name="person_name[]"]'
+
+        );
+
+        const firstDesignation = document.querySelector(
+
+            'input[name="designation[]"]'
+
+        );
+
+        const firstContact = document.querySelector(
+
+            'input[name="contact_no[]"]'
+
+        );
+
+        if (firstPerson)
+
+            firstPerson.value = selected.dataset.person || '';
+
+        if (firstDesignation)
+
+            firstDesignation.value = selected.dataset.designation || '';
+
+        if (firstContact)
+
+            firstContact.value = selected.dataset.contact || '';
 
     }
+
+);
+
+const visitContainer = document.getElementById(
+
+    'visitContainer'
+
+);
+
+const addVisitButton = document.getElementById(
+
+    'addVisit'
+
+);
+
+addVisitButton.addEventListener(
+
+    'click',
+
+    function () {
+
+        const firstCard = visitContainer.querySelector(
+
+            '.visit-form'
+
+        );
+
+        const newCard = firstCard.cloneNode(
+
+            true
+
+        );
+
+        newCard.querySelectorAll(
+
+            'input'
+
+        ).forEach(
+
+            function (
+
+                input
+
+            ) {
+
+                if (
+
+                    input.type != 'button'
+
+                ) {
+
+                    input.value = '';
+
+                }
+
+            }
+
+        );
+
+        newCard.querySelectorAll(
+
+            'textarea'
+
+        ).forEach(
+
+            function (
+
+                textarea
+
+            ) {
+
+                textarea.value = '';
+
+            }
+
+        );
+
+        newCard.querySelector(
+
+            '.removeVisit'
+
+        ).style.display = 'block';
+
+        visitContainer.appendChild(
+
+            newCard
+
+        );
+
+    }
+
+);
+
+document.addEventListener(
+
+    'click',
+
+    function (
+
+        e
+
+    ) {
+
+        if (
+
+            e.target.closest(
+
+                '.removeVisit'
+
+            )
+
+        ) {
+
+            e.target.closest(
+
+                '.visit-form'
+
+            ).remove();
+
+        }
+
+    }
+
 );
 
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 

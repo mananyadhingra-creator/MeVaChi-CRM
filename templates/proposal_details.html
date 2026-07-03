@@ -13,20 +13,23 @@
 <body class="bg-light">
 
 <div class="container mt-4">
-    <div class="d-flex justify-content-end gap-1">
+    <div class="d-flex justify-content-end gap-2 mb-3">
+
         <a href="javascript:history.back()"
            class="btn btn-outline-secondary">
 
             Back
 
         </a>
+
         <a href="/dashboard"
            class="btn btn-dark">
 
-            Back To Dashboard
+            Back to Dashboard
 
-        </a>  
-    </div>    
+        </a>
+
+    </div>   
     <div class="card shadow p-4">
 
         <h2 class="text-center mb-4">
@@ -291,34 +294,131 @@
 
     <br>
 
-    <div class="card shadow p-4">
+    <div class="card shadow-sm mt-4">
 
-        <h4 class="mb-3">
+        <div class="card-header">
 
-            Documents
+            <h5>
 
-        </h4>
+                Proposal Files
 
-        {% if proposal.proposal_pdf %}
+            </h5>
 
-        <a href="{{ url_for('static',
-                            filename=proposal.proposal_pdf) }}"
-           target="_blank"
-           class="btn btn-dark">
+        </div>
 
-            View Proposal PDF
+        <div class="card-body">
 
-        </a>
+            {% if proposal.files %}
 
-        {% else %}
+            <table class="table table-bordered">
 
-        <p>
+                <thead>
 
-            No PDF Uploaded
+                    <tr>
 
-        </p>
+                        <th>
 
-        {% endif %}
+                            File Name
+
+                        </th>
+
+                        <th>
+
+                            Action
+
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for file in proposal.files %}
+
+                    <tr>
+
+                        <td>
+
+                            {{ file.file_name }}
+
+                        </td>
+
+                        <td>
+
+                            <a
+
+                            href="{{ url_for(
+
+                                'static',
+
+                                filename=file.file_path
+
+                            ) }}"
+
+                            target="_blank"
+
+                            class="btn btn-primary btn-sm">
+
+                            View
+
+                            </a>
+
+                            <a
+
+                            href="{{ url_for(
+
+                                'static',
+
+                                filename=file.file_path
+
+                            ) }}"
+
+                            download
+
+                            class="btn btn-success btn-sm">
+
+                            Download
+
+                            </a>
+
+                            <a
+
+                            href="/delete-proposal-file/{{ file.file_id }}"
+
+                            class="btn btn-danger btn-sm"
+
+                            onclick="return confirm(
+
+                            'Delete this file?'
+
+                            )">
+
+                            Delete
+
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+            {% else %}
+
+            <div class="alert alert-warning">
+
+                No files uploaded.
+
+            </div>
+
+            {% endif %}
+
+        </div>
 
     </div>
 

@@ -13,19 +13,22 @@
 <body class="bg-light">
 
 <div class="container mt-5">
-    <div class="d-flex justify-content-end gap-1">
+    <div class="d-flex justify-content-end gap-2 mb-3">
+
         <a href="javascript:history.back()"
            class="btn btn-outline-secondary">
 
             Back
 
         </a>
+
         <a href="/dashboard"
            class="btn btn-dark">
 
-            Back To Dashboard
+            Back to Dashboard
 
-        </a>  
+        </a>
+
     </div>
     <div class="card shadow p-4">
 
@@ -194,7 +197,7 @@
 
                         <label class="form-label">
 
-                            Current Invoice PDF
+                            Current Invoice Files
 
                         </label>
 
@@ -206,13 +209,14 @@
                         ) }}"
                         target="_blank">
 
-                            View Current PDF
+                            View Current Files
                         </a>
                         <br><br>
                         {% endif %}
                         <input type="file"
-                               name="invoice_pdf"
-                               class="form-control">
+                               name="invoice_files"
+                               class="form-control"
+                               multiple>
 
                     </div>
 

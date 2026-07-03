@@ -3,88 +3,465 @@
 
 <head>
 
-    <title>Meeting Details</title>
+    <title>
+
+        Meeting Details
+
+    </title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
           rel="stylesheet">
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
 </head>
 
 <body class="bg-light">
 
 <div class="container mt-4">
-    <div class="d-flex justify-content-end gap-1">
+
+    <div class="d-flex justify-content-end gap-2 mb-3">
+
         <a href="javascript:history.back()"
            class="btn btn-outline-secondary">
 
             Back
 
         </a>
+
         <a href="/dashboard"
            class="btn btn-dark">
 
-            Back To Dashboard
+            Back to Dashboard
 
-        </a>  
+        </a>
+
     </div>
-    <div class="card shadow p-4">
+
+    <!-- ======================================== -->
+    <!-- COMPANY DETAILS -->
+    <!-- ======================================== -->
+
+    <div class="card shadow p-4 mb-4">
 
         <h2 class="text-center mb-4">
 
-            Meeting Details
+            Company Details
 
         </h2>
 
         <table class="table table-bordered">
 
             <tr>
-                <th>Meeting Fixed By</th>
-                <td>{{ meeting.meeting_fixed_by }}</td>
+
+                <th>
+
+                    Firm Name
+
+                </th>
+
+                <td>
+
+                    {{ meeting.firm_name }}
+
+                </td>
+
             </tr>
 
             <tr>
-                <th>Source</th>
-                <td>{{ meeting.source }}</td>
+
+                <th>
+
+                    Source
+
+                </th>
+
+                <td>
+
+                    {{ meeting.source }}
+
+                </td>
+
             </tr>
 
             <tr>
-                <th>Name</th>
-                <td>{{ meeting.name }}</td>
+
+                <th>
+
+                    Reference
+
+                </th>
+
+                <td>
+
+                    {{ meeting.reference }}
+
+                </td>
+
             </tr>
 
             <tr>
-                <th>Reference</th>
-                <td>{{ meeting.reference }}</td>
+
+                <th>
+
+                    Address
+
+                </th>
+
+                <td>
+
+                    {{ meeting.address }}
+
+                </td>
+
             </tr>
 
             <tr>
-                <th>Firm Name</th>
-                <td>{{ meeting.firm_name }}</td>
+
+                <th>
+
+                    State
+
+                </th>
+
+                <td>
+
+                    {{ meeting.state }}
+
+                </td>
+
+            </tr>
+
+        </table>
+
+    </div>
+
+    <!-- ======================================== -->
+    <!-- CURRENT MEETING -->
+    <!-- ======================================== -->
+
+    <div class="card shadow p-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+
+            <h3>
+
+                Current Meeting
+
+            </h3>
+
+            <a href="/edit-meeting/{{ meeting.meeting_id }}"
+               class="btn btn-warning">
+
+                Edit Current Meeting
+
+            </a>
+
+        </div>
+
+        <table class="table table-bordered">
+
+            <tr>
+
+                <th>
+
+                    Contact Person
+
+                </th>
+
+                <td>
+
+                    {{ meeting.name }}
+
+                </td>
+
             </tr>
 
             <tr>
-                <th>Designation</th>
-                <td>{{ meeting.designation }}</td>
+
+                <th>
+
+                    Designation
+
+                </th>
+
+                <td>
+
+                    {{ meeting.designation }}
+
+                </td>
+
             </tr>
 
             <tr>
-                <th>Address</th>
-                <td>{{ meeting.address }}</td>
+
+                <th>
+
+                    Contact Number
+
+                </th>
+
+                <td>
+
+                    {{ meeting.contact_no }}
+
+                </td>
+
             </tr>
 
             <tr>
-                <th>State</th>
-                <td>{{ meeting.state }}</td>
+
+                <th>
+
+                    Email
+
+                </th>
+
+                <td>
+
+                    {{ meeting.email }}
+
+                </td>
+
             </tr>
 
             <tr>
-                <th>Contact No</th>
-                <td>{{ meeting.contact_no }}</td>
+
+                <th>
+
+                    Meeting Fixed By
+
+                </th>
+
+                <td>
+
+                    {{ meeting.meeting_fixed_by }}
+
+                </td>
+
             </tr>
 
             <tr>
-                <th>Email</th>
-                <td>{{ meeting.email }}</td>
+
+                <th>
+
+                    Date Of Meeting
+
+                </th>
+
+                <td>
+
+                    {{ meeting.date_of_meeting }}
+
+                </td>
+
+            </tr>
+            <tr>
+
+                <th>
+
+                    Mode Of Meeting
+
+                </th>
+
+                <td>
+
+                    {{ meeting.mode_of_meeting }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <th>
+
+                    Meeting Status
+
+                </th>
+
+                <td>
+
+                    {{ meeting.meeting_status }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <th>
+
+                    Meeting Conducted By
+
+                </th>
+
+                <td>
+
+                    {{ meeting.meeting_conducted_by }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <th>
+
+                    Company Info Shared
+
+                </th>
+
+                <td>
+
+                    {{ meeting.company_info_shared }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <th>
+
+                    Floor Plan Shared
+
+                </th>
+
+                <td>
+
+                    {{ meeting.floor_plan_shared }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <th>
+
+                    Site Visit
+
+                </th>
+
+                <td>
+
+                    {{ meeting.site_visit }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <th>
+
+                    Post Meeting Mail
+
+                </th>
+
+                <td>
+
+                    {{ meeting.post_meeting_mail }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <th>
+
+                    Date Of Last Followup
+
+                </th>
+
+                <td>
+
+                    {{ meeting.date_of_last_followup }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <th>
+
+                    Date To Call Next
+
+                </th>
+
+                <td>
+
+                    {{ meeting.date_to_call_next }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <th>
+
+                    Reschedule Date
+
+                </th>
+
+                <td>
+
+                    {{ meeting.reschedule_date }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <th>
+
+                    Reason For Reschedule
+
+                </th>
+
+                <td>
+
+                    {{ meeting.reason_for_reschedule }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <th>
+
+                    Final Remarks
+
+                </th>
+
+                <td>
+
+                    {{ meeting.final_remarks }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <th>
+
+                    Remarks
+
+                </th>
+
+                <td>
+
+                    {{ meeting.remarks }}
+
+                </td>
+
             </tr>
 
         </table>
@@ -93,132 +470,414 @@
 
     <br>
 
-    <div class="card shadow p-4">
-
-        <h4>
-
-            Meeting Status
-
-        </h4>
-
-        <table class="table table-bordered">
-
-            <tr>
-                <th>Company Info Shared</th>
-                <td>{{ meeting.company_info_shared }}</td>
-            </tr>
-
-            <tr>
-                <th>Meeting Fixed</th>
-                <td>{{ meeting.meeting_fixed }}</td>
-            </tr>
-
-            <tr>
-                <th>Date Of Meeting</th>
-                <td>{{ meeting.date_of_meeting }}</td>
-            </tr>
-
-            <tr>
-                <th>Mode Of Meeting</th>
-                <td>{{ meeting.mode_of_meeting }}</td>
-            </tr>
-
-            <tr>
-                <th>Meeting Status</th>
-                <td>{{ meeting.meeting_status }}</td>
-            </tr>
-
-            <tr>
-                <th>Meeting Conducted By</th>
-                <td>{{ meeting.meeting_conducted_by }}</td>
-            </tr>
-
-            <tr>
-                <th>Floor Plan Shared</th>
-                <td>{{ meeting.floor_plan_shared }}</td>
-            </tr>
-
-            <tr>
-                <th>Site Visit</th>
-                <td>{{ meeting.site_visit }}</td>
-            </tr>
-
-            <tr>
-                <th>Post Meeting Mail</th>
-                <td>{{ meeting.post_meeting_mail }}</td>
-            </tr>
-
-        </table>
-
-    </div>
-        <br>
+    <!-- ======================================== -->
+    <!-- MEETING HISTORY -->
+    <!-- ======================================== -->
 
     <div class="card shadow p-4">
 
-        <h4>
+        <h3 class="mb-3">
 
-            Followup & Remarks
+            Meeting History
 
-        </h4>
+        </h3>
 
-        <table class="table table-bordered">
+        {% if history %}
+        <div class="table-responsive">
 
-            <tr>
-                <th>Date Of Last Followup</th>
-                <td>{{ meeting.date_of_last_followup }}</td>
-            </tr>
+            <table class="table table-bordered table-striped">
 
-            <tr>
-                <th>Date To Call Next</th>
-                <td>{{ meeting.date_to_call_next }}</td>
-            </tr>
+                <thead>
 
-            <tr>
-                <th>Final Remarks</th>
-                <td>{{ meeting.final_remarks }}</td>
-            </tr>
+                    <tr>
 
-            <tr>
-                <th>Remarks</th>
-                <td>{{ meeting.remarks }}</td>
-            </tr>
+                        <th>
 
-        </table>
+                            Date
+
+                        </th>
+
+                        <th>
+
+                            Contact Person
+
+                        </th>
+
+                        <th>
+
+                            Status
+
+                        </th>
+
+                        <th>
+
+                            Conducted By
+
+                        </th>
+
+                        <th>
+
+                            Actions
+
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for item in history %}
+
+                    <tr>
+
+                        <td>
+
+                            {{ item.date_of_meeting }}
+
+                        </td>
+
+                        <td>
+
+                            {{ item.name }}
+
+                        </td>
+
+                        <td>
+
+                            {{ item.meeting_status }}
+
+                        </td>
+
+                        <td>
+
+                            {{ item.meeting_conducted_by }}
+
+                        </td>
+
+                        
+
+                        <td>
+
+                            <button
+                                type="button"
+                                class="btn btn-outline-dark btn-sm"
+                                data-bs-toggle="modal"
+                                data-bs-target="#historyModal{{ item.history_id }}">
+
+                                <i class="bi bi-eye"></i>
+
+                            </button>
+
+                            <a href="{{ url_for(
+                                'edit_meeting',
+                                meeting_id=meeting.meeting_id,
+                                history_id=item.history_id
+                            ) }}"
+                               class="btn btn-outline-warning btn-sm">
+
+                                <i class="bi bi-pencil"></i>
+
+                            </a>
+
+
+
+                            
+
+                        </td>
+
+                    </tr>
+                    <div class="modal fade"
+                         id="historyModal{{ item.history_id }}"
+                         tabindex="-1"
+                         aria-hidden="true">
+
+                        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+
+                            <div class="modal-content">
+
+                                <div class="modal-header">
+
+                                    <h4 class="modal-title">
+
+                                        <i class="bi bi-calendar-event"></i>
+
+                                        Meeting Details
+
+                                    </h4>
+
+                                    <button
+                                        type="button"
+                                        class="btn-close"
+                                        data-bs-dismiss="modal">
+                                    </button>
+
+                                </div>
+
+                                <div class="modal-body">
+
+                                    <!-- Contact Information -->
+
+                                    <div class="card mb-4">
+
+                                        <div class="card-header bg-primary text-white">
+
+                                            Contact Information
+
+                                        </div>
+
+                                        <div class="card-body">
+
+                                            <div class="row">
+
+                                                <div class="col-md-6 mb-3">
+
+                                                    <strong>Name</strong><br>
+
+                                                    {{ item.name }}
+
+                                                </div>
+
+                                                <div class="col-md-6 mb-3">
+
+                                                    <strong>Designation</strong><br>
+
+                                                    {{ item.designation }}
+
+                                                </div>
+
+                                                <div class="col-md-6 mb-3">
+
+                                                    <strong>Contact Number</strong><br>
+
+                                                    {{ item.contact_no }}
+
+                                                </div>
+
+                                                <div class="col-md-6 mb-3">
+
+                                                    <strong>Email</strong><br>
+
+                                                    {{ item.email }}
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                    <!-- Meeting Information -->
+
+                                    <div class="card mb-4">
+
+                                        <div class="card-header bg-success text-white">
+
+                                            Meeting Information
+
+                                        </div>
+
+                                        <div class="card-body">
+
+                                            <div class="row">
+
+                                                <div class="col-md-4 mb-3">
+
+                                                    <strong>Meeting Date</strong><br>
+
+                                                    {{ item.date_of_meeting }}
+
+                                                </div>
+
+                                                <div class="col-md-4 mb-3">
+
+                                                    <strong>Meeting Fixed By</strong><br>
+
+                                                    {{ item.meeting_fixed_by }}
+
+                                                </div>
+
+                                                <div class="col-md-4 mb-3">
+
+                                                    <strong>Meeting Conducted By</strong><br>
+
+                                                    {{ item.meeting_conducted_by }}
+
+                                                </div>
+
+                                                <div class="col-md-4 mb-3">
+
+                                                    <strong>Status</strong><br>
+
+                                                    {{ item.meeting_status }}
+
+                                                </div>
+
+                                                <div class="col-md-4 mb-3">
+
+                                                    <strong>Mode</strong><br>
+
+                                                    {{ item.mode_of_meeting }}
+
+                                                </div>
+
+                                                <div class="col-md-4 mb-3">
+
+                                                    <strong>Company Info Shared</strong><br>
+
+                                                    {{ item.company_info_shared }}
+
+                                                </div>
+
+                                                <div class="col-md-4 mb-3">
+
+                                                    <strong>Meeting Fixed</strong><br>
+
+                                                    {{ item.meeting_fixed }}
+
+                                                </div>
+
+                                                <div class="col-md-4 mb-3">
+
+                                                    <strong>Floor Plan Shared</strong><br>
+
+                                                    {{ item.floor_plan_shared }}
+
+                                                </div>
+
+                                                <div class="col-md-4 mb-3">
+
+                                                    <strong>Site Visit</strong><br>
+
+                                                    {{ item.site_visit }}
+
+                                                </div>
+
+                                                <div class="col-md-4 mb-3">
+
+                                                    <strong>Post Meeting Mail</strong><br>
+
+                                                    {{ item.post_meeting_mail }}
+
+                                                </div>
+
+                                                <div class="col-md-4 mb-3">
+
+                                                    <strong>Last Follow-up</strong><br>
+
+                                                    {{ item.date_of_last_followup }}
+
+                                                </div>
+
+                                                <div class="col-md-4 mb-3">
+
+                                                    <strong>Next Follow-up</strong><br>
+
+                                                    {{ item.date_to_call_next }}
+
+                                                </div>
+
+                                                <div class="col-md-6 mb-3">
+
+                                                    <strong>Reschedule Date</strong><br>
+
+                                                    {{ item.reschedule_date }}
+
+                                                </div>
+
+                                                <div class="col-md-6 mb-3">
+
+                                                    <strong>Reason for Reschedule</strong><br>
+
+                                                    {{ item.reason_for_reschedule or "-" }}
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                    <!-- Remarks -->
+
+                                    <div class="card">
+
+                                        <div class="card-header bg-warning">
+
+                                            Remarks
+
+                                        </div>
+
+                                        <div class="card-body">
+
+                                            <div class="mb-4">
+
+                                                <strong>Remarks</strong>
+
+                                                <hr>
+
+                                                {{ item.remarks or "-" }}
+
+                                            </div>
+
+                                            <div>
+
+                                                <strong>Final Remarks</strong>
+
+                                                <hr>
+
+                                                {{ item.final_remarks or "-" }}
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                                <div class="modal-footer">
+
+                                    <button
+                                        type="button"
+                                        class="btn btn-secondary"
+                                        data-bs-dismiss="modal">
+
+                                        Close
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <div class="alert alert-info mb-0">
+
+            No previous meetings found.
+
+        </div>
+
+        {% endif %}
 
     </div>
-
-    <br>
-
-    <div class="card shadow p-4">
-
-        <h4>
-
-            Reschedule Details
-
-        </h4>
-
-        <table class="table table-bordered">
-
-            <tr>
-                <th>Reschedule Date</th>
-                <td>{{ meeting.reschedule_date }}</td>
-            </tr>
-
-            <tr>
-                <th>Reason For Reschedule</th>
-                <td>{{ meeting.reason_for_reschedule }}</td>
-            </tr>
-
-        </table>
-
-    </div>
-
-    <br>
-
-
 
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

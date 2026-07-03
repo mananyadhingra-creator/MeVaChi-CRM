@@ -30,20 +30,24 @@
 
 <div class="container mt-5">
 
-    <div class="d-flex justify-content-end gap-1">
+    <div class="d-flex justify-content-end gap-2 mb-3">
+
         <a href="javascript:history.back()"
            class="btn btn-outline-secondary">
 
             Back
 
         </a>
+
         <a href="/dashboard"
            class="btn btn-dark">
 
-            Back To Dashboard
+            Back to Dashboard
 
-        </a>  
+        </a>
+
     </div>
+    
     <h2 class="text-center mb-4">
 
         Client Services
@@ -226,14 +230,14 @@
             Client Details
 
         </a>
-
+        {% if not admin_view %}
         <a href="/add-service/{{ client.client_id }}"
            class="btn btn-dark">
 
             Add Service
 
         </a>
-
+        {% endif %}
         <a href="/add-client"
            class="btn btn-outline-dark">
 

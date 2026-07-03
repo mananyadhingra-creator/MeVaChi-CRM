@@ -17,20 +17,23 @@
 <body class="bg-light">
 
 <div class="container py-5">
-    <div class="d-flex justify-content-end gap-1">
+    <div class="d-flex justify-content-end gap-2 mb-3">
+
         <a href="javascript:history.back()"
            class="btn btn-outline-secondary">
 
             Back
 
         </a>
+
         <a href="/dashboard"
            class="btn btn-dark">
 
-            Back To Dashboard
+            Back to Dashboard
 
-        </a>  
-    </div>    
+        </a>
+
+    </div>   
     <div class="d-flex justify-content-between align-items-center mb-4">
 
         <div>
@@ -103,7 +106,7 @@
 
                             <th>MOCA</th>
 
-                            <th>Drawing PDF</th>
+                            
 
                             <th>Owner</th>
 
@@ -143,27 +146,7 @@
 
                             </td>
 
-                            <td>
-
-                                {% if drawing.drawing_pdf %}
-
-                                <a href="{{ url_for(
-                                    'static',
-                                    filename=drawing.drawing_pdf
-                                ) }}"
-                                   target="_blank">
-
-                                    View PDF
-
-                                </a>
-
-                                {% else %}
-
-                                    No PDF
-
-                                {% endif %}
-
-                            </td>
+                            
 
                             <td>
 

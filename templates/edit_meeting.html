@@ -1,234 +1,107 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
 
-    <meta charset="UTF-8">
+    <title>
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+        Edit Meeting
 
-    <title>Meeting Management</title>
+    </title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
           rel="stylesheet">
 
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
 </head>
 
 <body class="bg-light">
+{% with messages = get_flashed_messages(with_categories=true) %}
 
-<div class="container mt-5">
-    <div class="d-flex justify-content-end gap-1">
+    {% if messages %}
+
+        {% for category, message in messages %}
+
+            <div class="alert alert-{{ category }} alert-dismissible fade show">
+
+                {{ message }}
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"></button>
+
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+{% endwith %}
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-end gap-2 mb-3">
+
         <a href="javascript:history.back()"
            class="btn btn-outline-secondary">
 
             Back
 
         </a>
+
         <a href="/dashboard"
            class="btn btn-dark">
 
-            Back To Dashboard
+            Back to Dashboard
 
-        </a>  
+        </a>
+
     </div>
-    <div class="card shadow p-4">
 
-        <h2 class="text-center mb-4">
+    <form method="POST">
 
-            Edit Meeting
+        <!-- ===================================== -->
+        <!-- COMPANY DETAILS -->
+        <!-- ===================================== -->
 
-        </h2>
+        <div class="card shadow p-4 mb-4">
 
-        <form method="POST">
+            <h3 class="mb-4">
+
+                Company Details
+
+            </h3>
 
             <div class="row">
 
-                <div class="mb-3">
-
-                    <label class="form-label">
-
-                        Select Lead
-
-                    </label>
-
-                    <select name="lead_id">
-                        <option value="">
-                            Select Lead
-                        </option>
-
-                        {% for lead in leads %}
-
-                        <option value="{{ lead.lead_id }}"
-                                data-name="{{ lead.name }}"
-                                data-reference="{{ lead.reference }}"
-                                data-phone="{{ lead.phone }}"
-                                data-location="{{ lead.location }}"
-                                {% if lead.lead_id == meeting.lead_id %}
-                                    selected
-                                {% endif %}>
-
-                            {{ lead.name }}
-
-                        </option>
-
-                        {% endfor %}
-
-                    </select>
-
-                </div>
-
                 <div class="col-md-6 mb-3">
 
                     <label class="form-label">
-                        Meeting Fixed By
-                    </label>
 
-                    <input type="text"
-                           name="meeting_fixed_by"
-                           value="{{ meeting.meeting_fixed_by }}">
-
-                </div>
-
-                <div class="col-md-6 mb-3">
-
-                    <label class="form-label">
                         Source
-                    </label>
 
-                    <select name="source"
-                            class="form-select">
-
-                        <option value="Linkedin"
-                            {% if meeting.source == 'Linkedin' %}
-                                selected
-                            {% endif %}>
-                            Linkedin
-                        </option>
-
-                        <option value="Instagram"
-                            {% if meeting.source == 'Instagram' %}
-                                selected
-                            {% endif %}>
-                            Instagram
-                        </option>
-
-                        <option value="Customer Reference"
-                            {% if meeting.source == 'Customer Reference' %}
-                                selected
-                            {% endif %}>
-                            Customer Reference
-                        </option>
-
-                        <option value="Cold Call"
-                            {% if meeting.source == 'Cold Call' %}
-                                selected
-                            {% endif %}>
-                            Cold Call
-                        </option>
-
-                        <option value="Cold Email"
-                            {% if meeting.source == 'Cold Email' %}
-                                selected
-                            {% endif %}>
-                            Cold Email
-                        </option>
-
-                        <option value="Gate Crashing"
-                            {% if meeting.source == 'Gate Crashing' %}
-                                selected
-                            {% endif %}>
-                            Gate Crashing
-                        </option>
-
-                        <option value="Architect"
-                            {% if meeting.source == 'Architect' %}
-                                selected
-                            {% endif %}>
-                            Architect
-                        </option>
-
-                        <option value="Website"
-                            {% if meeting.source == 'Website' %}
-                                selected
-                            {% endif %}>
-                            Website
-                        </option>
-
-                        <option value="Direct"
-                            {% if meeting.source == 'Direct' %}
-                                selected
-                            {% endif %}>
-                            Direct
-                        </option>
-
-                        <option value="Distributors"
-                            {% if meeting.source == 'Distributors' %}
-                                selected
-                            {% endif %}>
-                            Distributors
-                        </option>
-
-                        <option value="MVC Reference"
-                            {% if meeting.source == 'MVC Reference' %}
-                                selected
-                            {% endif %}>
-                            MVC Reference
-                        </option>
-
-                        <option value="Contractor"
-                            {% if meeting.source == 'Contractor' %}
-                                selected
-                            {% endif %}>
-                            Contractor
-                        </option>
-
-                        <option value="Builder"
-                            {% if meeting.source == 'Builder' %}
-                                selected
-                            {% endif %}>
-                            Builder
-                        </option>
-
-                        <option value="Others"
-                            {% if meeting.source == 'Others' %}
-                                selected
-                            {% endif %}>
-                            Others
-                        </option>
-
-                    </select>
-
-                </div>
-
-            </div>
-
-            <div class="row">
-
-                <div class="col-md-6 mb-3">
-
-                    <label class="form-label">
-                        Name
                     </label>
 
                     <input type="text"
-                           id="name"
-                           name="name"
-                           value="{{ meeting.name }}">
+                           name="source"
+                           class="form-control"
+                           value="{{ meeting.source }}">
 
                 </div>
 
                 <div class="col-md-6 mb-3">
 
                     <label class="form-label">
+
                         Reference
+
                     </label>
 
                     <input type="text"
-                           id="reference"
                            name="reference"
-                           value="{{ meeting.reference }}"
-                           class="form-control">
+                           class="form-control"
+                           value="{{ meeting.reference }}">
 
                 </div>
 
@@ -239,26 +112,30 @@
                 <div class="col-md-6 mb-3">
 
                     <label class="form-label">
+
                         Firm Name
+
                     </label>
 
                     <input type="text"
                            name="firm_name"
-                           value="{{ meeting.firm_name }}"
-                           class="form-control">
+                           class="form-control"
+                           value="{{ meeting.firm_name }}">
 
                 </div>
 
                 <div class="col-md-6 mb-3">
 
                     <label class="form-label">
-                        Designation
+
+                        State
+
                     </label>
 
                     <input type="text"
-                           name="designation"
-                           value="{{ meeting.designation }}"
-                           class="form-control">
+                           name="state"
+                           class="form-control"
+                           value="{{ meeting.state }}">
 
                 </div>
 
@@ -267,12 +144,66 @@
             <div class="mb-3">
 
                 <label class="form-label">
+
                     Address
+
                 </label>
 
-                <textarea id="address"
-                          name="address"
+                <textarea name="address"
+                          rows="3"
                           class="form-control">{{ meeting.address }}</textarea>
+
+            </div>
+
+        </div>
+
+        <!-- ===================================== -->
+        <!-- CURRENT MEETING -->
+        <!-- ===================================== -->
+
+        <div class="card shadow p-4 mb-4">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <h3>
+
+                    Current Meeting
+
+                </h3>
+
+
+            </div>
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+
+                        Meeting Fixed By
+
+                    </label>
+
+                    <input type="text"
+                           name="meeting_fixed_by"
+                           class="form-control"
+                           value="{{ editing_record.meeting_fixed_by }}">
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+
+                        Contact Person
+
+                    </label>
+
+                    <input type="text"
+                           name="name"
+                           class="form-control"
+                           value="{{ editing_record.name }}">
+
+                </div>
 
             </div>
 
@@ -281,27 +212,30 @@
                 <div class="col-md-6 mb-3">
 
                     <label class="form-label">
-                        State
+
+                        Designation
+
                     </label>
 
                     <input type="text"
-                           name="state"
-                           value="{{ meeting.state }}"
-                           class="form-control">
+                           name="designation"
+                           class="form-control"
+                           value="{{ editing_record.designation }}">
 
                 </div>
 
                 <div class="col-md-6 mb-3">
 
                     <label class="form-label">
+
                         Contact Number
+
                     </label>
 
                     <input type="text"
-                           id="contact_no"
                            name="contact_no"
-                           value="{{ meeting.contact_no }}"
-                           class="form-control">
+                           class="form-control"
+                           value="{{ editing_record.contact_no }}">
 
                 </div>
 
@@ -310,13 +244,15 @@
             <div class="mb-3">
 
                 <label class="form-label">
+
                     Email
+
                 </label>
 
                 <input type="email"
                        name="email"
-                       value="{{ meeting.email }}"
-                       class="form-control">
+                       class="form-control"
+                       value="{{ editing_record.email }}">
 
             </div>
 
@@ -325,23 +261,27 @@
                 <div class="col-md-4 mb-3">
 
                     <label class="form-label">
+
                         Company Info Shared
+
                     </label>
 
                     <select name="company_info_shared"
                             class="form-select">
 
                         <option value="YES"
-                            {% if meeting.company_info_shared == 'YES' %}
-                                selected
-                            {% endif %}>
+                            {% if editing_record.company_info_shared == 'YES' %}selected{% endif %}>
+
                             YES
+
                         </option>
+
                         <option value="NO"
-                            {% if meeting.company_info_shared == 'NO' %}
-                                selected
-                            {% endif %}>
+                            {% if editing_record.company_info_shared == 'NO' %}selected{% endif %}>
+
                             NO
+
+                        </option>
 
                     </select>
 
@@ -350,24 +290,28 @@
                 <div class="col-md-4 mb-3">
 
                     <label class="form-label">
+
                         Meeting Fixed
+
                     </label>
 
                     <select name="meeting_fixed"
                             class="form-select">
 
                         <option value="YES"
-                            {% if meeting.meeting_fixed == 'YES' %}
-                                selected
-                            {% endif %}>
+                            {% if editing_record.meeting_fixed == 'YES' %}selected{% endif %}>
+
                             YES
+
                         </option>
+
                         <option value="NO"
-                            {% if meeting.meeting_fixed == 'NO' %}
-                                selected
-                            {% endif %}>
+                            {% if editing_record.meeting_fixed == 'NO' %}selected{% endif %}>
+
                             NO
+
                         </option>
+
                     </select>
 
                 </div>
@@ -375,13 +319,15 @@
                 <div class="col-md-4 mb-3">
 
                     <label class="form-label">
+
                         Date Of Meeting
+
                     </label>
 
                     <input type="date"
                            name="date_of_meeting"
-                           value="{{ meeting.date_of_meeting }}"
-                           class="form-control">
+                           class="form-control"
+                           value="{{ editing_record.date_of_meeting }}">
 
                 </div>
 
@@ -392,23 +338,26 @@
                 <div class="col-md-4 mb-3">
 
                     <label class="form-label">
+
                         Mode Of Meeting
+
                     </label>
 
                     <select name="mode_of_meeting"
                             class="form-select">
 
                         <option value="In-person"
-                            {% if meeting.mode_of_meeting == 'In-person' %}
-                                selected
-                            {% endif %}>
+                            {% if editing_record.mode_of_meeting == 'In-person' %}selected{% endif %}>
+
                             In-person
+
                         </option>
+
                         <option value="Online"
-                            {% if meeting.mode_of_meeting == 'Online' %}
-                                selected
-                            {% endif %}>
+                            {% if editing_record.mode_of_meeting == 'Online' %}selected{% endif %}>
+
                             Online
+
                         </option>
 
                     </select>
@@ -418,53 +367,59 @@
                 <div class="col-md-4 mb-3">
 
                     <label class="form-label">
+
                         Meeting Status
+
                     </label>
 
                     <input type="text"
                            name="meeting_status"
-                           value="{{ meeting.meeting_status }}"
-                           class="form-control">
+                           class="form-control"
+                           value="{{ editing_record.meeting_status }}">
 
                 </div>
 
                 <div class="col-md-4 mb-3">
 
                     <label class="form-label">
+
                         Meeting Conducted By
+
                     </label>
 
                     <input type="text"
                            name="meeting_conducted_by"
-                           value="{{ meeting.meeting_conducted_by }}"
-                           class="form-control">
+                           class="form-control"
+                           value="{{ editing_record.meeting_conducted_by }}">
 
                 </div>
 
             </div>
-
             <div class="row">
 
                 <div class="col-md-4 mb-3">
 
                     <label class="form-label">
+
                         Floor Plan Shared
+
                     </label>
 
                     <select name="floor_plan_shared"
                             class="form-select">
 
                         <option value="YES"
-                            {% if meeting.floor_plan_shared == 'YES' %}
-                                selected
-                            {% endif %}>
+                            {% if editing_record.floor_plan_shared == 'YES' %}selected{% endif %}>
+
                             YES
+
                         </option>
+
                         <option value="NO"
-                            {% if meeting.floor_plan_shared == 'NO' %}
-                                selected
-                            {% endif %}>
+                            {% if editing_record.floor_plan_shared == 'NO' %}selected{% endif %}>
+
                             NO
+
                         </option>
 
                     </select>
@@ -474,23 +429,26 @@
                 <div class="col-md-4 mb-3">
 
                     <label class="form-label">
+
                         Site Visit
+
                     </label>
 
                     <select name="site_visit"
                             class="form-select">
 
                         <option value="YES"
-                            {% if meeting.site_visit == 'YES' %}
-                                selected
-                            {% endif %}>
+                            {% if editing_record.site_visit == 'YES' %}selected{% endif %}>
+
                             YES
+
                         </option>
+
                         <option value="NO"
-                            {% if meeting.site_visit == 'NO' %}
-                                selected
-                            {% endif %}>
+                            {% if editing_record.site_visit == 'NO' %}selected{% endif %}>
+
                             NO
+
                         </option>
 
                     </select>
@@ -500,23 +458,26 @@
                 <div class="col-md-4 mb-3">
 
                     <label class="form-label">
+
                         Post Meeting Mail
+
                     </label>
 
                     <select name="post_meeting_mail"
                             class="form-select">
 
                         <option value="YES"
-                            {% if meeting.post_meeting_mail == 'YES' %}
-                                selected
-                            {% endif %}>
+                            {% if editing_record.post_meeting_mail == 'YES' %}selected{% endif %}>
+
                             YES
+
                         </option>
+
                         <option value="NO"
-                            {% if meeting.post_meeting_mail == 'NO' %}
-                                selected
-                            {% endif %}>
+                            {% if editing_record.post_meeting_mail == 'NO' %}selected{% endif %}>
+
                             NO
+
                         </option>
 
                     </select>
@@ -530,39 +491,45 @@
                 <div class="col-md-4 mb-3">
 
                     <label class="form-label">
+
                         Date Of Last Followup
+
                     </label>
 
                     <input type="date"
                            name="date_of_last_followup"
-                           value="{{ meeting.date_of_last_followup }}"
-                           class="form-control">
+                           class="form-control"
+                           value="{{ editing_record.date_of_last_followup }}">
 
                 </div>
 
                 <div class="col-md-4 mb-3">
 
                     <label class="form-label">
+
                         Date To Call Next
+
                     </label>
 
                     <input type="date"
                            name="date_to_call_next"
-                           value="{{ meeting.date_to_call_next }}"
-                           class="form-control">
+                           class="form-control"
+                           value="{{ editing_record.date_to_call_next }}">
 
                 </div>
 
                 <div class="col-md-4 mb-3">
 
                     <label class="form-label">
+
                         Reschedule Date
+
                     </label>
 
                     <input type="date"
                            name="reschedule_date"
-                           value="{{ meeting.reschedule_date }}"
-                           class="form-control">
+                           class="form-control"
+                           value="{{ editing_record.reschedule_date }}">
 
                 </div>
 
@@ -571,47 +538,1001 @@
             <div class="mb-3">
 
                 <label class="form-label">
-                    Final Remarks
-                </label>
 
-                <textarea name="final_remarks"
-                          class="form-control">{{ meeting.final_remarks }}</textarea>
-
-            </div>
-
-            <div class="mb-3">
-
-                <label class="form-label">
                     Reason For Reschedule
+
                 </label>
 
                 <textarea name="reason_for_reschedule"
-                          class="form-control">{{ meeting.reason_for_reschedule }}</textarea>
+                          rows="3"
+                          class="form-control">{{ editing_record.reason_for_reschedule }}</textarea>
 
             </div>
 
             <div class="mb-3">
 
                 <label class="form-label">
-                    Remarks
+
+                    Final Remarks
+
                 </label>
 
-                <textarea name="remarks"
-                          class="form-control">{{ meeting.remarks }}</textarea>
+                <textarea name="final_remarks"
+                          rows="3"
+                          class="form-control">{{ editing_record.final_remarks }}</textarea>
 
             </div>
 
-            <button type="submit"
-                    class="btn btn-dark">
+            <div class="mb-4">
 
-                Update Meeting
+                <label class="form-label">
+
+                    Remarks
+
+                </label>
+
+                <textarea name="remarks"
+                          rows="3"
+                          class="form-control">{{ editing_record.remarks }}</textarea>
+
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+
+                <button type="submit"
+                        name="action"
+                        value="delete_current"
+                        class="btn btn-outline-danger"
+                        onclick="return confirm('Delete current meeting?')">
+
+                    <i class="bi bi-trash"></i>
+
+                    Delete Current Meeting
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- ===================================== -->
+        <!-- NEW MEETINGS -->
+        <!-- ===================================== -->
+
+        <div class="card shadow p-4 mb-4">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <h3>
+
+                    New Meetings
+
+                </h3>
+
+            </div>
+
+            <div id="new-meeting-container">
+            </div>
+
+            <div id="meeting-template"
+                 class="d-none">
+                 
+                <div class="new-meeting-card card border shadow-sm p-4 mb-4 position-relative">
+
+                    <button type="button"
+                            class="btn btn-outline-danger btn-sm position-absolute top-0 end-0 m-3 remove-meeting"
+                            onclick="removeMeeting(this)">
+                            
+
+                        <i class="bi bi-trash"></i>
+
+                    </button>
+
+                    <h5 class="mb-4">
+
+                        New Meeting
+
+                    </h5>
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+
+                                Meeting Fixed By
+
+                            </label>
+
+                            <input type="text"
+                                   name="new_meeting_fixed_by[]"
+                                   class="form-control">
+
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+
+                                Contact Person
+
+                            </label>
+
+                            <input type="text"
+                                   name="new_name[]"
+                                   class="form-control">
+
+                        </div>
+
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+
+                                Designation
+
+                            </label>
+
+                            <input type="text"
+                                   name="new_designation[]"
+                                   class="form-control">
+
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+
+                                Contact Number
+
+                            </label>
+
+                            <input type="text"
+                                   name="new_contact_no[]"
+                                   class="form-control">
+
+                        </div>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            Email
+
+                        </label>
+
+                        <input type="email"
+                               name="new_email[]"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-md-4 mb-3">
+
+                            <label class="form-label">
+
+                                Company Info Shared
+
+                            </label>
+
+                            <select name="new_company_info_shared[]"
+                                    class="form-select">
+
+                                <option>
+
+                                    YES
+
+                                </option>
+
+                                <option>
+
+                                    NO
+
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+
+                            <label class="form-label">
+
+                                Meeting Fixed
+
+                            </label>
+
+                            <select name="new_meeting_fixed[]"
+                                    class="form-select">
+
+                                <option>
+
+                                    YES
+
+                                </option>
+
+                                <option>
+
+                                    NO
+
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+
+                            <label class="form-label">
+
+                                Date Of Meeting
+
+                            </label>
+
+                            <input type="date"
+                                   name="new_date_of_meeting[]"
+                                   class="form-control">
+
+                        </div>
+
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-md-4 mb-3">
+
+                            <label class="form-label">
+
+                                Mode Of Meeting
+
+                            </label>
+
+                            <select name="new_mode_of_meeting[]"
+                                    class="form-select">
+
+                                <option>
+
+                                    In-person
+
+                                </option>
+
+                                <option>
+
+                                    Online
+
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+
+                            <label class="form-label">
+
+                                Meeting Status
+
+                            </label>
+
+                            <input type="text"
+                                   name="new_meeting_status[]"
+                                   class="form-control">
+
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+
+                            <label class="form-label">
+
+                                Meeting Conducted By
+
+                            </label>
+
+                            <input type="text"
+                                   name="new_meeting_conducted_by[]"
+                                   class="form-control">
+
+                        </div>
+
+                    </div>
+                    <div class="row">
+
+                        <div class="col-md-4 mb-3">
+
+                            <label class="form-label">
+
+                                Floor Plan Shared
+
+                            </label>
+
+                            <select name="new_floor_plan_shared[]"
+                                    class="form-select">
+
+                                <option>
+
+                                    YES
+
+                                </option>
+
+                                <option>
+
+                                    NO
+
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+
+                            <label class="form-label">
+
+                                Site Visit
+
+                            </label>
+
+                            <select name="new_site_visit[]"
+                                    class="form-select">
+
+                                <option>
+
+                                    YES
+
+                                </option>
+
+                                <option>
+
+                                    NO
+
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+
+                            <label class="form-label">
+
+                                Post Meeting Mail
+
+                            </label>
+
+                            <select name="new_post_meeting_mail[]"
+                                    class="form-select">
+
+                                <option>
+
+                                    YES
+
+                                </option>
+
+                                <option>
+
+                                    NO
+
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-md-4 mb-3">
+
+                            <label class="form-label">
+
+                                Date Of Last Followup
+
+                            </label>
+
+                            <input type="date"
+                                   name="new_date_of_last_followup[]"
+                                   class="form-control">
+
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+
+                            <label class="form-label">
+
+                                Date To Call Next
+
+                            </label>
+
+                            <input type="date"
+                                   name="new_date_to_call_next[]"
+                                   class="form-control">
+
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+
+                            <label class="form-label">
+
+                                Reschedule Date
+
+                            </label>
+
+                            <input type="date"
+                                   name="new_reschedule_date[]"
+                                   class="form-control">
+
+                        </div>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            Reason For Reschedule
+
+                        </label>
+
+                        <textarea name="new_reason_for_reschedule[]"
+                                  rows="3"
+                                  class="form-control"></textarea>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            Final Remarks
+
+                        </label>
+
+                        <textarea name="new_final_remarks[]"
+                                  rows="3"
+                                  class="form-control"></textarea>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            Remarks
+
+                        </label>
+
+                        <textarea name="new_remarks[]"
+                                  rows="3"
+                                  class="form-control"></textarea>
+
+                    </div>
+
+                </div>
+
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center">
+
+                <button type="button"
+                        class="btn btn-outline-primary"
+                        onclick="addMeetingCard()">
+
+                    <i class="bi bi-plus-circle"></i>
+
+                    Record New Meeting
+
+                </button>
+
+
+
+            </div>
+
+    </div>
+
+        <br>
+
+        <div class="card shadow p-4 mb-4">
+
+            <h3 class="mb-4">
+
+                Previous Meetings
+
+            </h3>
+
+            {% if history %}
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered table-hover align-middle">
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th>
+
+                                Date
+
+                            </th>
+
+                            <th>
+
+                                Contact Person
+
+                            </th>
+
+                            <th>
+
+                                Status
+
+                            </th>
+
+                            <th>
+
+                                Conducted By
+
+                            </th>
+
+                            <th>
+
+                                Actions
+
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for item in history %}
+
+                        <tr>
+
+                            <td>
+
+                                {{ item.date_of_meeting }}
+
+                            </td>
+
+                            <td>
+
+                                {{ item.name }}
+
+                            </td>
+
+                            <td>
+
+                                {{ item.meeting_status }}
+
+                            </td>
+
+                            <td>
+
+                                {{ item.meeting_conducted_by }}
+
+                            </td>
+
+                            <td>
+
+                                <button
+                                    type="button"
+                                    class="btn btn-outline-dark btn-sm"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#historyModal{{ item.history_id }}">
+
+                                    <i class="bi bi-eye"></i>
+
+                                </button>
+
+                                <a href="{{ url_for('edit_meeting',
+                                                    meeting_id=meeting.meeting_id,
+                                                    history_id=item.history_id) }}"
+                                   class="btn btn-outline-primary btn-sm">
+
+                                    <i class="bi bi-pencil"></i>
+
+                                </a>
+
+                                <button type="submit"
+                                        name="delete_history"
+                                        value="{{ item.history_id }}"
+                                        class="btn btn-outline-danger btn-sm"
+                                        onclick="return confirm('Delete this meeting?')">
+
+                                    <i class="bi bi-trash"></i>
+
+                                </button>
+
+                            </td>
+
+                        </tr>
+
+                        <div class="modal fade"
+                             id="historyModal{{ item.history_id }}"
+                             tabindex="-1"
+                             aria-hidden="true">
+
+                            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+
+                                <div class="modal-content">
+
+                                    <div class="modal-header">
+
+                                        <h4 class="modal-title">
+
+                                            <i class="bi bi-calendar-event"></i>
+
+                                            Meeting Details
+
+                                        </h4>
+
+                                        <button
+                                            type="button"
+                                            class="btn-close"
+                                            data-bs-dismiss="modal">
+                                        </button>
+
+                                    </div>
+
+                                    <div class="modal-body">
+
+                                        <!-- Contact Information -->
+
+                                        <div class="card mb-4">
+
+                                            <div class="card-header bg-primary text-white">
+
+                                                Contact Information
+
+                                            </div>
+
+                                            <div class="card-body">
+
+                                                <div class="row">
+
+                                                    <div class="col-md-6 mb-3">
+
+                                                        <strong>Name</strong><br>
+
+                                                        {{ item.name }}
+
+                                                    </div>
+
+                                                    <div class="col-md-6 mb-3">
+
+                                                        <strong>Designation</strong><br>
+
+                                                        {{ item.designation }}
+
+                                                    </div>
+
+                                                    <div class="col-md-6 mb-3">
+
+                                                        <strong>Contact Number</strong><br>
+
+                                                        {{ item.contact_no }}
+
+                                                    </div>
+
+                                                    <div class="col-md-6 mb-3">
+
+                                                        <strong>Email</strong><br>
+
+                                                        {{ item.email }}
+
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                        <!-- Meeting Information -->
+
+                                        <div class="card mb-4">
+
+                                            <div class="card-header bg-success text-white">
+
+                                                Meeting Information
+
+                                            </div>
+
+                                            <div class="card-body">
+
+                                                <div class="row">
+
+                                                    <div class="col-md-4 mb-3">
+
+                                                        <strong>Meeting Date</strong><br>
+
+                                                        {{ item.date_of_meeting }}
+
+                                                    </div>
+
+                                                    <div class="col-md-4 mb-3">
+
+                                                        <strong>Meeting Fixed By</strong><br>
+
+                                                        {{ item.meeting_fixed_by }}
+
+                                                    </div>
+
+                                                    <div class="col-md-4 mb-3">
+
+                                                        <strong>Meeting Conducted By</strong><br>
+
+                                                        {{ item.meeting_conducted_by }}
+
+                                                    </div>
+
+                                                    <div class="col-md-4 mb-3">
+
+                                                        <strong>Status</strong><br>
+
+                                                        {{ item.meeting_status }}
+
+                                                    </div>
+
+                                                    <div class="col-md-4 mb-3">
+
+                                                        <strong>Mode</strong><br>
+
+                                                        {{ item.mode_of_meeting }}
+
+                                                    </div>
+
+                                                    <div class="col-md-4 mb-3">
+
+                                                        <strong>Company Info Shared</strong><br>
+
+                                                        {{ item.company_info_shared }}
+
+                                                    </div>
+
+                                                    <div class="col-md-4 mb-3">
+
+                                                        <strong>Meeting Fixed</strong><br>
+
+                                                        {{ item.meeting_fixed }}
+
+                                                    </div>
+
+                                                    <div class="col-md-4 mb-3">
+
+                                                        <strong>Floor Plan Shared</strong><br>
+
+                                                        {{ item.floor_plan_shared }}
+
+                                                    </div>
+
+                                                    <div class="col-md-4 mb-3">
+
+                                                        <strong>Site Visit</strong><br>
+
+                                                        {{ item.site_visit }}
+
+                                                    </div>
+
+                                                    <div class="col-md-4 mb-3">
+
+                                                        <strong>Post Meeting Mail</strong><br>
+
+                                                        {{ item.post_meeting_mail }}
+
+                                                    </div>
+
+                                                    <div class="col-md-4 mb-3">
+
+                                                        <strong>Last Follow-up</strong><br>
+
+                                                        {{ item.date_of_last_followup }}
+
+                                                    </div>
+
+                                                    <div class="col-md-4 mb-3">
+
+                                                        <strong>Next Follow-up</strong><br>
+
+                                                        {{ item.date_to_call_next }}
+
+                                                    </div>
+
+                                                    <div class="col-md-6 mb-3">
+
+                                                        <strong>Reschedule Date</strong><br>
+
+                                                        {{ item.reschedule_date }}
+
+                                                    </div>
+
+                                                    <div class="col-md-6 mb-3">
+
+                                                        <strong>Reason for Reschedule</strong><br>
+
+                                                        {{ item.reason_for_reschedule or "-" }}
+
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                        <!-- Remarks -->
+
+                                        <div class="card">
+
+                                            <div class="card-header bg-warning">
+
+                                                Remarks
+
+                                            </div>
+
+                                            <div class="card-body">
+
+                                                <div class="mb-4">
+
+                                                    <strong>Remarks</strong>
+
+                                                    <hr>
+
+                                                    {{ item.remarks or "-" }}
+
+                                                </div>
+
+                                                <div>
+
+                                                    <strong>Final Remarks</strong>
+
+                                                    <hr>
+
+                                                    {{ item.final_remarks or "-" }}
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="modal-footer">
+
+                                        <button
+                                            type="button"
+                                            class="btn btn-secondary"
+                                            data-bs-dismiss="modal">
+
+                                            Close
+
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% else %}
+
+            <div class="alert alert-secondary">
+
+                No previous meetings available.
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+        <div class="d-flex justify-content-end mt-4">
+
+            <button type="submit"
+                    name="action"
+                    value="save"
+                    class="btn btn-success btn-lg">
+
+                <i class="bi bi-floppy"></i>
+
+                Save Changes
 
             </button>
 
+        </div>
 
-        </form>
+    </form>
 
-    </div>
+</div>
+<script>
+
+function addMeetingCard() {
+
+    let template = document.querySelector(
+
+        '#meeting-template .new-meeting-card'
+
+    );
+
+    let clone = template.cloneNode(
+
+        true
+
+    );
+
+    clone.querySelectorAll(
+
+        'input'
+
+    ).forEach(function(input){
+
+        input.value = '';
+
+    });
+
+    clone.querySelectorAll(
+
+        'textarea'
+
+    ).forEach(function(textarea){
+
+        textarea.value = '';
+
+    });
+
+    clone.querySelectorAll(
+
+        'select'
+
+    ).forEach(function(select){
+
+        select.selectedIndex = 0;
+
+    });
+
+    document.getElementById(
+
+        'new-meeting-container'
+
+    ).appendChild(
+
+        clone
+
+    );
+
+}
+
+function removeMeeting(button){
+
+    button.closest(
+
+        '.new-meeting-card'
+
+    ).remove();
+
+}
+
+</script>
 
 </body>
 

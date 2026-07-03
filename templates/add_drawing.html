@@ -30,20 +30,23 @@
 
 <div class="container mt-4">
 
-    <div class="d-flex justify-content-end gap-1">
+    <div class="d-flex justify-content-end gap-2 mb-3">
+
         <a href="javascript:history.back()"
            class="btn btn-outline-secondary">
 
             Back
 
         </a>
+
         <a href="/dashboard"
            class="btn btn-dark">
 
-            Back To Dashboard
+            Back to Dashboard
 
-        </a>  
-    </div>    
+        </a>
+
+    </div>  
     {% if not admin_view %}
     <div class="card shadow p-4">
 
@@ -175,13 +178,14 @@
 
                         <label class="form-label">
 
-                            Drawing PDF
+                            Drawing Files
 
                         </label>
 
                         <input type="file"
-                               name="drawing_pdf"
-                               class="form-control">
+                               name="drawing_files"
+                               class="form-control"
+                               multiple>
 
                     </div>
 
@@ -247,7 +251,7 @@
 
                     <th>MOCA</th>
 
-                    <th>Drawing PDF</th>
+                    
 
                     <th>Action</th>
 
@@ -269,7 +273,7 @@
 
                     <td>{{ drawing.moca }}</td>
 
-                    <td>
+                    {#<td>
 
                         {% if drawing.drawing_pdf %}
 
@@ -283,7 +287,7 @@
 
                         {% endif %}
 
-                    </td>
+                    </td>#}
 
                     <td>
 

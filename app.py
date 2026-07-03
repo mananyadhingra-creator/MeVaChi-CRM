@@ -85,6 +85,256 @@ def can_view_record(
         'username'
     ) == record_owner
 
+def can_edit_record(record_owner):
+
+    if session.get(
+        'role'
+    ) == 'ADMIN':
+
+        return True
+
+    return (
+        record_owner ==
+        session.get(
+            'username'
+        )
+    )
+
+
+def can_delete_record(record_owner):
+
+    if session.get(
+        'role'
+    ) == 'ADMIN':
+
+        return True
+
+    return (
+        record_owner ==
+        session.get(
+            'username'
+        )
+    )
+
+def get_record_query(model):
+
+    role = session.get(
+        'role'
+    )
+
+    username = session.get(
+        'username'
+    )
+
+    if role == 'ADMIN':
+
+        return model.query
+
+    if model == Installation:
+
+        return model.query
+
+    if role == 'SALES':
+
+        if model in [
+
+            Client,
+
+            CustomerCareCard
+
+        ]:
+
+            return model.query.filter(
+                False
+            )
+
+        return model.query.filter(
+
+            model.record_owner ==
+            username
+
+        )
+
+    if role == 'COMMERCIALS':
+
+        if model in [
+
+            Client,
+
+            CustomerCareCard
+
+        ]:
+
+            return model.query
+
+        return model.query
+
+    return model.query.filter(
+        False
+    )
+
+def can_view_search_result(
+    module,
+    record
+):
+
+    role = session.get(
+        'role'
+    )
+
+    username = session.get(
+        'username'
+    )
+
+    if role == 'ADMIN':
+
+        return True
+
+    if module == 'INSTALLATION':
+
+        return True
+
+    if role == 'SALES':
+
+        if module in [
+
+            'CLIENT',
+
+            'SERVICE'
+
+        ]:
+
+            return False
+
+        return (
+
+            record.record_owner ==
+            username
+
+        )
+
+    if role == 'COMMERCIALS':
+
+        return True
+
+    return False
+
+def can_edit_search_result(record):
+
+    role = session.get(
+        'role'
+    )
+
+    username = session.get(
+        'username'
+    )
+
+    if role == 'ADMIN':
+
+        return True
+
+    if isinstance(
+        record,
+        Installation
+    ):
+
+        return True
+
+    if role == 'COMMERCIALS':
+
+        if isinstance(
+            record,
+            (
+                Client,
+                CustomerCareCard
+            )
+        ):
+
+            return True
+
+    return (
+
+        record.record_owner ==
+        username
+
+    )
+
+def can_delete_search_result(record):
+
+    role = session.get(
+        'role'
+    )
+
+    username = session.get(
+        'username'
+    )
+
+    if role == 'ADMIN':
+
+        return True
+
+    if isinstance(
+        record,
+        Installation
+    ):
+
+        return True
+
+    if role == 'COMMERCIALS':
+
+        if isinstance(
+            record,
+            (
+                Client,
+                CustomerCareCard
+            )
+        ):
+
+            return True
+
+    return (
+
+        record.record_owner ==
+        username
+
+    )
+
+def search_records(
+    model,
+    columns,
+    search
+):
+
+    query = get_record_query(
+        model
+    )
+
+    conditions = []
+
+    for column in columns:
+
+        conditions.append(
+
+            column.ilike(
+
+                f'%{search}%'
+
+            )
+
+        )
+
+    query = query.filter(
+
+        or_(
+
+            *conditions
+
+        )
+
+    )
+
+    return query.all()
+
 def log_activity(
 
     module_name,
@@ -114,6 +364,129 @@ def log_activity(
     )
 
     db.session.add(log)
+
+def update_client_status(client):
+
+    today = datetime.today().date()
+
+    if client.installation_date:
+
+        client.cmc_due_days = (
+            today -
+            client.installation_date
+        ).days
+
+    else:
+
+        client.cmc_due_days = 0
+
+    client.cmc_due = (
+        'YES'
+        if client.cmc_due_days >= 345
+        else 'NO'
+    )
+
+    if client.last_service_date:
+
+        client.last_service_days = (
+            today -
+            client.last_service_date
+        ).days
+
+    elif client.activation_date:
+
+        client.last_service_days = (
+            today -
+            client.activation_date
+        ).days
+
+    else:
+
+        client.last_service_days = 0
+
+    client.service_due = (
+        'YES'
+        if client.last_service_days >= client.service_interval_days
+        else 'NO'
+    )
+
+def admin_delete_or_request(
+    model,
+    record_id,
+    module_name
+):
+
+    record = model.query.get_or_404(
+        record_id
+    )
+
+    if session.get(
+        'role'
+    ) == 'ADMIN':
+
+        try:
+
+            db.session.delete(
+                record
+            )
+
+            log_activity(
+
+                module_name,
+
+                record_id,
+
+                'DELETED'
+
+            )
+
+            db.session.commit()
+
+            flash(
+                'Record deleted successfully.',
+                'success'
+            )
+
+        except Exception:
+
+            db.session.rollback()
+
+            flash(
+
+                'Cannot delete this record because it is linked with other records.',
+
+                'danger'
+
+            )
+
+    else:
+
+        delete_request = DeleteRequest(
+
+            module_name=
+                module_name,
+
+            record_id=
+                record_id,
+
+            requested_by=
+                session['username']
+
+        )
+
+        db.session.add(
+            delete_request
+        )
+
+        db.session.commit()
+
+        flash(
+
+            'Delete request sent to Admin.',
+
+            'success'
+
+        )
 
 class User(db.Model):
 
@@ -242,9 +615,119 @@ class Meeting(db.Model):
         db.ForeignKey('leads.lead_id')
     )
 
+    history = db.relationship(
+
+        'MeetingHistory',
+
+        backref='meeting',
+
+        cascade='all, delete-orphan'
+
+    )
+
     record_owner = db.Column(
         db.String(100)
     )    
+
+class MeetingHistory(db.Model):
+
+    __tablename__ = 'meeting_history'
+
+    history_id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    meeting_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            'meetings.meeting_id'
+        )
+    )
+
+    name = db.Column(
+        db.String(100)
+    )
+
+    designation = db.Column(
+        db.String(100)
+    )
+
+    contact_no = db.Column(
+        db.String(20)
+    )
+
+    email = db.Column(
+        db.String(100)
+    )
+
+    meeting_fixed_by = db.Column(
+        db.String(100)
+    )
+
+    company_info_shared = db.Column(
+        db.String(10)
+    )
+
+    meeting_fixed = db.Column(
+        db.String(10)
+    )
+
+    date_of_meeting = db.Column(
+        db.Date
+    )
+
+    mode_of_meeting = db.Column(
+        db.String(50)
+    )
+
+    meeting_status = db.Column(
+        db.String(50)
+    )
+
+    meeting_conducted_by = db.Column(
+        db.String(100)
+    )
+
+    floor_plan_shared = db.Column(
+        db.String(10)
+    )
+
+    site_visit = db.Column(
+        db.String(10)
+    )
+
+    post_meeting_mail = db.Column(
+        db.String(10)
+    )
+
+    date_of_last_followup = db.Column(
+        db.Date
+    )
+
+    date_to_call_next = db.Column(
+        db.Date
+    )
+
+    reschedule_date = db.Column(
+        db.Date
+    )
+
+    reason_for_reschedule = db.Column(
+        db.Text
+    )
+
+    remarks = db.Column(
+        db.Text
+    )
+
+    final_remarks = db.Column(
+        db.Text
+    )
+
+    record_owner = db.Column(
+        db.String(100)
+    )
 
 class Visit(db.Model):
 
@@ -316,6 +799,144 @@ class Visit(db.Model):
         db.String(100)
     )
 
+    last_updated = db.Column(
+
+        db.DateTime,
+
+        default=datetime.utcnow,
+
+        onupdate=datetime.utcnow
+
+    )
+
+class VisitHistory(db.Model):
+
+    __tablename__ = 'visit_history'
+
+    history_id = db.Column(
+
+        db.Integer,
+
+        primary_key=True
+
+    )
+
+    visit_id = db.Column(
+
+        db.Integer,
+
+        db.ForeignKey(
+
+            'visits.visit_id'
+
+        )
+
+    )
+
+    meeting_id = db.Column(
+
+        db.Integer,
+
+        db.ForeignKey(
+
+            'meetings.meeting_id'
+
+        )
+
+    )
+
+    state = db.Column(
+
+        db.String(100)
+
+    )
+
+    region = db.Column(
+
+        db.String(100)
+
+    )
+
+    abc = db.Column(
+
+        db.String(100)
+
+    )
+
+    company_name = db.Column(
+
+        db.String(200)
+
+    )
+
+    person_name = db.Column(
+
+        db.String(100)
+
+    )
+
+    designation = db.Column(
+
+        db.String(100)
+
+    )
+
+    contact_no = db.Column(
+
+        db.String(20)
+
+    )
+
+    address = db.Column(
+
+        db.Text
+
+    )
+
+    brief = db.Column(
+
+        db.Text
+
+    )
+
+    visit_date = db.Column(
+
+        db.Date
+
+    )
+
+    leads_generated = db.Column(
+
+        db.Integer
+
+    )
+
+    m2 = db.Column(
+
+        db.Text
+
+    )
+
+    m3 = db.Column(
+
+        db.Text
+
+    )
+
+    record_owner = db.Column(
+
+        db.String(100)
+
+    )
+
+    last_updated = db.Column(
+
+        db.DateTime,
+
+        default=datetime.utcnow
+
+    )
+
 class Drawing(db.Model):
 
     __tablename__ = 'drawings'
@@ -346,12 +967,60 @@ class Drawing(db.Model):
         db.String(100)
     )
 
-    drawing_pdf = db.Column(
-        db.String(255)
+    files = db.relationship(
+
+        'DrawingFile',
+
+        backref='drawing',
+
+        cascade='all, delete-orphan'
+
     )
 
     record_owner = db.Column(
         db.String(100)
+    )
+
+class DrawingFile(db.Model):
+
+    __tablename__ = 'drawing_files'
+
+    file_id = db.Column(
+
+        db.Integer,
+
+        primary_key=True
+
+    )
+
+    drawing_id = db.Column(
+
+        db.Integer,
+
+        db.ForeignKey(
+
+            'drawings.drawing_id'
+
+        )
+
+    )
+
+    file_name = db.Column(
+
+        db.String(255)
+
+    )
+
+    file_path = db.Column(
+
+        db.String(500)
+
+    )
+
+    file_type = db.Column(
+
+        db.String(500)
+
     )
 
 class Proposal(db.Model):
@@ -434,7 +1103,7 @@ class Proposal(db.Model):
 
     remarks = db.Column(db.Text)
 
-    proposal_pdf = db.Column(db.String(255))
+    
 
     meeting_id = db.Column(
         db.Integer,
@@ -445,8 +1114,60 @@ class Proposal(db.Model):
         db.ForeignKey('drawings.drawing_id')
     )
 
+    files = db.relationship(
+
+        'ProposalFile',
+
+        backref='proposal',
+
+        cascade='all, delete-orphan'
+
+    )
+
     record_owner = db.Column(
         db.String(100)
+    )
+
+class ProposalFile(db.Model):
+
+    __tablename__ = 'proposal_files'
+
+    file_id = db.Column(
+
+        db.Integer,
+
+        primary_key=True
+
+    )
+
+    proposal_id = db.Column(
+
+        db.Integer,
+
+        db.ForeignKey(
+
+            'proposals.proposal_id'
+
+        )
+
+    )
+
+    file_name = db.Column(
+
+        db.String(500)
+
+    )
+
+    file_path = db.Column(
+
+        db.String(500)
+
+    )
+
+    file_type = db.Column(
+
+        db.String(500)
+
     )
 
 class SalesPipeline(db.Model):
@@ -667,12 +1388,48 @@ class Invoice(db.Model):
         db.Numeric(12,2)
     )
 
-    invoice_pdf = db.Column(
-        db.String(255)
-    )
+
 
     record_owner = db.Column(
         db.String(100)
+    )
+
+    files = db.relationship(
+
+    'InvoiceFile',
+
+    backref='invoice',
+
+    cascade='all, delete-orphan'
+
+)
+    
+class InvoiceFile(db.Model):
+
+    __tablename__ = 'invoice_files'
+
+    file_id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    invoice_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            'invoices.invoice_id'
+        )
+    )
+
+    file_name = db.Column(
+        db.String(500)
+    )
+
+    file_path = db.Column(
+        db.String(500)
+    )
+
+    file_type = db.Column(
+        db.String(500)
     )
 
 class Installation(db.Model):
@@ -778,7 +1535,7 @@ class InstallationFile(db.Model):
     )
 
     file_type = db.Column(
-        db.String(50)
+        db.String(500)
     )
 
 class InstallationCutting(db.Model):
@@ -1278,7 +2035,7 @@ def dashboard():
     service_due_clients = []
 
     for client in Client.query.all():
-
+        update_client_status(client)
         if client.last_service_date:
 
             due_date = (
@@ -1831,7 +2588,13 @@ def add_lead():
     else:
         all_leads=base_query.all()
 
-    return render_template('add_lead.html', leads=all_leads)
+    return render_template(
+        'add_lead.html',
+        leads=all_leads,
+        admin_view=session.get(
+            'role'
+        ) == 'ADMIN'
+    )
 
 @app.route('/lead/<int:lead_id>')
 def lead_details(lead_id):
@@ -1977,6 +2740,60 @@ def edit_lead(lead_id):
 )
 def request_delete_lead(lead_id):
 
+    lead = Lead.query.get_or_404(
+        lead_id
+    )
+
+    # ADMIN -> DELETE DIRECTLY
+    if session.get(
+        'role'
+    ) == 'ADMIN':
+
+        try:
+
+            db.session.delete(
+                lead
+            )
+
+            db.session.flush()
+
+            log_activity(
+
+                'LEAD',
+
+                lead_id,
+
+                'DELETED'
+
+            )
+
+            db.session.commit()
+
+            flash(
+
+                'Lead deleted successfully.'
+
+            )
+
+        except Exception:
+
+            db.session.rollback()
+
+            flash(
+
+                'Cannot delete this Lead because it is linked with other records.'
+
+            )
+
+        return redirect(
+
+            url_for(
+                'add_lead'
+            )
+
+        )
+
+    # EMPLOYEE -> DELETE REQUEST
     if request.method == 'POST':
 
         delete_request = DeleteRequest(
@@ -1998,7 +2815,9 @@ def request_delete_lead(lead_id):
         db.session.add(
             delete_request
         )
+
         db.session.flush()
+
         log_activity(
 
             'LEAD',
@@ -2020,9 +2839,11 @@ def request_delete_lead(lead_id):
         )
 
         return redirect(
+
             url_for(
                 'add_lead'
             )
+
         )
 
     return render_template(
@@ -2035,98 +2856,490 @@ def request_delete_lead(lead_id):
 
     )
 
-
-@app.route('/add-meeting',
-           methods=['GET','POST'])
-def add_meeting():
+@app.route('/delete-lead/<int:lead_id>')
+def delete_lead(lead_id):
 
     if not has_access(
-        'ADMIN',
-        'COMMERCIALS',
-        'SALES'
+        'ADMIN'
     ):
 
         return redirect(
             url_for('dashboard')
         )
 
+    lead = Lead.query.get_or_404(
+        lead_id
+    )
+
+    try:
+
+        db.session.delete(
+            lead
+        )
+
+        db.session.flush()
+
+        log_activity(
+
+            'LEAD',
+
+            lead_id,
+
+            'DELETED'
+
+        )
+
+        db.session.commit()
+
+        flash(
+
+            'Lead deleted successfully.'
+
+        )
+
+    except Exception:
+
+        db.session.rollback()
+
+        flash(
+
+            'Cannot delete this Lead because it is linked with other records.'
+
+        )
+
+    return redirect(
+
+        url_for(
+            'add_lead'
+        )
+
+    )
+
+@app.route(
+    '/add-meeting',
+    methods=['GET', 'POST']
+)
+def add_meeting():
+
+    if not has_access(
+
+        'ADMIN',
+
+        'COMMERCIALS',
+
+        'SALES'
+
+    ):
+
+        return redirect(
+
+            url_for(
+                'dashboard'
+            )
+
+        )
+
     if request.method == 'POST':
-        
-        meeting_fixed_by = request.form.get('meeting_fixed_by')
-        source = request.form.get('source')
-        name = request.form.get('name')
-        reference = request.form.get('reference')
-        firm_name = request.form.get('firm_name')
-        designation = request.form.get('designation')
-        address = request.form.get('address')
-        state = request.form.get('state')
-        contact_no = request.form.get('contact_no')
-        email = request.form.get('email')
-        company_info_shared = request.form.get('company_info_shared')
-        meeting_fixed = request.form.get('meeting_fixed')
-        date_of_meeting = request.form.get('date_of_meeting')
-        if date_of_meeting:
-            date_of_meeting = datetime.strptime( date_of_meeting, '%Y-%m-%d' ).date()
-        else:
-            date_of_meeting = None
-        mode_of_meeting = request.form.get('mode_of_meeting')
-        meeting_status = request.form.get('meeting_status')
-        meeting_conducted_by = request.form.get('meeting_conducted_by')
-        floor_plan_shared = request.form.get('floor_plan_shared')
-        site_visit = request.form.get('site_visit')
-        post_meeting_mail = request.form.get('post_meeting_mail')
-        date_of_last_followup = request.form.get('date_of_last_followup')
-        if date_of_last_followup:
-            date_of_last_followup = datetime.strptime( date_of_last_followup, '%Y-%m-%d' ).date()
-        else:
-            date_of_last_followup = None
-        date_to_call_next = request.form.get('date_to_call_next')
-        if date_to_call_next:
-            date_to_call_next = datetime.strptime( date_to_call_next, '%Y-%m-%d' ).date()
-        else:
-            date_to_call_next = None
-        final_remarks = request.form.get('final_remarks')
-        reschedule_date_input = request.form.get('reschedule_date')
-        if reschedule_date_input:
-            reschedule_date = datetime.strptime( reschedule_date_input, '%Y-%m-%d' ).date()
-        else:
-            reschedule_date = None
-        reason_for_reschedule = request.form.get('reason_for_reschedule')
-        remarks = request.form.get('remarks')
-        lead_id = request.form.get('lead_id')
+
+        # ===========================
+        # COMPANY DETAILS
+        # ===========================
+
+        lead_id = request.form.get(
+
+            'lead_id'
+
+        )
+
+        source = request.form.get(
+
+            'source'
+
+        )
+
+        reference = request.form.get(
+
+            'reference'
+
+        )
+
+        firm_name = request.form.get(
+
+            'firm_name'
+
+        )
+
+        address = request.form.get(
+
+            'address'
+
+        )
+
+        state = request.form.get(
+
+            'state'
+
+        )
+
+        # ===========================
+        # ALL MEETING RECORDS
+        # ===========================
+
+        names = request.form.getlist(
+
+            'name[]'
+
+        )
+
+        designations = request.form.getlist(
+
+            'designation[]'
+
+        )
+
+        contact_numbers = request.form.getlist(
+
+            'contact_no[]'
+
+        )
+
+        emails = request.form.getlist(
+
+            'email[]'
+
+        )
+
+        meeting_fixed_bys = request.form.getlist(
+
+            'meeting_fixed_by[]'
+
+        )
+
+        company_info_shareds = request.form.getlist(
+
+            'company_info_shared[]'
+
+        )
+
+        meeting_fixeds = request.form.getlist(
+
+            'meeting_fixed[]'
+
+        )
+
+        meeting_dates = request.form.getlist(
+
+            'date_of_meeting[]'
+
+        )
+
+        meeting_modes = request.form.getlist(
+
+            'mode_of_meeting[]'
+
+        )
+
+        meeting_statuses = request.form.getlist(
+
+            'meeting_status[]'
+
+        )
+
+        meeting_conducted_bys = request.form.getlist(
+
+            'meeting_conducted_by[]'
+
+        )
+
+        floor_plan_shareds = request.form.getlist(
+
+            'floor_plan_shared[]'
+
+        )
+
+        site_visits = request.form.getlist(
+
+            'site_visit[]'
+
+        )
+
+        post_meeting_mails = request.form.getlist(
+
+            'post_meeting_mail[]'
+
+        )
+
+        last_followups = request.form.getlist(
+
+            'date_of_last_followup[]'
+
+        )
+
+        next_calls = request.form.getlist(
+
+            'date_to_call_next[]'
+
+        )
+
+        reschedule_dates = request.form.getlist(
+
+            'reschedule_date[]'
+
+        )
+
+        reasons = request.form.getlist(
+
+            'reason_for_reschedule[]'
+
+        )
+
+        remarks_list = request.form.getlist(
+
+            'remarks[]'
+
+        )
+
+        final_remarks_list = request.form.getlist(
+
+            'final_remarks[]'
+
+        )
+
+        # ===========================
+        # CREATE MASTER MEETING
+        # ===========================
+
+        first_meeting_date = None
+
+        if meeting_dates[0]:
+
+            first_meeting_date = datetime.strptime(
+
+                meeting_dates[0],
+
+                '%Y-%m-%d'
+
+            ).date()
+
+        first_last_followup = None
+
+        if last_followups[0]:
+
+            first_last_followup = datetime.strptime(
+
+                last_followups[0],
+
+                '%Y-%m-%d'
+
+            ).date()
+
+        first_next_call = None
+
+        if next_calls[0]:
+
+            first_next_call = datetime.strptime(
+
+                next_calls[0],
+
+                '%Y-%m-%d'
+
+            ).date()
+
+        first_reschedule = None
+
+        if reschedule_dates[0]:
+
+            first_reschedule = datetime.strptime(
+
+                reschedule_dates[0],
+
+                '%Y-%m-%d'
+
+            ).date()
+
         meeting = Meeting(
-            meeting_fixed_by=meeting_fixed_by,
-            source=source,
-            name=name,
-            reference=reference,
-            firm_name=firm_name,
-            designation=designation,
-            address=address,
-            state=state,
-            contact_no=contact_no,
-            email=email,
-            company_info_shared=company_info_shared,
-            meeting_fixed=meeting_fixed,
-            date_of_meeting=date_of_meeting,
-            mode_of_meeting=mode_of_meeting,
-            meeting_status=meeting_status,
-            meeting_conducted_by=meeting_conducted_by,
-            floor_plan_shared=floor_plan_shared,
-            site_visit=site_visit,
-            post_meeting_mail=post_meeting_mail,
-            date_of_last_followup=date_of_last_followup,
-            date_to_call_next=date_to_call_next,
-            final_remarks=final_remarks,
-            reschedule_date=reschedule_date,
-            reason_for_reschedule=reason_for_reschedule,
-            remarks=remarks,
+
             lead_id=lead_id,
+
+            source=source,
+
+            reference=reference,
+
+            firm_name=firm_name,
+
+            address=address,
+
+            state=state,
+
+            name=names[0],
+
+            designation=designations[0],
+
+            contact_no=contact_numbers[0],
+
+            email=emails[0],
+
+            meeting_fixed_by=meeting_fixed_bys[0],
+
+            company_info_shared=company_info_shareds[0],
+
+            meeting_fixed=meeting_fixeds[0],
+
+            date_of_meeting=first_meeting_date,
+
+            mode_of_meeting=meeting_modes[0],
+
+            meeting_status=meeting_statuses[0],
+
+            meeting_conducted_by=meeting_conducted_bys[0],
+
+            floor_plan_shared=floor_plan_shareds[0],
+
+            site_visit=site_visits[0],
+
+            post_meeting_mail=post_meeting_mails[0],
+
+            date_of_last_followup=first_last_followup,
+
+            date_to_call_next=first_next_call,
+
+            reschedule_date=first_reschedule,
+
+            reason_for_reschedule=reasons[0],
+
+            remarks=remarks_list[0],
+
+            final_remarks=final_remarks_list[0],
+
             record_owner=session[
                 'username'
-            ]    
+            ]
+
         )
-        db.session.add(meeting)
+
+        db.session.add(
+
+            meeting
+
+        )
+
         db.session.flush()
+        # ===========================
+        # SAVE ADDITIONAL MEETINGS
+        # ===========================
+
+        for i in range(
+
+            1,
+
+            len(names)
+
+        ):
+
+            history_meeting_date = None
+
+            if meeting_dates[i]:
+
+                history_meeting_date = datetime.strptime(
+
+                    meeting_dates[i],
+
+                    '%Y-%m-%d'
+
+                ).date()
+
+            history_last_followup = None
+
+            if last_followups[i]:
+
+                history_last_followup = datetime.strptime(
+
+                    last_followups[i],
+
+                    '%Y-%m-%d'
+
+                ).date()
+
+            history_next_call = None
+
+            if next_calls[i]:
+
+                history_next_call = datetime.strptime(
+
+                    next_calls[i],
+
+                    '%Y-%m-%d'
+
+                ).date()
+
+            history_reschedule = None
+
+            if reschedule_dates[i]:
+
+                history_reschedule = datetime.strptime(
+
+                    reschedule_dates[i],
+
+                    '%Y-%m-%d'
+
+                ).date()
+
+            history = MeetingHistory(
+
+                meeting_id=meeting.meeting_id,
+
+                name=names[i],
+
+                designation=designations[i],
+
+                contact_no=contact_numbers[i],
+
+                email=emails[i],
+
+                meeting_fixed_by=meeting_fixed_bys[i],
+
+                company_info_shared=company_info_shareds[i],
+
+                meeting_fixed=meeting_fixeds[i],
+
+                date_of_meeting=history_meeting_date,
+
+                mode_of_meeting=meeting_modes[i],
+
+                meeting_status=meeting_statuses[i],
+
+                meeting_conducted_by=meeting_conducted_bys[i],
+
+                floor_plan_shared=floor_plan_shareds[i],
+
+                site_visit=site_visits[i],
+
+                post_meeting_mail=post_meeting_mails[i],
+
+                date_of_last_followup=history_last_followup,
+
+                date_to_call_next=history_next_call,
+
+                reschedule_date=history_reschedule,
+
+                reason_for_reschedule=reasons[i],
+
+                remarks=remarks_list[i],
+
+                final_remarks=final_remarks_list[i],
+
+                record_owner=session[
+                    'username'
+                ]
+
+            )
+
+            db.session.add(
+
+                history
+
+            )
+
         log_activity(
 
             'MEETING',
@@ -2135,14 +3348,29 @@ def add_meeting():
 
             'CREATED'
 
-        )        
+        )
+
         db.session.commit()
-        return redirect(url_for('add_meeting'))
-    search=request.args.get(
+
+        return redirect(
+
+            url_for(
+
+                'add_meeting'
+
+            )
+
+        )
+    search = request.args.get(
+
         'search'
+
     )
+
     if session.get(
+
         'role'
+
     ) == 'SALES':
 
         base_query = Meeting.query.filter_by(
@@ -2154,7 +3382,9 @@ def add_meeting():
         )
 
     elif session.get(
+
         'role'
+
     ) == 'COMMERCIALS':
 
         commercial_users = User.query.filter_by(
@@ -2174,7 +3404,9 @@ def add_meeting():
         base_query = Meeting.query.filter(
 
             Meeting.record_owner.in_(
+
                 usernames
+
             )
 
         )
@@ -2185,83 +3417,65 @@ def add_meeting():
 
     if search:
 
-        all_meetings = base_query.filter(
+        base_query = base_query.filter(
 
             or_(
 
-                Meeting.meeting_fixed_by.ilike(
-                    f'%{search}%'
-                ),
+                Meeting.firm_name.ilike(
 
-                Meeting.source.ilike(
                     f'%{search}%'
+
                 ),
 
                 Meeting.name.ilike(
-                    f'%{search}%'
-                ),
 
-                Meeting.reference.ilike(
                     f'%{search}%'
-                ),
 
-                Meeting.firm_name.ilike(
-                    f'%{search}%'
-                ),
-
-                Meeting.designation.ilike(
-                    f'%{search}%'
-                ),
-
-                Meeting.address.ilike(
-                    f'%{search}%'
-                ),
-
-                Meeting.state.ilike(
-                    f'%{search}%'
                 ),
 
                 Meeting.contact_no.ilike(
+
                     f'%{search}%'
+
+                ),
+
+                Meeting.reference.ilike(
+
+                    f'%{search}%'
+
+                ),
+
+                Meeting.source.ilike(
+
+                    f'%{search}%'
+
                 ),
 
                 Meeting.email.ilike(
-                    f'%{search}%'
-                ),
 
-                Meeting.mode_of_meeting.ilike(
                     f'%{search}%'
+
                 ),
 
                 Meeting.meeting_status.ilike(
-                    f'%{search}%'
-                ),
 
-                Meeting.meeting_conducted_by.ilike(
                     f'%{search}%'
-                ),
 
-                Meeting.final_remarks.ilike(
-                    f'%{search}%'
-                ),
-
-                Meeting.reason_for_reschedule.ilike(
-                    f'%{search}%'
-                ),
-
-                Meeting.remarks.ilike(
-                    f'%{search}%'
                 )
 
             )
 
-        ).all()
+        )
 
-    else:
+    all_meetings = base_query.order_by(
 
-        all_meetings = base_query.all()
+        Meeting.date_of_meeting.desc()
+
+    ).all()        
     if session.get(
+
         'role'
+
     ) == 'SALES':
 
         all_leads = Lead.query.filter_by(
@@ -2273,7 +3487,9 @@ def add_meeting():
         ).all()
 
     elif session.get(
+
         'role'
+
     ) == 'COMMERCIALS':
 
         commercial_users = User.query.filter_by(
@@ -2293,7 +3509,9 @@ def add_meeting():
         all_leads = Lead.query.filter(
 
             Lead.record_owner.in_(
+
                 usernames
+
             )
 
         ).all()
@@ -2301,7 +3519,118 @@ def add_meeting():
     else:
 
         all_leads = Lead.query.all()
-    return render_template('add_meeting.html', meetings=all_meetings, leads=all_leads)
+
+    return render_template(
+
+        'add_meeting.html',
+
+        meetings=all_meetings,
+
+        leads=all_leads,
+
+        admin_view=session.get(
+
+            'role'
+
+        ) == 'ADMIN'
+
+    )
+
+@app.route('/delete-meeting/<int:meeting_id>')
+def delete_meeting(meeting_id):
+
+    if not has_access('ADMIN'):
+        return redirect(url_for('dashboard'))
+
+    meeting = Meeting.query.get_or_404(meeting_id)
+
+    try:
+        db.session.delete(meeting)
+
+        log_activity(
+            'MEETING',
+            meeting_id,
+            'DELETED'
+        )
+
+        db.session.commit()
+
+        flash(
+            'Meeting deleted successfully.',
+            'success'
+        )
+
+    except Exception:
+
+        db.session.rollback()
+
+        flash(
+            'Cannot delete this Meeting because it is linked with other records.',
+            'danger'
+        )
+
+    return redirect(
+        url_for('add_meeting')
+    )
+
+@app.route(
+    '/meeting-history/<int:history_id>'
+)
+def meeting_history_details(
+    history_id
+):
+
+    if not has_access(
+
+        'ADMIN',
+        'COMMERCIALS',
+        'SALES'
+
+    ):
+
+        return redirect(
+
+            url_for(
+                'dashboard'
+            )
+
+        )
+
+    history = MeetingHistory.query.get_or_404(
+
+        history_id
+
+    )
+
+    meeting = Meeting.query.get_or_404(
+
+        history.meeting_id
+
+    )
+
+    if not can_view_record(
+
+        meeting.record_owner
+
+    ):
+
+        return redirect(
+
+            url_for(
+                'dashboard'
+            )
+
+        )
+
+    return render_template(
+
+        'meeting_history_details.html',
+
+        history=history,
+
+        meeting=meeting
+
+    )
 
 @app.route('/meeting/<int:meeting_id>')
 def meeting_details(meeting_id):
@@ -2322,6 +3651,16 @@ def meeting_details(meeting_id):
         meeting_id
     )
 
+    history = MeetingHistory.query.filter_by(
+
+        meeting_id=meeting_id
+
+    ).order_by(
+
+        MeetingHistory.date_of_meeting.desc()
+
+    ).all()
+
     if not can_view_record(
 
         meeting.record_owner
@@ -2334,28 +3673,52 @@ def meeting_details(meeting_id):
             )
         )
 
+    
+
     return render_template(
+
         'meeting_details.html',
-        meeting=meeting
+
+        meeting=meeting,
+
+        history=history
+
     )
 
 @app.route(
     '/edit-meeting/<int:meeting_id>',
     methods=['GET', 'POST']
 )
-def edit_meeting(meeting_id):
+def edit_meeting(
+
+    meeting_id
+
+):
+
     if not has_access(
+
         'ADMIN',
         'COMMERCIALS',
         'SALES'
+
     ):
 
         return redirect(
-            url_for('dashboard')
+
+            url_for(
+
+                'dashboard'
+
+            )
+
         )
+
     meeting = Meeting.query.get_or_404(
+
         meeting_id
+
     )
+
     if not can_access_record(
 
         meeting.record_owner
@@ -2363,166 +3726,47 @@ def edit_meeting(meeting_id):
     ):
 
         return redirect(
+
             url_for(
+
                 'dashboard'
+
             )
-        )
-    if request.method == 'POST':
 
-        meeting.meeting_fixed_by = request.form.get(
-            'meeting_fixed_by'
         )
 
-        meeting.source = request.form.get(
-            'source'
+    history = MeetingHistory.query.filter_by(
+
+        meeting_id=meeting_id
+
+    ).order_by(
+
+        MeetingHistory.date_of_meeting.desc()
+
+    ).all()
+
+    history_id = request.args.get(
+
+        'history_id',
+
+        type=int
+
+    )
+
+    editing_record = meeting
+
+    if history_id:
+
+        editing_record = MeetingHistory.query.get_or_404(
+
+            history_id
+
         )
 
-        meeting.name = request.form.get(
-            'name'
-        )
-
-        meeting.reference = request.form.get(
-            'reference'
-        )
-
-        meeting.firm_name = request.form.get(
-            'firm_name'
-        )
-
-        meeting.designation = request.form.get(
-            'designation'
-        )
-
-        meeting.address = request.form.get(
-            'address'
-        )
-
-        meeting.state = request.form.get(
-            'state'
-        )
-
-        meeting.contact_no = request.form.get(
-            'contact_no'
-        )
-
-        meeting.email = request.form.get(
-            'email'
-        )
-
-        meeting.company_info_shared = request.form.get(
-            'company_info_shared'
-        )
-
-        meeting.meeting_fixed = request.form.get(
-            'meeting_fixed'
-        )
-
-        meeting.mode_of_meeting = request.form.get(
-            'mode_of_meeting'
-        )
-
-        meeting.meeting_status = request.form.get(
-            'meeting_status'
-        )
-
-        meeting.meeting_conducted_by = request.form.get(
-            'meeting_conducted_by'
-        )
-
-        meeting.floor_plan_shared = request.form.get(
-            'floor_plan_shared'
-        )
-
-        meeting.site_visit = request.form.get(
-            'site_visit'
-        )
-
-        meeting.post_meeting_mail = request.form.get(
-            'post_meeting_mail'
-        )
-
-        meeting.final_remarks = request.form.get(
-            'final_remarks'
-        )
-
-        meeting.reason_for_reschedule = request.form.get(
-            'reason_for_reschedule'
-        )
-
-        meeting.remarks = request.form.get(
-            'remarks'
-        )
-
-        meeting.date_of_meeting = (
-            datetime.strptime(
-                request.form.get(
-                    'date_of_meeting'
-                ),
-                '%Y-%m-%d'
-            ).date()
-            if request.form.get(
-                'date_of_meeting'
-            )
-            else None
-        )
-
-        meeting.date_of_last_followup = (
-            datetime.strptime(
-                request.form.get(
-                    'date_of_last_followup'
-                ),
-                '%Y-%m-%d'
-            ).date()
-            if request.form.get(
-                'date_of_last_followup'
-            )
-            else None
-        )
-
-        meeting.date_to_call_next = (
-            datetime.strptime(
-                request.form.get(
-                    'date_to_call_next'
-                ),
-                '%Y-%m-%d'
-            ).date()
-            if request.form.get(
-                'date_to_call_next'
-            )
-            else None
-        )
-
-        meeting.reschedule_date = (
-            datetime.strptime(
-                request.form.get(
-                    'reschedule_date'
-                ),
-                '%Y-%m-%d'
-            ).date()
-            if request.form.get(
-                'reschedule_date'
-            )
-            else None
-        )
-        db.session.flush()
-        log_activity(
-
-            'MEETING',
-
-            meeting.meeting_id,
-
-            'UPDATED'
-
-        )  
-        db.session.commit()
-
-        return redirect(
-            url_for(
-                'add_meeting'
-            )
-        )
     if session.get(
+
         'role'
+
     ) == 'SALES':
 
         all_leads = Lead.query.filter_by(
@@ -2534,7 +3778,9 @@ def edit_meeting(meeting_id):
         ).all()
 
     elif session.get(
+
         'role'
+
     ) == 'COMMERCIALS':
 
         commercial_users = User.query.filter_by(
@@ -2554,7 +3800,9 @@ def edit_meeting(meeting_id):
         all_leads = Lead.query.filter(
 
             Lead.record_owner.in_(
+
                 usernames
+
             )
 
         ).all()
@@ -2563,10 +3811,858 @@ def edit_meeting(meeting_id):
 
         all_leads = Lead.query.all()
 
+    if request.method == 'POST':
+        action = request.form.get(
+
+            'action'
+
+        )
+
+        delete_history_id = request.form.get(
+
+            'delete_history'
+
+        )
+
+        if action == 'delete_current':
+
+            if session.get(
+
+                'role'
+
+            ) == 'ADMIN':
+
+                db.session.delete(
+
+                    meeting
+
+                )
+
+                log_activity(
+
+                    'MEETING',
+
+                    meeting.meeting_id,
+
+                    'DELETED'
+
+                )
+
+                db.session.commit()
+
+                flash(
+
+                    'Meeting deleted successfully.',
+
+                    'success'
+
+                )
+
+                return redirect(
+
+                    url_for(
+
+                        'add_meeting'
+
+                    )
+
+                )
+
+            delete_request = DeleteRequest(
+
+                module_name='MEETING',
+
+                record_id=meeting.meeting_id,
+
+                requested_by=session[
+                    'username'
+                ],
+
+                reason='Requested from Edit Meeting'
+
+            )
+
+            db.session.add(
+
+                delete_request
+
+            )
+
+            log_activity(
+
+                'MEETING',
+
+                meeting.meeting_id,
+
+                'DELETE REQUESTED',
+
+                'Requested from Edit Meeting'
+
+            )
+
+            db.session.commit()
+
+            flash(
+
+                'Delete request sent to Admin.',
+
+                'info'
+
+            )
+
+            return redirect(
+
+                url_for(
+
+                    'edit_meeting',
+
+                    meeting_id=meeting.meeting_id
+
+                )
+
+            )
+
+
+        company_details = {
+
+            'source': request.form.get(
+
+                'source'
+
+            ),
+
+            'reference': request.form.get(
+
+                'reference'
+
+            ),
+
+            'firm_name': request.form.get(
+
+                'firm_name'
+
+            ),
+
+            'address': request.form.get(
+
+                'address'
+
+            ),
+
+            'state': request.form.get(
+
+                'state'
+
+            )
+
+        }
+
+        edited_meeting = {
+
+            'name': request.form.get(
+
+                'name'
+
+            ),
+
+            'designation': request.form.get(
+
+                'designation'
+
+            ),
+
+            'contact_no': request.form.get(
+
+                'contact_no'
+
+            ),
+
+            'email': request.form.get(
+
+                'email'
+
+            ),
+
+            'meeting_fixed_by': request.form.get(
+
+                'meeting_fixed_by'
+
+            ),
+
+            'company_info_shared': request.form.get(
+
+                'company_info_shared'
+
+            ),
+
+            'meeting_fixed': request.form.get(
+
+                'meeting_fixed'
+
+            ),
+
+            'date_of_meeting': (
+
+                datetime.strptime(
+
+                    request.form.get(
+
+                        'date_of_meeting'
+
+                    ),
+
+                    '%Y-%m-%d'
+
+                ).date()
+
+                if request.form.get(
+
+                    'date_of_meeting'
+
+                )
+
+                else None
+
+            ),
+
+            'mode_of_meeting': request.form.get(
+
+                'mode_of_meeting'
+
+            ),
+
+            'meeting_status': request.form.get(
+
+                'meeting_status'
+
+            ),
+
+            'meeting_conducted_by': request.form.get(
+
+                'meeting_conducted_by'
+
+            ),
+
+            'floor_plan_shared': request.form.get(
+
+                'floor_plan_shared'
+
+            ),
+
+            'site_visit': request.form.get(
+
+                'site_visit'
+
+            ),
+
+            'post_meeting_mail': request.form.get(
+
+                'post_meeting_mail'
+
+            ),
+
+            'date_of_last_followup': (
+
+                datetime.strptime(
+
+                    request.form.get(
+
+                        'date_of_last_followup'
+
+                    ),
+
+                    '%Y-%m-%d'
+
+                ).date()
+
+                if request.form.get(
+
+                    'date_of_last_followup'
+
+                )
+
+                else None
+
+            ),
+
+            'date_to_call_next': (
+
+                datetime.strptime(
+
+                    request.form.get(
+
+                        'date_to_call_next'
+
+                    ),
+
+                    '%Y-%m-%d'
+
+                ).date()
+
+                if request.form.get(
+
+                    'date_to_call_next'
+
+                )
+
+                else None
+
+            ),
+
+            'reschedule_date': (
+
+                datetime.strptime(
+
+                    request.form.get(
+
+                        'reschedule_date'
+
+                    ),
+
+                    '%Y-%m-%d'
+
+                ).date()
+
+                if request.form.get(
+
+                    'reschedule_date'
+
+                )
+
+                else None
+
+            ),
+
+            'reason_for_reschedule': request.form.get(
+
+                'reason_for_reschedule'
+
+            ),
+
+            'final_remarks': request.form.get(
+
+                'final_remarks'
+
+            ),
+
+            'remarks': request.form.get(
+
+                'remarks'
+
+            )
+
+        }
+        meeting_list = []
+
+        if history_id:
+
+            meeting_list.append(
+
+                edited_meeting
+
+            )
+
+            current_record = {
+
+                'name': meeting.name,
+
+                'designation': meeting.designation,
+
+                'contact_no': meeting.contact_no,
+
+                'email': meeting.email,
+
+                'meeting_fixed_by': meeting.meeting_fixed_by,
+
+                'company_info_shared': meeting.company_info_shared,
+
+                'meeting_fixed': meeting.meeting_fixed,
+
+                'date_of_meeting': meeting.date_of_meeting,
+
+                'mode_of_meeting': meeting.mode_of_meeting,
+
+                'meeting_status': meeting.meeting_status,
+
+                'meeting_conducted_by': meeting.meeting_conducted_by,
+
+                'floor_plan_shared': meeting.floor_plan_shared,
+
+                'site_visit': meeting.site_visit,
+
+                'post_meeting_mail': meeting.post_meeting_mail,
+
+                'date_of_last_followup': meeting.date_of_last_followup,
+
+                'date_to_call_next': meeting.date_to_call_next,
+
+                'reschedule_date': meeting.reschedule_date,
+
+                'reason_for_reschedule': meeting.reason_for_reschedule,
+
+                'final_remarks': meeting.final_remarks,
+
+                'remarks': meeting.remarks
+
+            }
+
+            meeting_list.append(
+
+                current_record
+
+            )
+
+        else:
+
+            meeting_list.append(
+
+                edited_meeting
+
+            )
+
+        existing_history = MeetingHistory.query.filter_by(
+
+            meeting_id=meeting.meeting_id
+
+        ).all()
+
+        for item in existing_history:
+
+            if history_id and item.history_id == history_id:
+
+                continue
+
+            meeting_list.append(
+
+                {
+
+                    'name': item.name,
+
+                    'designation': item.designation,
+
+                    'contact_no': item.contact_no,
+
+                    'email': item.email,
+
+                    'meeting_fixed_by': item.meeting_fixed_by,
+
+                    'company_info_shared': item.company_info_shared,
+
+                    'meeting_fixed': item.meeting_fixed,
+
+                    'date_of_meeting': item.date_of_meeting,
+
+                    'mode_of_meeting': item.mode_of_meeting,
+
+                    'meeting_status': item.meeting_status,
+
+                    'meeting_conducted_by': item.meeting_conducted_by,
+
+                    'floor_plan_shared': item.floor_plan_shared,
+
+                    'site_visit': item.site_visit,
+
+                    'post_meeting_mail': item.post_meeting_mail,
+
+                    'date_of_last_followup': item.date_of_last_followup,
+
+                    'date_to_call_next': item.date_to_call_next,
+
+                    'reschedule_date': item.reschedule_date,
+
+                    'reason_for_reschedule': item.reason_for_reschedule,
+
+                    'final_remarks': item.final_remarks,
+
+                    'remarks': item.remarks
+
+                }
+
+            )
+
+        new_names = request.form.getlist(
+
+            'new_name[]'
+
+        )
+
+        new_designations = request.form.getlist(
+
+            'new_designation[]'
+
+        )
+
+        new_contacts = request.form.getlist(
+
+            'new_contact_no[]'
+
+        )
+
+        new_emails = request.form.getlist(
+
+            'new_email[]'
+
+        )
+
+        new_meeting_fixed_bys = request.form.getlist(
+
+            'new_meeting_fixed_by[]'
+
+        )
+
+        new_company_info_shareds = request.form.getlist(
+
+            'new_company_info_shared[]'
+
+        )
+
+        new_meeting_fixeds = request.form.getlist(
+
+            'new_meeting_fixed[]'
+
+        )
+
+        new_dates = request.form.getlist(
+
+            'new_date_of_meeting[]'
+
+        )
+
+        new_modes = request.form.getlist(
+
+            'new_mode_of_meeting[]'
+
+        )
+
+        new_statuses = request.form.getlist(
+
+            'new_meeting_status[]'
+
+        )
+
+        new_conducted_bys = request.form.getlist(
+
+            'new_meeting_conducted_by[]'
+
+        )
+
+        new_floor_plan_shareds = request.form.getlist(
+
+            'new_floor_plan_shared[]'
+
+        )
+
+        new_site_visits = request.form.getlist(
+
+            'new_site_visit[]'
+
+        )
+
+        new_post_meeting_mails = request.form.getlist(
+
+            'new_post_meeting_mail[]'
+
+        )
+
+        new_last_followups = request.form.getlist(
+
+            'new_date_of_last_followup[]'
+
+        )
+
+        new_next_calls = request.form.getlist(
+
+            'new_date_to_call_next[]'
+
+        )
+
+        new_reschedule_dates = request.form.getlist(
+
+            'new_reschedule_date[]'
+
+        )
+
+        new_reason_for_reschedules = request.form.getlist(
+
+            'new_reason_for_reschedule[]'
+
+        )
+
+        new_final_remarks = request.form.getlist(
+
+            'new_final_remarks[]'
+
+        )
+
+        new_remarks = request.form.getlist(
+
+            'new_remarks[]'
+
+        )
+
+        for i in range(
+
+            len(
+
+                new_names
+
+            )
+
+        ):
+
+            if not new_names[i].strip():
+
+                continue
+
+            meeting_list.append(
+
+                {
+
+                    'name': new_names[i],
+
+                    'designation': new_designations[i],
+
+                    'contact_no': new_contacts[i],
+
+                    'email': new_emails[i],
+
+                    'meeting_fixed_by': new_meeting_fixed_bys[i],
+
+                    'company_info_shared': new_company_info_shareds[i],
+
+                    'meeting_fixed': new_meeting_fixeds[i],
+
+                    'date_of_meeting': (
+
+                        datetime.strptime(
+
+                            new_dates[i],
+
+                            '%Y-%m-%d'
+
+                        ).date()
+
+                        if new_dates[i]
+
+                        else None
+
+                    ),
+
+                    'mode_of_meeting': new_modes[i],
+
+                    'meeting_status': new_statuses[i],
+
+                    'meeting_conducted_by': new_conducted_bys[i],
+
+                    'floor_plan_shared': new_floor_plan_shareds[i],
+
+                    'site_visit': new_site_visits[i],
+
+                    'post_meeting_mail': new_post_meeting_mails[i],
+
+                    'date_of_last_followup': (
+
+                        datetime.strptime(
+
+                            new_last_followups[i],
+
+                            '%Y-%m-%d'
+
+                        ).date()
+
+                        if new_last_followups[i]
+
+                        else None
+
+                    ),
+
+                    'date_to_call_next': (
+
+                        datetime.strptime(
+
+                            new_next_calls[i],
+
+                            '%Y-%m-%d'
+
+                        ).date()
+
+                        if new_next_calls[i]
+
+                        else None
+
+                    ),
+
+                    'reschedule_date': (
+
+                        datetime.strptime(
+
+                            new_reschedule_dates[i],
+
+                            '%Y-%m-%d'
+
+                        ).date()
+
+                        if new_reschedule_dates[i]
+
+                        else None
+
+                    ),
+
+                    'reason_for_reschedule': new_reason_for_reschedules[i],
+
+                    'final_remarks': new_final_remarks[i],
+
+                    'remarks': new_remarks[i]
+
+                }
+
+            )
+        meeting_list.sort(
+
+            key=lambda x: (
+
+                x['date_of_meeting']
+
+                if x['date_of_meeting']
+
+                else date.min
+
+            ),
+
+            reverse=True
+
+        )
+
+        latest = meeting_list.pop(
+
+            0
+
+        )
+
+        for field, value in company_details.items():
+
+            setattr(
+
+                meeting,
+
+                field,
+
+                value
+
+            )
+
+        for field, value in latest.items():
+
+            setattr(
+
+                meeting,
+
+                field,
+
+                value
+
+            )
+
+        MeetingHistory.query.filter_by(
+
+            meeting_id=meeting.meeting_id
+
+        ).delete(
+
+            synchronize_session=False
+
+        )
+
+        for item in meeting_list:
+
+            db.session.add(
+
+                MeetingHistory(
+
+                    meeting_id=meeting.meeting_id,
+
+                    name=item['name'],
+
+                    designation=item['designation'],
+
+                    contact_no=item['contact_no'],
+
+                    email=item['email'],
+
+                    meeting_fixed_by=item['meeting_fixed_by'],
+
+                    company_info_shared=item['company_info_shared'],
+
+                    meeting_fixed=item['meeting_fixed'],
+
+                    date_of_meeting=item['date_of_meeting'],
+
+                    mode_of_meeting=item['mode_of_meeting'],
+
+                    meeting_status=item['meeting_status'],
+
+                    meeting_conducted_by=item['meeting_conducted_by'],
+
+                    floor_plan_shared=item['floor_plan_shared'],
+
+                    site_visit=item['site_visit'],
+
+                    post_meeting_mail=item['post_meeting_mail'],
+
+                    date_of_last_followup=item['date_of_last_followup'],
+
+                    date_to_call_next=item['date_to_call_next'],
+
+                    reschedule_date=item['reschedule_date'],
+
+                    reason_for_reschedule=item['reason_for_reschedule'],
+
+                    final_remarks=item['final_remarks'],
+
+                    remarks=item['remarks'],
+
+                    record_owner=meeting.record_owner
+
+                )
+
+            )
+
+        log_activity(
+
+            'MEETING',
+
+            meeting.meeting_id,
+
+            'UPDATED'
+
+        )
+
+        db.session.commit()
+
+        return redirect(
+
+            url_for(
+
+                'edit_meeting',
+
+                meeting_id=meeting.meeting_id
+
+            )
+
+        )
+
     return render_template(
+
         'edit_meeting.html',
+
         meeting=meeting,
+
+        editing_record=editing_record,
+
+        history=history,
+
         leads=all_leads
+
     )
 
 @app.route(
@@ -2575,6 +4671,60 @@ def edit_meeting(meeting_id):
 )
 def request_delete_meeting(meeting_id):
 
+    meeting = Meeting.query.get_or_404(
+        meeting_id
+    )
+
+    # ADMIN -> DELETE DIRECTLY
+    if session.get(
+        'role'
+    ) == 'ADMIN':
+
+        try:
+
+            db.session.delete(
+                meeting
+            )
+
+            db.session.flush()
+
+            log_activity(
+
+                'MEETING',
+
+                meeting_id,
+
+                'DELETED'
+
+            )
+
+            db.session.commit()
+
+            flash(
+
+                'Meeting deleted successfully.'
+
+            )
+
+        except Exception:
+
+            db.session.rollback()
+
+            flash(
+
+                'Cannot delete this Meeting because it is linked with other records.'
+
+            )
+
+        return redirect(
+
+            url_for(
+                'add_meeting'
+            )
+
+        )
+
+    # EMPLOYEE -> DELETE REQUEST
     if request.method == 'POST':
 
         delete_request = DeleteRequest(
@@ -2596,7 +4746,9 @@ def request_delete_meeting(meeting_id):
         db.session.add(
             delete_request
         )
+
         db.session.flush()
+
         log_activity(
 
             'MEETING',
@@ -2618,9 +4770,11 @@ def request_delete_meeting(meeting_id):
         )
 
         return redirect(
+
             url_for(
                 'add_meeting'
             )
+
         )
 
     return render_template(
@@ -2633,90 +4787,225 @@ def request_delete_meeting(meeting_id):
 
     )
 
-@app.route('/add-visit',
-           methods=['GET','POST'])
+@app.route(
+
+    '/add-visit',
+
+    methods=['GET', 'POST']
+
+)
 def add_visit():
+
     if not has_access(
+
         'ADMIN',
-        'SALES',
-        'COMMERCIALS' 
+
+        'COMMERCIALS',
+
+        'SALES'
+
     ):
 
         return redirect(
-            url_for('dashboard')
+
+            url_for(
+
+                'dashboard'
+
+            )
+
         )
+
+    if session.get(
+
+        'role'
+
+    ) == 'SALES':
+
+        meetings = Meeting.query.filter_by(
+
+            record_owner=session[
+                'username'
+            ]
+
+        ).all()
+
+        visits = Visit.query.filter_by(
+
+            record_owner=session[
+                'username'
+            ]
+
+        ).order_by(
+
+            Visit.visit_date.desc()
+
+        ).all()
+
+    elif session.get(
+
+        'role'
+
+    ) == 'COMMERCIALS':
+
+        commercial_users = User.query.filter_by(
+
+            role='COMMERCIALS'
+
+        ).all()
+
+        usernames = [
+
+            user.username
+
+            for user in commercial_users
+
+        ]
+
+        meetings = Meeting.query.filter(
+
+            Meeting.record_owner.in_(
+
+                usernames
+
+            )
+
+        ).all()
+
+        visits = Visit.query.filter(
+
+            Visit.record_owner.in_(
+
+                usernames
+
+            )
+
+        ).order_by(
+
+            Visit.visit_date.desc()
+
+        ).all()
+
+    else:
+
+        meetings = Meeting.query.order_by(
+
+            Meeting.date_of_meeting.desc()
+
+        ).all()
+
+        visits = Visit.query.order_by(
+
+            Visit.visit_date.desc()
+
+        ).all()
+
     if request.method == 'POST':
 
+        # ===========================
+        # COMPANY DETAILS
+        # ===========================
+
         meeting_id = request.form.get(
+
             'meeting_id'
-        )
 
-        state = request.form.get(
-            'state'
-        )
-
-        region = request.form.get(
-            'region'
-        )
-
-        abc = request.form.get(
-            'abc'
         )
 
         company_name = request.form.get(
+
             'company_name'
-        )
 
-        person_name = request.form.get(
-            'person_name'
-        )
-
-        designation = request.form.get(
-            'designation'
-        )
-
-        contact_no = request.form.get(
-            'contact_no'
         )
 
         address = request.form.get(
+
             'address'
+
         )
 
-        brief = request.form.get(
-            'brief'
+        state = request.form.get(
+
+            'state'
+
         )
 
-        visit_date = request.form.get(
-            'visit_date'
+        region = request.form.get(
+
+            'region'
+
         )
 
-        if visit_date:
+        abc = request.form.get(
 
-            visit_date = datetime.strptime(
-                visit_date,
+            'abc'
+
+        )
+
+        # ===========================
+        # ALL VISIT RECORDS
+        # ===========================
+
+        person_names = request.form.getlist(
+
+            'person_name[]'
+
+        )
+
+        designations = request.form.getlist(
+
+            'designation[]'
+
+        )
+
+        contact_numbers = request.form.getlist(
+
+            'contact_no[]'
+
+        )
+
+        briefs = request.form.getlist(
+
+            'brief[]'
+
+        )
+
+        visit_dates = request.form.getlist(
+
+            'visit_date[]'
+
+        )
+
+        leads_generated_list = request.form.getlist(
+
+            'leads_generated[]'
+
+        )
+
+        # ===========================
+        # CREATE MASTER VISIT
+        # ===========================
+
+        first_visit_date = None
+
+        if visit_dates[0]:
+
+            first_visit_date = datetime.strptime(
+
+                visit_dates[0],
+
                 '%Y-%m-%d'
+
             ).date()
+        meeting = Meeting.query.get_or_404(
 
-        else:
+            meeting_id
 
-            visit_date = None
-
-        leads_generated = request.form.get(
-            'leads_generated'
-        )
-
-        m2 = request.form.get(
-            'm2'
-        )
-
-        m3 = request.form.get(
-            'm3'
         )
 
         visit = Visit(
 
-            meeting_id=meeting_id,
+            meeting_id=meeting.meeting_id,
 
             state=state,
 
@@ -2726,33 +5015,133 @@ def add_visit():
 
             company_name=company_name,
 
-            person_name=person_name,
+            person_name=person_names[0],
 
-            designation=designation,
+            designation=designations[0],
 
-            contact_no=contact_no,
+            contact_no=contact_numbers[0],
 
             address=address,
 
-            brief=brief,
+            brief=briefs[0],
 
-            visit_date=visit_date,
+            visit_date=first_visit_date,
 
-            leads_generated=leads_generated,
+            leads_generated=(
 
-            m2=m2,
+                int(
 
-            m3=m3,
+                    leads_generated_list[0]
+
+                )
+
+                if leads_generated_list[0]
+
+                else 0
+
+            ),
+
+            m2=None,
+
+            m3=None,
+
             record_owner=session[
+
                 'username'
-            ]    
+
+            ]
+
         )
 
         db.session.add(
+
             visit
+
         )
 
         db.session.flush()
+
+        # ===========================
+        # SAVE ADDITIONAL VISITS
+        # ===========================
+
+        for i in range(
+
+            1,
+
+            len(
+
+                person_names
+
+            )
+
+        ):
+
+            history_visit_date = None
+
+            if visit_dates[i]:
+
+                history_visit_date = datetime.strptime(
+
+                    visit_dates[i],
+
+                    '%Y-%m-%d'
+
+                ).date()
+
+            history = VisitHistory(
+
+                visit_id=visit.visit_id,
+
+                meeting_id=meeting.meeting_id,
+
+                state=state,
+
+                region=region,
+
+                abc=abc,
+
+                company_name=company_name,
+
+                person_name=person_names[i],
+
+                designation=designations[i],
+
+                contact_no=contact_numbers[i],
+
+                address=address,
+
+                brief=briefs[i],
+
+                visit_date=history_visit_date,
+
+                leads_generated=(
+
+                    int(
+
+                        leads_generated_list[i]
+
+                    )
+
+                    if leads_generated_list[i]
+
+                    else 0
+
+                ),
+
+                record_owner=session[
+
+                    'username'
+
+                ]
+
+            )
+
+            db.session.add(
+
+                history
+
+            )
         log_activity(
 
             'VISIT',
@@ -2761,166 +5150,105 @@ def add_visit():
 
             'CREATED'
 
-        )  
+        )
+
         db.session.commit()
+
+        flash(
+
+            'Visit added successfully.',
+
+            'success'
+
+        )
+
         return redirect(
+
             url_for(
+
                 'add_visit'
+
             )
+
         )
 
-    search=request.args.get(
+    search = request.args.get(
+
         'search'
+
     )
-    if session.get(
-        'role'
-    ) == 'SALES':
-
-        base_query = Visit.query.filter_by(
-
-            record_owner=session[
-                'username'
-            ]
-
-        )
-
-    elif session.get(
-        'role'
-    ) == 'COMMERCIALS':
-
-        commercial_users = User.query.filter_by(
-
-            role='COMMERCIALS'
-
-        ).all()
-
-        usernames = [
-
-            user.username
-
-            for user in commercial_users
-
-        ]
-
-        base_query = Visit.query.filter(
-
-            Visit.record_owner.in_(
-                usernames
-            )
-
-        )
-
-    else:
-
-        base_query = Visit.query
 
     if search:
 
-        all_visits = base_query.filter(
+        visits = [
 
-            or_(
+            visit
 
-                Visit.state.ilike(
-                    f'%{search}%'
-                ),
+            for visit in visits
 
-                Visit.region.ilike(
-                    f'%{search}%'
-                ),
+            if (
 
-                Visit.abc.ilike(
-                    f'%{search}%'
-                ),
+                search.lower() in (visit.company_name or '').lower()
 
-                Visit.company_name.ilike(
-                    f'%{search}%'
-                ),
+                or search.lower() in (visit.person_name or '').lower()
 
-                Visit.person_name.ilike(
-                    f'%{search}%'
-                ),
+                or search.lower() in (visit.contact_no or '').lower()
 
-                Visit.designation.ilike(
-                    f'%{search}%'
-                ),
+                or search.lower() in (visit.region or '').lower()
 
-                Visit.contact_no.ilike(
-                    f'%{search}%'
-                ),
-
-                Visit.address.ilike(
-                    f'%{search}%'
-                ),
-
-                Visit.brief.ilike(
-                    f'%{search}%'
-                )
+                or search.lower() in (visit.state or '').lower()
 
             )
-
-        ).all()
-
-    else:
-
-        all_visits = base_query.all()
-
-    if session.get(
-        'role'
-    ) == 'SALES':
-
-        all_meetings = Meeting.query.filter_by(
-
-            record_owner=session[
-                'username'
-            ]
-
-        ).all()
-
-    elif session.get(
-        'role'
-    ) == 'COMMERCIALS':
-
-        commercial_users = User.query.filter_by(
-
-            role='COMMERCIALS'
-
-        ).all()
-
-        usernames = [
-
-            user.username
-
-            for user in commercial_users
 
         ]
 
-        all_meetings = Meeting.query.filter(
+    return render_template(
 
-            Meeting.record_owner.in_(
-                usernames
-            )
+        'add_visit.html',
 
-        ).all()
+        visits=visits,
 
-    else:
+        meetings=meetings,
 
-        all_meetings = Meeting.query.all()
-    return render_template('add_visit.html', visits=all_visits, meetings=all_meetings) 
+        admin_view=session.get(
 
-@app.route('/visit/<int:visit_id>')
+            'role'
+
+        ) == 'ADMIN'
+
+    )
+
+@app.route(
+    '/visit/<int:visit_id>'
+)
 def visit_details(visit_id):
+
     if not has_access(
+
         'ADMIN',
+
         'SALES',
+
         'COMMERCIALS'
+
     ):
 
         return redirect(
-            url_for('dashboard')
+
+            url_for(
+
+                'dashboard'
+
+            )
+
         )
+
     visit = Visit.query.get_or_404(
+
         visit_id
+
     )
+
     if not can_view_record(
 
         visit.record_owner
@@ -2928,32 +5256,74 @@ def visit_details(visit_id):
     ):
 
         return redirect(
+
             url_for(
+
                 'dashboard'
+
             )
+
         )
+
+    history = VisitHistory.query.filter_by(
+
+        visit_id=visit.visit_id
+
+    ).order_by(
+
+        VisitHistory.visit_date.desc()
+
+    ).all()
+
     return render_template(
+
         'visit_details.html',
-        visit=visit
+
+        visit=visit,
+
+        history=history
+
     )
 
 @app.route(
+
     '/edit-visit/<int:visit_id>',
+
     methods=['GET', 'POST']
+
 )
-def edit_visit(visit_id):
+def edit_visit(
+
+    visit_id
+
+):
+
     if not has_access(
+
         'ADMIN',
-        'SALES',
-        'COMMERCIALS'
+
+        'COMMERCIALS',
+
+        'SALES'
+
     ):
 
         return redirect(
-            url_for('dashboard')
+
+            url_for(
+
+                'dashboard'
+
+            )
+
         )
+
     visit = Visit.query.get_or_404(
+
         visit_id
+
     )
+
     if not can_access_record(
 
         visit.record_owner
@@ -2961,12 +5331,47 @@ def edit_visit(visit_id):
     ):
 
         return redirect(
+
             url_for(
+
                 'dashboard'
+
             )
+
         )
+
+    history_id = request.args.get(
+
+        'history_id',
+
+        type=int
+
+    )
+
+    history = VisitHistory.query.filter_by(
+
+        visit_id=visit.visit_id
+
+    ).order_by(
+
+        VisitHistory.visit_date.desc()
+
+    ).all()
+
+    editing_record = visit
+
+    if history_id:
+
+        editing_record = VisitHistory.query.get_or_404(
+
+            history_id
+
+        )
+
     if session.get(
+
         'role'
+
     ) == 'SALES':
 
         all_meetings = Meeting.query.filter_by(
@@ -2978,7 +5383,9 @@ def edit_visit(visit_id):
         ).all()
 
     elif session.get(
+
         'role'
+
     ) == 'COMMERCIALS':
 
         commercial_users = User.query.filter_by(
@@ -2998,7 +5405,9 @@ def edit_visit(visit_id):
         all_meetings = Meeting.query.filter(
 
             Meeting.record_owner.in_(
+
                 usernames
+
             )
 
         ).all()
@@ -3009,71 +5418,566 @@ def edit_visit(visit_id):
 
     if request.method == 'POST':
 
-        visit.meeting_id = request.form.get(
-            'meeting_id'
+        action = request.form.get(
+
+            'action'
+
         )
 
-        visit.state = request.form.get(
-            'state'
+        delete_history_id = request.form.get(
+
+            'delete_history'
+
         )
 
-        visit.region = request.form.get(
-            'region'
-        )
+        static_data = {
 
-        visit.abc = request.form.get(
-            'abc'
-        )
+            'meeting_id': request.form.get(
 
-        visit.company_name = request.form.get(
-            'company_name'
-        )
+                'meeting_id'
 
-        visit.person_name = request.form.get(
-            'person_name'
-        )
+            ),
 
-        visit.designation = request.form.get(
-            'designation'
-        )
+            'company_name': request.form.get(
 
-        visit.contact_no = request.form.get(
-            'contact_no'
-        )
+                'company_name'
 
-        visit.address = request.form.get(
-            'address'
-        )
+            ),
 
-        visit.brief = request.form.get(
-            'brief'
-        )
+            'address': request.form.get(
 
-        visit.leads_generated = request.form.get(
-            'leads_generated'
-        )
+                'address'
 
-        visit.m2 = request.form.get(
-            'm2'
-        )
+            ),
 
-        visit.m3 = request.form.get(
-            'm3'
-        )
+            'state': request.form.get(
 
-        visit.visit_date = (
-            datetime.strptime(
-                request.form.get(
-                    'visit_date'
-                ),
-                '%Y-%m-%d'
-            ).date()
-            if request.form.get(
-                'visit_date'
+                'state'
+
+            ),
+
+            'region': request.form.get(
+
+                'region'
+
+            ),
+
+            'abc': request.form.get(
+
+                'abc'
+
             )
-            else None
+
+        }
+
+        current_visit = {
+
+            'person_name': request.form.get(
+
+                'person_name'
+
+            ),
+
+            'designation': request.form.get(
+
+                'designation'
+
+            ),
+
+            'contact_no': request.form.get(
+
+                'contact_no'
+
+            ),
+
+            'brief': request.form.get(
+
+                'brief'
+
+            ),
+
+            'visit_date': (
+
+                datetime.strptime(
+
+                    request.form.get(
+
+                        'visit_date'
+
+                    ),
+
+                    '%Y-%m-%d'
+
+                ).date()
+
+                if request.form.get(
+
+                    'visit_date'
+
+                )
+
+                else None
+
+            ),
+
+            'leads_generated': (
+
+                int(
+
+                    request.form.get(
+
+                        'leads_generated'
+
+                    ) or 0
+
+                )
+
+            )
+
+        }
+
+        if action == 'delete_current':
+
+            if session.get(
+
+                'role'
+
+            ) == 'ADMIN':
+
+                db.session.delete(
+
+                    visit
+
+                )
+
+                log_activity(
+
+                    'VISIT',
+
+                    visit.visit_id,
+
+                    'DELETED'
+
+                )
+
+                db.session.commit()
+
+                flash(
+
+                    'Visit deleted successfully.',
+
+                    'success'
+
+                )
+
+                return redirect(
+
+                    url_for(
+
+                        'add_visit'
+
+                    )
+
+                )
+
+            delete_request = DeleteRequest(
+
+                module_name='VISIT',
+
+                record_id=visit.visit_id,
+
+                requested_by=session[
+                    'username'
+                ],
+
+                reason='Requested from Edit Visit'
+
+            )
+
+            db.session.add(
+
+                delete_request
+
+            )
+
+            log_activity(
+
+                'VISIT',
+
+                visit.visit_id,
+
+                'DELETE REQUESTED',
+
+                'Requested from Edit Visit'
+
+            )
+
+            db.session.commit()
+
+            flash(
+
+                'Delete request sent to Admin.',
+
+                'info'
+
+            )
+
+            return redirect(
+
+                url_for(
+
+                    'edit_visit',
+
+                    visit_id=visit.visit_id
+
+                )
+
+            )
+
+        if delete_history_id:
+
+            history_record = VisitHistory.query.get_or_404(
+
+                delete_history_id
+
+            )
+
+            if session.get(
+
+                'role'
+
+            ) == 'ADMIN':
+
+                db.session.delete(
+
+                    history_record
+
+                )
+
+                log_activity(
+
+                    'VISIT_HISTORY',
+
+                    history_record.history_id,
+
+                    'DELETED'
+
+                )
+
+                db.session.commit()
+
+                flash(
+
+                    'Visit history deleted successfully.',
+
+                    'success'
+
+                )
+
+            else:
+
+                delete_request = DeleteRequest(
+
+                    module_name='VISIT_HISTORY',
+
+                    record_id=history_record.history_id,
+
+                    requested_by=session[
+                        'username'
+                    ],
+
+                    reason='Requested from Edit Visit'
+
+                )
+
+                db.session.add(
+
+                    delete_request
+
+                )
+
+                log_activity(
+
+                    'VISIT_HISTORY',
+
+                    history_record.history_id,
+
+                    'DELETE REQUESTED'
+
+                )
+
+                db.session.commit()
+
+                flash(
+
+                    'Delete request sent to Admin.',
+
+                    'info'
+
+                )
+
+            return redirect(
+
+                url_for(
+
+                    'edit_visit',
+
+                    visit_id=visit.visit_id
+
+                )
+
+            )
+
+        existing_history = VisitHistory.query.filter_by(
+
+            visit_id=visit.visit_id
+
+        ).all()
+
+        visit_list = [
+
+            current_visit
+
+        ]
+
+        for item in existing_history:
+
+            visit_list.append({
+
+                'person_name': item.person_name,
+
+                'designation': item.designation,
+
+                'contact_no': item.contact_no,
+
+                'brief': item.brief,
+
+                'visit_date': item.visit_date,
+
+                'leads_generated': item.leads_generated
+
+            })
+
+        new_person_name = request.form.getlist(
+
+            'new_person_name[]'
+
         )
-        db.session.flush()
+
+        new_designation = request.form.getlist(
+
+            'new_designation[]'
+
+        )
+
+        new_contact_no = request.form.getlist(
+
+            'new_contact_no[]'
+
+        )
+
+        new_brief = request.form.getlist(
+
+            'new_brief[]'
+
+        )
+
+        new_visit_date = request.form.getlist(
+
+            'new_visit_date[]'
+
+        )
+
+        new_leads_generated = request.form.getlist(
+
+            'new_leads_generated[]'
+
+        )
+
+        for i in range(
+
+            len(
+
+                new_person_name
+
+            )
+
+        ):
+
+            if not (
+
+                new_person_name[i]
+
+                or new_visit_date[i]
+
+            ):
+
+                continue
+
+            visit_list.append({
+
+                'person_name': new_person_name[i],
+
+                'designation': new_designation[i],
+
+                'contact_no': new_contact_no[i],
+
+                'brief': new_brief[i],
+
+                'visit_date': (
+
+                    datetime.strptime(
+
+                        new_visit_date[i],
+
+                        '%Y-%m-%d'
+
+                    ).date()
+
+                    if new_visit_date[i]
+
+                    else None
+
+                ),
+
+                'leads_generated': (
+
+                    int(
+
+                        new_leads_generated[i]
+
+                        or 0
+
+                    )
+
+                )
+
+            })
+
+        visit_list = [
+
+            item
+
+            for item in visit_list
+
+            if item.get(
+
+                'visit_date'
+
+            )
+
+        ]
+
+        visit_list.sort(
+
+            key=lambda x: x.get(
+
+                'visit_date'
+
+            ),
+
+            reverse=True
+
+        )
+
+        if not visit_list:
+
+            flash(
+
+                'At least one visit is required.',
+
+                'danger'
+
+            )
+
+            return redirect(
+
+                url_for(
+
+                    'edit_visit',
+
+                    visit_id=visit.visit_id
+
+                )
+
+            )
+
+        latest_visit = visit_list[0]
+
+        visit.meeting_id = static_data['meeting_id']
+
+        visit.company_name = static_data['company_name']
+
+        visit.address = static_data['address']
+
+        visit.state = static_data['state']
+
+        visit.region = static_data['region']
+
+        visit.abc = static_data['abc']
+
+        visit.person_name = latest_visit['person_name']
+
+        visit.designation = latest_visit['designation']
+
+        visit.contact_no = latest_visit['contact_no']
+
+        visit.brief = latest_visit['brief']
+
+        visit.visit_date = latest_visit['visit_date']
+
+        visit.leads_generated = latest_visit['leads_generated']
+
+        db.session.query(
+
+            VisitHistory
+
+        ).filter_by(
+
+            visit_id=visit.visit_id
+
+        ).delete()
+
+        for item in visit_list[1:]:
+
+            history = VisitHistory(
+
+                visit_id=visit.visit_id,
+
+                meeting_id=visit.meeting_id,
+
+                company_name=visit.company_name,
+
+                address=visit.address,
+
+                state=visit.state,
+
+                region=visit.region,
+
+                abc=visit.abc,
+
+                person_name=item['person_name'],
+
+                designation=item['designation'],
+
+                contact_no=item['contact_no'],
+
+                brief=item['brief'],
+
+                visit_date=item['visit_date'],
+
+                leads_generated=item['leads_generated'],
+
+                record_owner=visit.record_owner
+
+            )
+
+            db.session.add(
+
+                history
+
+            )
+
         log_activity(
 
             'VISIT',
@@ -3082,19 +5986,42 @@ def edit_visit(visit_id):
 
             'UPDATED'
 
-        )  
+        )
+
         db.session.commit()
 
+        flash(
+
+            'Visit updated successfully.',
+
+            'success'
+
+        )
+
         return redirect(
+
             url_for(
-                'add_visit'
+
+                'edit_visit',
+
+                visit_id=visit.visit_id
+
             )
+
         )
 
     return render_template(
+
         'edit_visit.html',
+
         visit=visit,
+
+        editing_record=editing_record,
+
+        history=history,
+
         meetings=all_meetings
+
     )
 
 @app.route(
@@ -3103,6 +6030,60 @@ def edit_visit(visit_id):
 )
 def request_delete_visit(visit_id):
 
+    visit = Visit.query.get_or_404(
+        visit_id
+    )
+
+    # ADMIN -> DELETE DIRECTLY
+    if session.get(
+        'role'
+    ) == 'ADMIN':
+
+        try:
+
+            db.session.delete(
+                visit
+            )
+
+            db.session.flush()
+
+            log_activity(
+
+                'VISIT',
+
+                visit_id,
+
+                'DELETED'
+
+            )
+
+            db.session.commit()
+
+            flash(
+
+                'Visit deleted successfully.'
+
+            )
+
+        except Exception:
+
+            db.session.rollback()
+
+            flash(
+
+                'Cannot delete this Visit because it is linked with other records.'
+
+            )
+
+        return redirect(
+
+            url_for(
+                'add_visit'
+            )
+
+        )
+
+    # EMPLOYEE -> DELETE REQUEST
     if request.method == 'POST':
 
         delete_request = DeleteRequest(
@@ -3124,7 +6105,9 @@ def request_delete_visit(visit_id):
         db.session.add(
             delete_request
         )
+
         db.session.flush()
+
         log_activity(
 
             'VISIT',
@@ -3146,9 +6129,11 @@ def request_delete_visit(visit_id):
         )
 
         return redirect(
+
             url_for(
                 'add_visit'
             )
+
         )
 
     return render_template(
@@ -3195,28 +6180,7 @@ def add_drawing():
             'moca'
         )
 
-        drawing_file = request.files.get(
-            'drawing_pdf'
-        )
-
-        drawing_pdf_path = None
-
-        if drawing_file and drawing_file.filename:
-
-            filename = secure_filename(
-                drawing_file.filename
-            )
-
-            drawing_pdf_path = (
-                'drawings/' + filename
-            )
-
-            drawing_file.save(
-                os.path.join(
-                    app.config['UPLOAD_FOLDER'],
-                    drawing_pdf_path
-                )
-            )
+        
 
         drawing = Drawing(
 
@@ -3230,7 +6194,7 @@ def add_drawing():
 
             moca=moca,
 
-            drawing_pdf=drawing_pdf_path,
+            
             record_owner=session[
                 'username'
             ]    
@@ -3240,6 +6204,53 @@ def add_drawing():
             drawing
         )
         db.session.flush()
+        drawing_files = request.files.getlist(
+            'drawing_files'
+        )
+
+        for file in drawing_files:
+
+            if file and file.filename:
+
+                filename = secure_filename(
+                    file.filename
+                )
+
+                relative_path = (
+                    'drawings/' +
+                    filename
+                )
+
+                file.save(
+
+                    os.path.join(
+
+                        app.config[
+                            'UPLOAD_FOLDER'
+                        ],
+
+                        relative_path
+
+                    )
+
+                )
+
+                drawing_file = DrawingFile(
+
+                    drawing_id=
+                    drawing.drawing_id,
+
+                    file_name=filename,
+
+                    file_path=relative_path,
+
+                    file_type=file.content_type
+
+                )
+
+                db.session.add(
+                    drawing_file
+                )
         log_activity(
 
             'DRAWING',
@@ -3373,7 +6384,10 @@ def add_drawing():
     return render_template(
         'add_drawing.html',
         drawings=all_drawings,
-        visits=all_visits
+        visits=all_visits,
+        admin_view=session.get(
+            'role'
+        ) == 'ADMIN'
     )
 
 @app.route('/drawing/<int:drawing_id>')
@@ -3432,7 +6446,7 @@ def edit_drawing(drawing_id):
                 'dashboard'
             )
         )
-    drawing_pdf=drawing.drawing_pdf
+    
 
     if session.get(
         'role'
@@ -3514,34 +6528,53 @@ def edit_drawing(drawing_id):
             'moca'
         )
 
-        if 'drawing_pdf' in request.files:
+        drawing_files = request.files.getlist(
+            'drawing_files'
+        )
 
-            file = request.files[
-                'drawing_pdf'
-            ]
+        for file in drawing_files:
 
-            if file.filename != '':
+            if file and file.filename:
 
                 filename = secure_filename(
                     file.filename
                 )
 
+                relative_path = (
+                    'drawings/' +
+                    filename
+                )
+
                 file.save(
+
                     os.path.join(
+
                         app.config[
                             'UPLOAD_FOLDER'
                         ],
-                        'drawings',
-                        filename
+
+                        relative_path
+
                     )
+
                 )
 
-                drawing_pdf = (
-                    'drawings/' +
-                filename
+                new_file = DrawingFile(
+
+                    drawing_id=
+                    drawing.drawing_id,
+
+                    file_name=filename,
+
+                    file_path=relative_path,
+
+                    file_type=file.content_type
+
                 )
 
-        drawing.drawing_pdf = drawing_pdf
+                db.session.add(
+                    new_file
+                )
         db.session.flush()
         log_activity(
 
@@ -3572,6 +6605,60 @@ def edit_drawing(drawing_id):
 )
 def request_delete_drawing(drawing_id):
 
+    drawing = Drawing.query.get_or_404(
+        drawing_id
+    )
+
+    # ADMIN -> DELETE DIRECTLY
+    if session.get(
+        'role'
+    ) == 'ADMIN':
+
+        try:
+
+            db.session.delete(
+                drawing
+            )
+
+            db.session.flush()
+
+            log_activity(
+
+                'DRAWING',
+
+                drawing_id,
+
+                'DELETED'
+
+            )
+
+            db.session.commit()
+
+            flash(
+
+                'Drawing deleted successfully.'
+
+            )
+
+        except Exception:
+
+            db.session.rollback()
+
+            flash(
+
+                'Cannot delete this Drawing because it is linked with other records.'
+
+            )
+
+        return redirect(
+
+            url_for(
+                'add_drawing'
+            )
+
+        )
+
+    # EMPLOYEE -> DELETE REQUEST
     if request.method == 'POST':
 
         delete_request = DeleteRequest(
@@ -3593,7 +6680,9 @@ def request_delete_drawing(drawing_id):
         db.session.add(
             delete_request
         )
+
         db.session.flush()
+
         log_activity(
 
             'DRAWING',
@@ -3615,9 +6704,11 @@ def request_delete_drawing(drawing_id):
         )
 
         return redirect(
+
             url_for(
                 'add_drawing'
             )
+
         )
 
     return render_template(
@@ -3628,6 +6719,39 @@ def request_delete_drawing(drawing_id):
 
         record_id=drawing_id
 
+    )
+
+@app.route(
+    '/delete-drawing-file/<int:file_id>'
+)
+def delete_drawing_file(file_id):
+
+    file_record = DrawingFile.query.get_or_404(
+        file_id
+    )
+
+    drawing_id = file_record.drawing_id
+
+    full_path = os.path.join(
+        app.config['UPLOAD_FOLDER'],
+        file_record.file_path
+    )
+
+    if os.path.exists(full_path):
+        os.remove(full_path)
+
+    db.session.delete(file_record)
+    db.session.commit()
+
+    flash(
+        'File deleted successfully.'
+    )
+
+    return redirect(
+        url_for(
+            'drawing_details',
+            drawing_id=drawing_id
+        )
     )
 
 @app.route('/add-proposal',
@@ -3755,33 +6879,7 @@ def add_proposal():
 
             next_to_call = None
 
-        proposal_pdf = None
-
-        if 'proposal_pdf' in request.files:
-
-            file = request.files[
-                'proposal_pdf'
-            ]
-
-            if file.filename != '':
-
-                filename = secure_filename(
-                    file.filename
-                )
-
-                file.save(
-                    os.path.join(
-                        app.config[
-                            'UPLOAD_FOLDER'],
-                            'proposals',
-                        filename
-                    )
-                )
-
-                proposal_pdf = (
-                    'proposals/' +
-                    filename
-                )
+        
 
         proposal = Proposal(
 
@@ -3886,8 +6984,7 @@ def add_proposal():
 
             remarks=remarks,
 
-            proposal_pdf=
-                proposal_pdf,
+            
             record_owner=session[
                 'username'
             ]    
@@ -3896,7 +6993,53 @@ def add_proposal():
         db.session.add(
             proposal
         )
-        db.session.flush()  
+        db.session.flush()
+        proposal_files = request.files.getlist(
+            'proposal_files'
+        )
+
+        for file in proposal_files:
+
+            if file and file.filename:
+
+                filename = secure_filename(
+                    file.filename
+                )
+
+                relative_path = (
+                    'proposals/' +
+                    filename
+                )
+
+                file.save(
+
+                    os.path.join(
+
+                        app.config[
+                            'UPLOAD_FOLDER'
+                        ],
+
+                        relative_path
+
+                    )
+
+                )
+
+                new_file = ProposalFile(
+
+                    proposal_id=proposal.proposal_id,
+
+                    file_name=filename,
+
+                    file_path=relative_path,
+
+                    file_type=file.content_type
+
+                )
+
+                db.session.add(
+                    new_file
+                )  
         log_activity(
 
             'PROPOSAL',
@@ -4115,7 +7258,10 @@ def add_proposal():
         'add_proposal.html',
         proposals=all_proposals,
         meetings=all_meetings,
-        drawings=all_drawings
+        drawings=all_drawings,
+        admin_view=session.get(
+            'role'
+        ) == 'ADMIN'
     )
 
 @app.route('/proposal/<int:proposal_id>')
@@ -4390,28 +7536,54 @@ def edit_proposal(proposal_id):
             ).date()
         else:
             proposal.next_to_call = None
-        proposal_pdf = proposal.proposal_pdf
-        if 'proposal_pdf' in request.files:
-            file = request.files[
-                'proposal_pdf'
-            ]
-            if file.filename != '':
+
+        proposal_files = request.files.getlist(
+            'proposal_files'
+        )
+
+        for file in proposal_files:
+
+            if file and file.filename:
+
                 filename = secure_filename(
                     file.filename
                 )
-                file.save(
-                    os.path.join(
-                        app.config[
-                            'UPLOAD_FOLDER'],
-                            'proposals',
-                        filename
-                    )
-                )
-                proposal_pdf = (
+
+                relative_path = (
                     'proposals/' +
                     filename
                 )
-        proposal.proposal_pdf = proposal_pdf
+
+                file.save(
+
+                    os.path.join(
+
+                        app.config[
+                            'UPLOAD_FOLDER'
+                        ],
+
+                        relative_path
+
+                    )
+
+                )
+
+                new_file = ProposalFile(
+
+                    proposal_id=
+                    proposal.proposal_id,
+
+                    file_name=filename,
+
+                    file_path=relative_path,
+
+                    file_type=file.content_type
+
+                )
+
+                db.session.add(
+                    new_file
+                )
         db.session.flush()
         log_activity(
 
@@ -4435,12 +7607,67 @@ def edit_proposal(proposal_id):
         meetings=all_meetings,
         drawings=all_drawings
     )
+
 @app.route(
     '/request-delete-proposal/<int:proposal_id>',
     methods=['GET', 'POST']
 )
 def request_delete_proposal(proposal_id):
 
+    proposal = Proposal.query.get_or_404(
+        proposal_id
+    )
+
+    # ADMIN -> DELETE DIRECTLY
+    if session.get(
+        'role'
+    ) == 'ADMIN':
+
+        try:
+
+            db.session.delete(
+                proposal
+            )
+
+            db.session.flush()
+
+            log_activity(
+
+                'PROPOSAL',
+
+                proposal_id,
+
+                'DELETED'
+
+            )
+
+            db.session.commit()
+
+            flash(
+
+                'Proposal deleted successfully.'
+
+            )
+
+        except Exception:
+
+            db.session.rollback()
+
+            flash(
+
+                'Cannot delete this Proposal because it is linked with other records.'
+
+            )
+
+        return redirect(
+
+            url_for(
+                'add_proposal'
+            )
+
+        )
+
+    # EMPLOYEE -> DELETE REQUEST
     if request.method == 'POST':
 
         delete_request = DeleteRequest(
@@ -4462,7 +7689,9 @@ def request_delete_proposal(proposal_id):
         db.session.add(
             delete_request
         )
+
         db.session.flush()
+
         log_activity(
 
             'PROPOSAL',
@@ -4484,9 +7713,11 @@ def request_delete_proposal(proposal_id):
         )
 
         return redirect(
+
             url_for(
                 'add_proposal'
             )
+
         )
 
     return render_template(
@@ -4496,6 +7727,59 @@ def request_delete_proposal(proposal_id):
         module='PROPOSAL',
 
         record_id=proposal_id
+
+    )
+
+@app.route(
+    '/delete-proposal-file/<int:file_id>'
+)
+def delete_proposal_file(file_id):
+
+    file_record = ProposalFile.query.get_or_404(
+        file_id
+    )
+
+    proposal_id = file_record.proposal_id
+
+    full_path = os.path.join(
+
+        app.config[
+            'UPLOAD_FOLDER'
+        ],
+
+        file_record.file_path
+
+    )
+
+    if os.path.exists(
+        full_path
+    ):
+
+        os.remove(
+            full_path
+        )
+
+    db.session.delete(
+        file_record
+    )
+
+    db.session.commit()
+
+    flash(
+
+        'File deleted successfully.'
+
+    )
+
+    return redirect(
+
+        url_for(
+
+            'proposal_details',
+
+            proposal_id=proposal_id
+
+        )
 
     )
 
@@ -4807,7 +8091,11 @@ def add_sales():
 
         sales=all_sales,
 
-        proposals=all_proposals
+        proposals=all_proposals,
+
+        admin_view=session.get(
+            'role'
+        ) == 'ADMIN'        
 
     )
 
@@ -5100,6 +8388,60 @@ def edit_sales(sales_id):
 )
 def request_delete_sales(sales_id):
 
+    sales = SalesPipeline.query.get_or_404(
+        sales_id
+    )
+
+    # ADMIN -> DELETE DIRECTLY
+    if session.get(
+        'role'
+    ) == 'ADMIN':
+
+        try:
+
+            db.session.delete(
+                sales
+            )
+
+            db.session.flush()
+
+            log_activity(
+
+                'SALES',
+
+                sales_id,
+
+                'DELETED'
+
+            )
+
+            db.session.commit()
+
+            flash(
+
+                'Sales record deleted successfully.'
+
+            )
+
+        except Exception:
+
+            db.session.rollback()
+
+            flash(
+
+                'Cannot delete this Sales record because it is linked with other records.'
+
+            )
+
+        return redirect(
+
+            url_for(
+                'add_sales'
+            )
+
+        )
+
+    # EMPLOYEE -> DELETE REQUEST
     if request.method == 'POST':
 
         delete_request = DeleteRequest(
@@ -5121,7 +8463,9 @@ def request_delete_sales(sales_id):
         db.session.add(
             delete_request
         )
+
         db.session.flush()
+
         log_activity(
 
             'SALES',
@@ -5143,9 +8487,11 @@ def request_delete_sales(sales_id):
         )
 
         return redirect(
+
             url_for(
                 'add_sales'
             )
+
         )
 
     return render_template(
@@ -5207,9 +8553,7 @@ def add_invoice():
             'product_sold'
         )
 
-        invoice_pdf = request.files.get(
-            'invoice_pdf'
-        )
+
 
         total_units = request.form.get(
             'total_units'
@@ -5243,31 +8587,7 @@ def add_invoice():
             'total_revenue'
         )
 
-        pdf_path = None
 
-        if invoice_pdf and invoice_pdf.filename != '':
-            filename = secure_filename(
-                invoice_pdf.filename
-            )
-
-            invoice_pdf.save(
-
-                os.path.join(
-
-                    app.config['UPLOAD_FOLDER'],
-
-                    'invoices',
-
-                    filename
-
-                )
-
-            )
-
-            pdf_path = (
-                'invoices/' +
-                filename
-            )
 
 
 
@@ -5301,7 +8621,7 @@ def add_invoice():
 
             total_revenue=total_revenue,
 
-            invoice_pdf=pdf_path,
+
             record_owner=session[
                 'username'
             ]    
@@ -5311,6 +8631,53 @@ def add_invoice():
             invoice
         )
         db.session.flush()
+        invoice_files = request.files.getlist(
+            'invoice_files'
+        )
+
+        for file in invoice_files:
+
+            if file and file.filename:
+
+                filename = secure_filename(
+                    file.filename
+                )
+
+                relative_path = (
+                    'invoices/' +
+                    filename
+                )
+
+                file.save(
+
+                    os.path.join(
+
+                        app.config[
+                            'UPLOAD_FOLDER'
+                        ],
+
+                        relative_path
+
+                    )
+
+                )
+
+                new_file = InvoiceFile(
+
+                    invoice_id=
+                    invoice.invoice_id,
+
+                    file_name=filename,
+
+                    file_path=relative_path,
+
+                    file_type=file.content_type
+
+                )
+
+                db.session.add(
+                    new_file
+                )
         log_activity(
 
             'INVOICE',
@@ -5441,7 +8808,11 @@ def add_invoice():
 
         invoices=all_invoices,
 
-        sales=all_sales
+        sales=all_sales,
+
+        admin_view=session.get(
+            'role'
+        ) == 'ADMIN'        
 
     )
 
@@ -5473,6 +8844,7 @@ def invoice_details(invoice_id):
     return render_template(
         'invoice_details.html',
         invoice=invoice
+
     )
 
 @app.route(
@@ -5602,26 +8974,53 @@ def edit_invoice(invoice_id):
         invoice.total_revenue = request.form.get(
             'total_revenue'
         )
-        pdf_path = invoice.invoice_pdf
-        invoice_pdf = request.files.get(
-            'invoice_pdf'
+        invoice_files = request.files.getlist(
+            'invoice_files'
         )
-        if invoice_pdf and invoice_pdf.filename != '':
-            filename = secure_filename(
-                invoice_pdf.filename
-            )
-            invoice_pdf.save(
-                os.path.join(
-                    app.config['UPLOAD_FOLDER'],
-                    'invoices',
+
+        for file in invoice_files:
+
+            if file and file.filename:
+
+                filename = secure_filename(
+                    file.filename
+                )
+
+                relative_path = (
+                    'invoices/' +
                     filename
                 )
-            )
-            pdf_path = (
-                'invoices/' +
-                filename
-            )
-        invoice.invoice_pdf = pdf_path
+
+                file.save(
+
+                    os.path.join(
+
+                        app.config[
+                            'UPLOAD_FOLDER'
+                        ],
+
+                        relative_path
+
+                    )
+
+                )
+
+                new_file = InvoiceFile(
+
+                    invoice_id=
+                    invoice.invoice_id,
+
+                    file_name=filename,
+
+                    file_path=relative_path,
+
+                    file_type=file.content_type
+
+                )
+
+                db.session.add(
+                    new_file
+                )
         db.session.flush()
         log_activity(
 
@@ -5652,6 +9051,60 @@ def edit_invoice(invoice_id):
 )
 def request_delete_invoice(invoice_id):
 
+    invoice = Invoice.query.get_or_404(
+        invoice_id
+    )
+
+    # ADMIN -> DELETE DIRECTLY
+    if session.get(
+        'role'
+    ) == 'ADMIN':
+
+        try:
+
+            db.session.delete(
+                invoice
+            )
+
+            db.session.flush()
+
+            log_activity(
+
+                'INVOICE',
+
+                invoice_id,
+
+                'DELETED'
+
+            )
+
+            db.session.commit()
+
+            flash(
+
+                'Invoice deleted successfully.'
+
+            )
+
+        except Exception:
+
+            db.session.rollback()
+
+            flash(
+
+                'Cannot delete this Invoice because it is linked with other records.'
+
+            )
+
+        return redirect(
+
+            url_for(
+                'add_invoice'
+            )
+
+        )
+
+    # EMPLOYEE -> DELETE REQUEST
     if request.method == 'POST':
 
         delete_request = DeleteRequest(
@@ -5673,7 +9126,9 @@ def request_delete_invoice(invoice_id):
         db.session.add(
             delete_request
         )
+
         db.session.flush()
+
         log_activity(
 
             'INVOICE',
@@ -5695,9 +9150,11 @@ def request_delete_invoice(invoice_id):
         )
 
         return redirect(
+
             url_for(
                 'add_invoice'
             )
+
         )
 
     return render_template(
@@ -5707,6 +9164,57 @@ def request_delete_invoice(invoice_id):
         module='INVOICE',
 
         record_id=invoice_id
+
+    )
+
+@app.route(
+    '/delete-invoice-file/<int:file_id>'
+)
+def delete_invoice_file(file_id):
+
+    file_record = InvoiceFile.query.get_or_404(
+        file_id
+    )
+
+    invoice_id = file_record.invoice_id
+
+    full_path = os.path.join(
+
+        app.config[
+            'UPLOAD_FOLDER'
+        ],
+
+        file_record.file_path
+
+    )
+
+    if os.path.exists(
+        full_path
+    ):
+
+        os.remove(
+            full_path
+        )
+
+    db.session.delete(
+        file_record
+    )
+
+    db.session.commit()
+
+    flash(
+        'File deleted successfully.'
+    )
+
+    return redirect(
+
+        url_for(
+
+            'invoice_details',
+
+            invoice_id=invoice_id
+
+        )
 
     )
 
@@ -5758,7 +9266,10 @@ def add_installation():
 
             created_by=session[
                 'username'
-            ]
+            ],
+            record_owner=session[
+                'username'
+            ],
 
         )
 
@@ -5782,8 +9293,8 @@ def add_installation():
                     file.filename
                 )
 
-                file_path = os.path.join(
-                    'installations',
+                file_path = (
+                    'installations/' +
                     filename
                 )
 
@@ -5828,8 +9339,8 @@ def add_installation():
                     file.filename
                 )
 
-                file_path = os.path.join(
-                    'installations',
+                file_path = (
+                    'installations/' +
                     filename
                 )
 
@@ -5992,7 +9503,11 @@ def add_installation():
 
         sales=sales_records,
 
-        search=search
+        search=search,
+
+        admin_view=session.get(
+            'role'
+        ) == 'ADMIN'
 
     )
 
@@ -6349,6 +9864,60 @@ def edit_installation(
 )
 def request_delete_installation(installation_id):
 
+    installation = Installation.query.get_or_404(
+        installation_id
+    )
+
+    # ADMIN -> DELETE DIRECTLY
+    if session.get(
+        'role'
+    ) == 'ADMIN':
+
+        try:
+
+            db.session.delete(
+                installation
+            )
+
+            db.session.flush()
+
+            log_activity(
+
+                'INSTALLATION',
+
+                installation_id,
+
+                'DELETED'
+
+            )
+
+            db.session.commit()
+
+            flash(
+
+                'Installation deleted successfully.'
+
+            )
+
+        except Exception:
+
+            db.session.rollback()
+
+            flash(
+
+                'Cannot delete this Installation because it is linked with other records.'
+
+            )
+
+        return redirect(
+
+            url_for(
+                'add_installation'
+            )
+
+        )
+
+    # EMPLOYEE -> DELETE REQUEST
     if request.method == 'POST':
 
         delete_request = DeleteRequest(
@@ -6370,7 +9939,9 @@ def request_delete_installation(installation_id):
         db.session.add(
             delete_request
         )
+
         db.session.flush()
+
         log_activity(
 
             'INSTALLATION',
@@ -6392,9 +9963,11 @@ def request_delete_installation(installation_id):
         )
 
         return redirect(
+
             url_for(
                 'add_installation'
             )
+
         )
 
     return render_template(
@@ -6692,40 +10265,123 @@ def add_client():
         'search'
     )
     if search:
-        all_clients=Client.query.filter(
+
+        all_clients = Client.query.filter(
+
             or_(
+
                 Client.client_name.ilike(
                     f'%{search}%'
                 ),
+
                 Client.property_type.ilike(
                     f'%{search}%'
                 ),
+
                 Client.nearest_metrostation.ilike(
                     f'%{search}%'
                 ),
+
                 Client.mail_id.ilike(
                     f'%{search}%'
                 ),
+
                 Client.state.ilike(
                     f'%{search}%'
                 ),
+
                 Client.mobile_no.ilike(
                     f'%{search}%'
                 ),
+
                 Client.product.ilike(
                     f'%{search}%'
                 ),
+
                 Client.filter_colour.ilike(
                     f'%{search}%'
                 ),
+
                 Client.remark.ilike(
                     f'%{search}%'
                 )
-            )
-        ).all()
-    else:
-        all_clients=Client.query.all()
 
+            )
+
+        ).all()
+
+    else:
+
+        all_clients = Client.query.all()
+
+
+
+    today = datetime.today().date()
+
+    for client in all_clients:
+        if client.installation_date:
+
+            client.cmc_due_days = (
+
+                today -
+
+                client.installation_date
+
+            ).days
+
+        else:
+
+            client.cmc_due_days = 0
+
+
+        client.cmc_due = (
+
+            'YES'
+
+            if client.cmc_due_days >= 345
+
+            else 'NO'
+
+        )
+
+
+        if client.last_service_date:
+
+            client.last_service_days = (
+
+                today -
+
+                client.last_service_date
+
+            ).days
+
+        elif client.activation_date:
+
+            client.last_service_days = (
+
+                today -
+
+                client.activation_date
+
+            ).days
+
+        else:
+
+            client.last_service_days = 0
+
+
+        client.service_due = (
+
+            'YES'
+
+            if client.last_service_days >=
+
+            client.service_interval_days
+
+            else 'NO'
+
+        )
+    db.session.commit()
     all_proposals = Proposal.query.all()
 
     all_invoices = Invoice.query.all()
@@ -6738,7 +10394,11 @@ def add_client():
 
         proposals=all_proposals,
 
-        invoices=all_invoices
+        invoices=all_invoices,
+
+        admin_view=session.get(
+            'role'
+        ) == 'ADMIN'
 
     )
 
@@ -6755,7 +10415,9 @@ def client_details(client_id):
     client = Client.query.get_or_404(
         client_id
     )
+    update_client_status(client)
 
+    db.session.commit()
     return render_template(
         'client_details.html',
         client=client
@@ -6774,9 +10436,9 @@ def edit_client(client_id):
         return redirect(
             url_for('dashboard')
         )
-    client = Client.query.get_or_404(
-        client_id
-    )
+    client = Client.query.get_or_404(client_id)
+
+    update_client_status(client)
 
     all_proposals = Proposal.query.all()
 
@@ -7043,6 +10705,78 @@ def edit_client(client_id):
 )
 def request_delete_client(client_id):
 
+    client = Client.query.get_or_404(
+        client_id
+    )
+
+    # ADMIN -> DELETE DIRECTLY
+    if session.get(
+        'role'
+    ) == 'ADMIN':
+
+        try:
+            service_count = CustomerCareCard.query.filter_by(
+                client_id=client_id
+            ).count()
+
+            if service_count > 0:
+
+                flash(
+
+                    f'Cannot delete this client. {service_count} service record(s) exist.'
+
+                )
+
+                return redirect(
+
+                    url_for(
+                        'add_client'
+                    )
+
+                )
+            db.session.delete(
+                client
+            )
+
+            db.session.flush()
+
+            log_activity(
+
+                'CLIENT',
+
+                client_id,
+
+                'DELETED'
+
+            )
+
+            db.session.commit()
+
+            flash(
+
+                'Client deleted successfully.'
+
+            )
+
+        except Exception:
+
+            db.session.rollback()
+
+            flash(
+
+                'Cannot delete this Client because it is linked with other records.'
+
+            )
+
+        return redirect(
+
+            url_for(
+                'add_client'
+            )
+
+        )
+
+    # EMPLOYEE -> DELETE REQUEST
     if request.method == 'POST':
 
         delete_request = DeleteRequest(
@@ -7064,7 +10798,9 @@ def request_delete_client(client_id):
         db.session.add(
             delete_request
         )
+
         db.session.flush()
+
         log_activity(
 
             'CLIENT',
@@ -7086,9 +10822,11 @@ def request_delete_client(client_id):
         )
 
         return redirect(
+
             url_for(
                 'add_client'
             )
+
         )
 
     return render_template(
@@ -7177,7 +10915,11 @@ def client_services(client_id):
 
         services=services,
 
-        service_count=service_count
+        service_count=service_count,
+
+        admin_view=session.get(
+            'role'
+        ) == 'ADMIN'
 
     )
 
@@ -7515,6 +11257,65 @@ def edit_service(card_id):
 )
 def request_delete_service(card_id):
 
+    service = CustomerCareCard.query.get_or_404(
+        card_id
+    )
+
+    # ADMIN
+    if session.get(
+        'role'
+    ) == 'ADMIN':
+
+        try:
+
+            db.session.delete(
+                service
+            )
+
+            db.session.flush()
+
+            log_activity(
+
+                'SERVICE',
+
+                card_id,
+
+                'DELETED'
+
+            )
+
+            db.session.commit()
+
+            flash(
+
+                'Service deleted successfully.'
+
+            )
+
+        except Exception:
+
+            db.session.rollback()
+
+            flash(
+
+                'Cannot delete this Service.'
+
+            )
+
+        return redirect(
+
+            url_for(
+
+                'client_services',
+
+                client_id=service.client_id
+
+            )
+
+        )
+
+    # EMPLOYEE
+
     if request.method == 'POST':
 
         delete_request = DeleteRequest(
@@ -7536,7 +11337,9 @@ def request_delete_service(card_id):
         db.session.add(
             delete_request
         )
+
         db.session.flush()
+
         log_activity(
 
             'SERVICE',
@@ -7556,11 +11359,9 @@ def request_delete_service(card_id):
         flash(
             'Delete request sent.'
         )
-        service = CustomerCareCard.query.get_or_404(
-            card_id
-        )
 
         return redirect(
+
             url_for(
 
                 'client_services',
@@ -7568,8 +11369,8 @@ def request_delete_service(card_id):
                 client_id=service.client_id
 
             )
-        )
 
+        )
 
     return render_template(
 
@@ -8942,11 +12743,14 @@ def organization_clients():
 
     )
 
-@app.route('/global-search')
+@app.route(
+    '/global-search'
+)
 def global_search():
 
     search = request.args.get(
-        'search'
+        'search',
+        ''
     )
 
     leads = []
@@ -8958,320 +12762,276 @@ def global_search():
     invoices = []
     clients = []
     services = []
+    installations = []
 
     if search:
 
-        leads = Lead.query.filter(
-            or_(
-                Lead.name.ilike(
-                    f'%{search}%'
-                ),
-                Lead.reference.ilike(
-                    f'%{search}%'
-                ),
-                Lead.location.ilike(
-                    f'%{search}%'
-                ),
-                Lead.phone.ilike(
-                    f'%{search}%'
-                ),
-                Lead.responses.ilike(
-                    f'%{search}%'
-                ),
-                Lead.recent.ilike(
-                    f'%{search}%'
-                )
-            )
-        ).all()
+        leads = search_records(
 
-        meetings = Meeting.query.filter(
-            or_(
-                Meeting.meeting_fixed_by.ilike(
-                    f'%{search}%'
-                ),
-                Meeting.source.ilike(
-                    f'%{search}%'
-                ),
-                Meeting.name.ilike(
-                    f'%{search}%'
-                ),
-                Meeting.reference.ilike(
-                    f'%{search}%'
-                ),
-                Meeting.firm_name.ilike(
-                    f'%{search}%'
-                ),
-                Meeting.designation.ilike(
-                    f'%{search}%'
-                ),
-                Meeting.address.ilike(
-                    f'%{search}%'
-                ),
-                Meeting.state.ilike(
-                    f'%{search}%'
-                ),
-                Meeting.contact_no.ilike(
-                    f'%{search}%'
-                ),
-                Meeting.email.ilike(
-                    f'%{search}%'
-                ),
-                Meeting.mode_of_meeting.ilike(
-                    f'%{search}%'
-                ),
-                Meeting.meeting_status.ilike(
-                    f'%{search}%'
-                ),
-                Meeting.meeting_conducted_by.ilike(
-                    f'%{search}%'
-                ),
-                Meeting.final_remarks.ilike(
-                    f'%{search}%'
-                ),
-                Meeting.reason_for_reschedule.ilike(
-                    f'%{search}%'
-                ),
-                Meeting.remarks.ilike(
-                    f'%{search}%'
-                )
-            )
-        ).all()
+            Lead,
 
-        visits=Visit.query.filter(
-            or_(
-                Visit.state.ilike(
-                    f'%{search}%'
-                ),
-                Visit.region.ilike(
-                    f'%{search}%'
-                ),
-                Visit.abc.ilike(
-                    f'%{search}%'
-                ),
-                Visit.company_name.ilike(
-                    f'%{search}%'
-                ),
-                Visit.person_name.ilike(
-                    f'%{search}%'
-                ),
-                Visit.designation.ilike(
-                    f'%{search}%'
-                ),
-                Visit.contact_no.ilike(
-                    f'%{search}%'
-                ),
-                Visit.address.ilike(
-                    f'%{search}%'
-                ),
-                Visit.brief.ilike(
-                    f'%{search}%'
-                )
-            )
-        ).all()        
+            [
 
-        drawings=Drawing.query.filter(
-            or_(
-                Drawing.name.ilike(
-                    f'%{search}%'
-                ),
-                Drawing.address.ilike(
-                    f'%{search}%'
-                ),
-                Drawing.moca.ilike(
-                    f'%{search}%'
-                )
-            )
-        ).all()
+                Lead.name,
 
-        proposals=Proposal.query.filter(
-            or_(
-                Proposal.reference_no.ilike(
-                    f'%{search}%'
-                ),
-                Proposal.name.ilike(
-                    f'%{search}%'
-                ),
-                Proposal.phone_no_client.ilike(
-                    f'%{search}%'
-                ),
-                Proposal.source.ilike(
-                    f'%{search}%'
-                ),
-                Proposal.type.ilike(
-                    f'%{search}%'
-                ),
-                Proposal.reference_source_details.ilike(
-                    f'%{search}%'
-                ),
-                Proposal.phone_no_source.ilike(
-                    f'%{search}%'
-                ),
-                Proposal.contact_person.ilike(
-                    f'%{search}%'
-                ),
-                Proposal.phone_no_contact_person.ilike(
-                    f'%{search}%'
-                ),
-                Proposal.email.ilike(
-                    f'%{search}%'
-                ),
-                Proposal.site_address.ilike(
-                    f'%{search}%'
-                ),
-                Proposal.state.ilike(
-                    f'%{search}%'
-                ),
-                Proposal.type_of_units.ilike(
-                    f'%{search}%'
-                ),
-                Proposal.product.ilike(
-                    f'%{search}%'
-                ),
-                Proposal.proposal_prepared_by.ilike(
-                    f'%{search}%'
-                ),
-                Proposal.proposal_shared_by.ilike(
-                    f'%{search}%'
-                ),
-                Proposal.status.ilike(
-                    f'%{search}%'
-                ),
-                Proposal.remarks.ilike(
-                    f'%{search}%'
-                )
-            )
-        ).all()
+                Lead.reference,
 
-        sales=SalesPipeline.query.filter(
-            or_(
-                SalesPipeline.name.ilike(
-                    f'%{search}%'
-                ),
-                SalesPipeline.reference_no.ilike(
-                    f'%{search}%'
-                ),
-                SalesPipeline.project_stage.ilike(
-                    f'%{search}%'
-                ),
-                SalesPipeline.moc.ilike(
-                    f'%{search}%'
-                ),
-                SalesPipeline.source.ilike(
-                    f'%{search}%'
-                ),
-                SalesPipeline.next_action.ilike(
-                    f'%{search}%'
-                ),
-                SalesPipeline.address.ilike(
-                    f'%{search}%'
-                ),
-                SalesPipeline.contact_no.ilike(
-                    f'%{search}%'
-                ),
-                SalesPipeline.project_type.ilike(
-                    f'%{search}%'
-                ),
-                SalesPipeline.category.ilike(
-                    f'%{search}%'
-                ),
-                SalesPipeline.email_id.ilike(
-                    f'%{search}%'
-                ),
-                SalesPipeline.site_incharge.ilike(
-                    f'%{search}%'
-                ),
-                SalesPipeline.site_incharge_contact.ilike(
-                    f'%{search}%'
-                ),
-                SalesPipeline.gst_no.ilike(
-                    f'%{search}%'
-                ),
-                SalesPipeline.sales_person.ilike(
-                    f'%{search}%'
-                )
-            )
-        ).all()
+                Lead.location,
 
-        invoices=Invoice.query.filter(
-            or_(
-                Invoice.name.ilike(
-                    f'%{search}%'
-                ),
-                Invoice.invoice_no.ilike(
-                    f'%{search}%'
-                ),
-                Invoice.gst_no.ilike(
-                    f'%{search}%'
-                ),
-                Invoice.product_sold.ilike(
-                    f'%{search}%'
-                )
-            )
-        ).all()
+                Lead.phone,
 
-        clients=Client.query.filter(
-            or_(
-                Client.client_name.ilike(
-                    f'%{search}%'
-                ),
-                Client.property_type.ilike(
-                    f'%{search}%'
-                ),
-                Client.nearest_metrostation.ilike(
-                    f'%{search}%'
-                ),
-                Client.mail_id.ilike(
-                    f'%{search}%'
-                ),
-                Client.state.ilike(
-                    f'%{search}%'
-                ),
-                Client.mobile_no.ilike(
-                    f'%{search}%'
-                ),
-                Client.product.ilike(
-                    f'%{search}%'
-                ),
-                Client.filter_colour.ilike(
-                    f'%{search}%'
-                ),
-                Client.remark.ilike(
-                    f'%{search}%'
-                )
-            )
-        ).all()
+                Lead.responses,
 
-        services = CustomerCareCard.query.filter(
-            or_(
+                Lead.recent
 
-                CustomerCareCard.service_of.ilike(
-                    f'%{search}%'
-                ),
+            ],
 
-                CustomerCareCard.serviced_by.ilike(
-                    f'%{search}%'
-                ),
+            search
 
-                CustomerCareCard.remark.ilike(
-                    f'%{search}%'
-                ),
+        )
 
-                CustomerCareCard.miscellaneous_messages.ilike(
-                    f'%{search}%'
-                ),
+        meetings = search_records(
 
-                CustomerCareCard.tips_and_tricks.ilike(
-                    f'%{search}%'
-                ),
+            Meeting,
 
-                CustomerCareCard.referrals_program.ilike(
-                    f'%{search}%'
-                )
-            )
-        ).all()
-        services = CustomerCareCard.query.join(
+            [
+
+                Meeting.meeting_fixed_by,
+
+                Meeting.source,
+
+                Meeting.name,
+
+                Meeting.reference,
+
+                Meeting.firm_name,
+
+                Meeting.designation,
+
+                Meeting.address,
+
+                Meeting.state,
+
+                Meeting.contact_no,
+
+                Meeting.email,
+
+                Meeting.mode_of_meeting,
+
+                Meeting.meeting_status,
+
+                Meeting.meeting_conducted_by,
+
+                Meeting.final_remarks,
+
+                Meeting.reason_for_reschedule,
+
+                Meeting.remarks
+
+            ],
+
+            search
+
+        )
+
+        visits = search_records(
+
+            Visit,
+
+            [
+
+                Visit.state,
+
+                Visit.region,
+
+                Visit.abc,
+
+                Visit.company_name,
+
+                Visit.person_name,
+
+                Visit.designation,
+
+                Visit.contact_no,
+
+                Visit.address,
+
+                Visit.brief
+
+            ],
+
+            search
+
+        )
+
+        drawings = search_records(
+
+            Drawing,
+
+            [
+
+                Drawing.name,
+
+                Drawing.address,
+
+                Drawing.moca
+
+            ],
+
+            search
+
+        )
+
+        proposals = search_records(
+
+            Proposal,
+
+            [
+
+                Proposal.reference_no,
+
+                Proposal.name,
+
+                Proposal.phone_no_client,
+
+                Proposal.source,
+
+                Proposal.type,
+
+                Proposal.reference_source_details,
+
+                Proposal.phone_no_source,
+
+                Proposal.contact_person,
+
+                Proposal.phone_no_contact_person,
+
+                Proposal.email,
+
+                Proposal.site_address,
+
+                Proposal.state,
+
+                Proposal.type_of_units,
+
+                Proposal.product,
+
+                Proposal.proposal_prepared_by,
+
+                Proposal.proposal_shared_by,
+
+                Proposal.status,
+
+                Proposal.remarks
+
+            ],
+
+            search
+
+        )
+        sales = search_records(
+
+            SalesPipeline,
+
+            [
+
+                SalesPipeline.name,
+
+                SalesPipeline.reference_no,
+
+                SalesPipeline.project_stage,
+
+                SalesPipeline.moc,
+
+                SalesPipeline.source,
+
+                SalesPipeline.next_action,
+
+                SalesPipeline.address,
+
+                SalesPipeline.contact_no,
+
+                SalesPipeline.project_type,
+
+                SalesPipeline.category,
+
+                SalesPipeline.email_id,
+
+                SalesPipeline.site_incharge,
+
+                SalesPipeline.site_incharge_contact,
+
+                SalesPipeline.gst_no,
+
+                SalesPipeline.sales_person
+
+            ],
+
+            search
+
+        )
+
+        invoices = search_records(
+
+            Invoice,
+
+            [
+
+                Invoice.name,
+
+                Invoice.invoice_no,
+
+                Invoice.gst_no,
+
+                Invoice.product_sold
+
+            ],
+
+            search
+
+        )
+
+        clients = search_records(
+
             Client,
-            CustomerCareCard.client_id == Client.client_id
+
+            [
+
+                Client.client_name,
+
+                Client.property_type,
+
+                Client.nearest_metrostation,
+
+                Client.mail_id,
+
+                Client.state,
+
+                Client.mobile_no,
+
+                Client.product,
+
+                Client.filter_colour,
+
+                Client.remark
+
+            ],
+
+            search
+
+        )
+
+        services = get_record_query(
+            CustomerCareCard
+        )
+
+        services = services.join(
+
+            Client,
+
+            CustomerCareCard.client_id ==
+            Client.client_id
+
         ).filter(
 
             or_(
@@ -9315,7 +13075,19 @@ def global_search():
             )
 
         ).all()
-        installations = Installation.query.filter(
+
+        installation_query = get_record_query(
+            Installation
+        )
+
+        installation_query = installation_query.join(
+
+            SalesPipeline,
+
+            Installation.sales_id ==
+            SalesPipeline.sales_id
+
+        ).filter(
 
             or_(
 
@@ -9334,6 +13106,7 @@ def global_search():
                 Installation.installation_status.ilike(
                     f'%{search}%'
                 ),
+
                 SalesPipeline.name.ilike(
                     f'%{search}%'
                 ),
@@ -9344,21 +13117,45 @@ def global_search():
 
             )
 
-        ).all()    
+        )
+
+        installations = installation_query.all()
 
     return render_template(
+
         'global_search.html',
+
         search=search,
+
         leads=leads,
+
         meetings=meetings,
+
         visits=visits,
+
         drawings=drawings,
+
         proposals=proposals,
+
         sales=sales,
+
         invoices=invoices,
+
         clients=clients,
+
         services=services,
-        installations=installations
+
+        installations=installations,
+
+        can_view_search_result=
+            can_view_search_result,
+
+        can_edit_search_result=
+            can_edit_search_result,
+
+        can_delete_search_result=
+            can_delete_search_result
+
     )
 
 @app.route('/tasks')
@@ -9526,6 +13323,7 @@ def tasks():
             week_proposals
 
     )
+
 @app.route('/services-due')
 def service_due():
 

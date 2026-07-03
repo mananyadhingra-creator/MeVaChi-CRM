@@ -17,19 +17,22 @@
 <body class="bg-light">
 
 <div class="container py-5">
-    <div class="d-flex justify-content-end gap-1">
+    <div class="d-flex justify-content-end gap-2 mb-3">
+
         <a href="javascript:history.back()"
            class="btn btn-outline-secondary">
 
             Back
 
         </a>
+
         <a href="/dashboard"
            class="btn btn-dark">
 
-            Back To Dashboard
+            Back to Dashboard
 
-        </a>  
+        </a>
+
     </div>    
     <div class="d-flex justify-content-between align-items-center mb-4">
 
@@ -144,16 +147,25 @@
                                 Edit
 
                             </a>
+                            {% if session['role'] == 'ADMIN' %}
 
-                            <a href="/request-delete-lead/{{ lead.lead_id }}"
-                               class="btn btn-danger btn-sm"
-                               onclick="return confirm(
-                                   'Delete this lead?'
-                               )">
+                            <a href="/delete-lead/{{ lead.lead_id }}"
+                               class="btn btn-danger btn-sm">
 
                                 Delete
 
                             </a>
+
+                            {% else %}
+
+                            <a href="/request-delete-lead/{{ lead.lead_id }}"
+                               class="btn btn-danger btn-sm">
+
+                                Delete
+
+                            </a>
+
+                            {% endif %}
                             {% endif %}
                         </td>
 

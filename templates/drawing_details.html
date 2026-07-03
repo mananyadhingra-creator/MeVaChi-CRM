@@ -76,34 +76,137 @@
                 <td>{{ drawing.moca }}</td>
 
             </tr>
-
-            <tr>
-
-                <th>Drawing PDF</th>
-
-                <td>
-
-                    {% if drawing.drawing_pdf %}
-
-                    <a href="{{ url_for('static',
-                                         filename=drawing.drawing_pdf) }}"
-                       target="_blank">
-
-                        Open Drawing PDF
-
-                    </a>
-
-                    {% else %}
-
-                    No PDF Uploaded
-
-                    {% endif %}
-
-                </td>
-
-            </tr>
-
         </table>
+
+
+                    <div class="card shadow-sm mt-4">
+
+                        <div class="card-header">
+
+                            <h5>
+
+                                Drawing Files
+
+                            </h5>
+
+                        </div>
+
+                        <div class="card-body">
+
+                            {% if drawing.files %}
+
+                                <table class="table table-bordered">
+
+                                    <thead>
+
+                                        <tr>
+
+                                            <th>
+
+                                                File Name
+
+                                            </th>
+
+                                            <th width="220">
+
+                                                Action
+
+                                            </th>
+
+                                        </tr>
+
+                                    </thead>
+
+                                    <tbody>
+
+                                        {% for file in drawing.files %}
+
+                                        <tr>
+
+                                            <td>
+
+                                                {{ file.file_name }}
+
+                                            </td>
+
+                                            <td>
+
+                                                <a
+
+                                                    href="{{ url_for(
+
+                                                        'static',
+
+                                                        filename=file.file_path
+
+                                                    ) }}"
+
+                                                    target="_blank"
+
+                                                    class="btn btn-primary btn-sm">
+
+                                                    View
+
+                                                </a>
+
+                                                <a
+
+                                                    href="{{ url_for(
+
+                                                        'static',
+
+                                                        filename=file.file_path
+
+                                                    ) }}"
+
+                                                    download
+
+                                                    class="btn btn-success btn-sm">
+
+                                                    Download
+
+                                                </a>
+
+                                                <a
+
+                                                href="/delete-drawing-file/{{ file.file_id }}"
+
+                                                class="btn btn-danger btn-sm"
+
+                                                onclick="return confirm(
+
+                                                'Delete this file?'
+
+                                                )">
+
+                                                Delete
+
+                                                </a>
+
+                                            </td>
+
+                                        </tr>
+
+                                        {% endfor %}
+
+                                    </tbody>
+
+                                </table>
+
+                            {% else %}
+
+                                <div class="alert alert-warning">
+
+                                    No files uploaded.
+
+                                </div>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
 
 
 

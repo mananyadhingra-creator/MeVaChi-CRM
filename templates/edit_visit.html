@@ -1,333 +1,889 @@
 <!DOCTYPE html>
+
 <html>
 
 <head>
 
-    <title>Visit Management</title>
+    <title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-          rel="stylesheet">
+        Edit Visit
+
+    </title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
 </head>
 
 <body class="bg-light">
 
 <div class="container mt-4">
-    <div class="d-flex justify-content-end gap-1">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            {% for category, message in messages %}
+
+                <div class="alert alert-{{ category }} alert-dismissible fade show">
+
+                    {{ message }}
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert">
+
+                    </button>
+
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+    <div class="d-flex justify-content-end gap-2 mb-3">
+
         <a href="javascript:history.back()"
            class="btn btn-outline-secondary">
 
             Back
 
         </a>
+
         <a href="/dashboard"
            class="btn btn-dark">
 
-            Back To Dashboard
+            Back to Dashboard
 
-        </a>  
+        </a>
+
     </div>
-    <div class="card shadow p-4">
 
-        <h2 class="text-center mb-4">
+    <form
+        method="POST">
 
-            Edit Visit
+        <!-- =============================== -->
+        <!-- COMPANY INFORMATION -->
+        <!-- =============================== -->
 
-        </h2>
+        <div class="card shadow p-4 mb-4">
 
-        <form method="POST">
+            <h3 class="mb-4">
 
-            <!-- SELECT MEETING -->
+                Company Information
 
-            <div class="card shadow-sm p-4 mb-4">
+            </h3>
 
-                <h4>
+            <div class="row">
 
-                    Select Meeting
-
-                </h4>
-
-                <select name="meeting_id">
-
-                    <option value="">
-                        Select Meeting
-                    </option>
-
-                    {% for meeting in meetings %}
-
-                    <option
-                        value="{{ meeting.meeting_id }}"
-
-                        data-company="{{ meeting.firm_name }}"
-
-                        data-person="{{ meeting.name }}"
-
-                        data-designation="{{ meeting.designation }}"
-
-                        data-contact="{{ meeting.contact_no }}"
-
-                        data-address="{{ meeting.address }}"
-
-                        data-state="{{ meeting.state }}"
-
-                        {% if meeting.meeting_id == visit.meeting_id %}
-                            selected
-                        {% endif %}>
-
-                        {{ meeting.name }}
-
-                    </option>
-
-                    {% endfor %}
-
-                </select>
-            </div>
-
-            <!-- VISIT DETAILS -->
-
-            <div class="card shadow-sm p-4 mb-4">
-
-                <h4>
-
-                    Visit Details
-
-                </h4>
-
-                <div class="row">
-
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-
-                            Company Name
-
-                        </label>
-
-                        <input type="text"
-                               id="company_name"
-                               name="company_name"
-                               value="{{ visit.company_name }}"
-                               class="form-control">
-
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-
-                            Person Name
-
-                        </label>
-
-                        <input type="text"
-                               id="person_name"
-                               name="person_name"
-                               value="{{ visit.person_name }}"
-                               class="form-control">
-
-                    </div>
-
-                </div>
-
-                <div class="row">
-
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-
-                            Designation
-
-                        </label>
-
-                        <input type="text"
-                               id="designation"
-                               name="designation"
-                               value="{{ visit.designation }}"
-                               class="form-control">
-
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-
-                            Contact No
-
-                        </label>
-
-                        <input type="text"
-                               id="contact_no"
-                               name="contact_no"
-                               value="{{ visit.contact_no }}"
-                               class="form-control">
-
-                    </div>
-
-                </div>
-
-                <div class="mb-3">
+                <div class="col-md-6 mb-3">
 
                     <label class="form-label">
 
-                        Address
+                        Company Name
 
                     </label>
 
-                    <textarea id="address"
-                              name="address"
-                              rows="3"
-                              class="form-control">{{ visit.address }}</textarea>
+                    <input
+                        type="text"
+                        name="company_name"
+                        value="{{ visit.company_name }}"
+                        class="form-control"
+                        readonly>
 
                 </div>
 
-                <div class="row">
-
-                    <div class="col-md-4 mb-3">
-
-                        <label class="form-label">
-
-                            State
-
-                        </label>
-
-                        <input type="text"
-                               id="state"
-                               name="state"
-                               value="{{ visit.state }}"
-                               class="form-control">
-
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-
-                        <label class="form-label">
-
-                            Region
-
-                        </label>
-
-                        <input type="text"
-                               name="region"
-                               value="{{ visit.region }}"
-                               class="form-control">
-
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-
-                        <label class="form-label">
-
-                            ABC
-
-                        </label>
-
-                        <input type="text"
-                               name="abc"
-                               value="{{ visit.abc }}"
-                               class="form-control">
-
-                    </div>
-
-                </div>
-
-                <div class="row">
-
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-
-                            Visit Date
-
-                        </label>
-
-                        <input type="date"
-                               name="visit_date"
-                               value="{{ visit.visit_date }}"
-                               class="form-control">
-
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-
-                            Leads Generated
-
-                        </label>
-
-                        <input type="number"
-                               name="leads_generated"
-                               value="{{ visit.leads_generated }}"
-                               class="form-control">
-
-                    </div>
-
-                </div>
-
-                <div class="mb-3">
+                <div class="col-md-6 mb-3">
 
                     <label class="form-label">
 
-                        Brief
+                        State
 
                     </label>
 
-                    <textarea name="brief"
-                              rows="3"
-                              class="form-control">{{ visit.brief }}</textarea>
-
-                </div>
-
-                <div class="mb-3">
-
-                    <label class="form-label">
-
-                        M2
-
-                    </label>
-
-                    <textarea name="m2"
-                              rows="3"
-                              class="form-control">{{ visit.m2 }}</textarea>
-
-                </div>
-
-                <div class="mb-3">
-
-                    <label class="form-label">
-
-                        M3
-
-                    </label>
-
-                    <textarea name="m3"
-                              rows="3"
-                              class="form-control">{{ visit.m3 }}</textarea>
+                    <input
+                        type="text"
+                        name="state"
+                        value="{{ visit.state }}"
+                        class="form-control"
+                        readonly>
 
                 </div>
 
             </div>
-                        <div class="text-center">
 
-                <button type="submit"
-                        class="btn btn-dark">
+            <div class="mb-3">
 
-                    Save Visit
+                <label class="form-label">
+
+                    Address
+
+                </label>
+
+                <textarea
+                    name="address"
+                    rows="2"
+                    class="form-control"
+                    readonly>{{ visit.address }}</textarea>
+
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+
+                        Region
+
+                    </label>
+
+                    <input
+                        type="text"
+                        name="region"
+                        value="{{ visit.region }}"
+                        class="form-control">
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+
+                        ABC
+
+                    </label>
+
+                    <input
+                        type="text"
+                        name="abc"
+                        value="{{ visit.abc }}"
+                        class="form-control">
+
+                </div>
+
+            </div>
+
+            <input
+                type="hidden"
+                name="meeting_id"
+                value="{{ visit.meeting_id }}">
+
+        </div>
+
+        <!-- =============================== -->
+        <!-- CURRENT VISIT -->
+        <!-- =============================== -->
+
+        <div class="card shadow p-4 mb-4">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <h3>
+
+                    Current Visit
+
+                </h3>
+
+                <button
+                    type="submit"
+                    name="action"
+                    value="delete_current"
+                    class="btn btn-outline-danger"
+                    onclick="return confirm('Delete this visit?')">
+
+                    <i class="bi bi-trash"></i>
+
+                    Delete Current Visit
 
                 </button>
 
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+
+                        Person Name
+
+                    </label>
+
+                    <input
+                        type="text"
+                        name="person_name"
+                        value="{{ editing_record.person_name }}"
+                        class="form-control">
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+
+                        Designation
+
+                    </label>
+
+                    <input
+                        type="text"
+                        name="designation"
+                        value="{{ editing_record.designation }}"
+                        class="form-control">
+
+                </div>
 
             </div>
 
-        </form>
+            <div class="row">
 
-    </div>
-  
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+
+                        Contact Number
+
+                    </label>
+
+                    <input
+                        type="text"
+                        name="contact_no"
+                        value="{{ editing_record.contact_no }}"
+                        class="form-control">
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+
+                        Visit Date
+
+                    </label>
+
+                    <input
+                        type="date"
+                        name="visit_date"
+                        value="{{ editing_record.visit_date }}"
+                        class="form-control">
+
+                </div>
+
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+
+                        Leads Generated
+
+                    </label>
+
+                    <input
+                        type="number"
+                        name="leads_generated"
+                        value="{{ editing_record.leads_generated }}"
+                        class="form-control">
+
+                </div>
+
+            </div>
+
+            <div class="mb-3">
+
+                <label class="form-label">
+
+                    Brief
+
+                </label>
+
+                <textarea
+                    name="brief"
+                    rows="4"
+                    class="form-control">{{ editing_record.brief }}</textarea>
+
+            </div>
+
+        </div>
+
+        <!-- RECORD NEW VISIT STARTS HERE -->
+
+        <div class="card shadow p-4 mb-4">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <h3>
+
+                    Record New Visit
+
+                </h3>
+
+            </div>
+
+            <div id="newVisitContainer">
+
+                <div class="new-visit-form border rounded p-3 mb-3 position-relative">
+
+                    <button
+                        type="button"
+                        class="btn btn-outline-danger btn-sm position-absolute top-0 end-0 m-2 removeVisit"
+                        style="display:none;">
+
+                        <i class="bi bi-trash"></i>
+
+                    </button>
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+
+                                Person Name
+
+                            </label>
+
+                            <input
+                                type="text"
+                                name="new_person_name[]"
+                                class="form-control">
+
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+
+                                Designation
+
+                            </label>
+
+                            <input
+                                type="text"
+                                name="new_designation[]"
+                                class="form-control">
+
+                        </div>
+
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+
+                                Contact Number
+
+                            </label>
+
+                            <input
+                                type="text"
+                                name="new_contact_no[]"
+                                class="form-control">
+
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+
+                                Visit Date
+
+                            </label>
+
+                            <input
+                                type="date"
+                                name="new_visit_date[]"
+                                class="form-control">
+
+                        </div>
+
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+
+                                Leads Generated
+
+                            </label>
+
+                            <input
+                                type="number"
+                                name="new_leads_generated[]"
+                                class="form-control">
+
+                        </div>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            Brief
+
+                        </label>
+
+                        <textarea
+                            name="new_brief[]"
+                            rows="3"
+                            class="form-control"></textarea>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="d-flex gap-2 mt-3">
+
+                <button
+                    type="button"
+                    id="addVisit"
+                    class="btn btn-outline-primary">
+
+                    <i class="bi bi-plus-circle"></i>
+
+                    Add One More Visit
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="card shadow p-4 mb-4">
+
+            <h3 class="mb-4">
+
+                Previous Visits
+
+            </h3>
+
+            {% if history %}
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered table-hover align-middle">
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th>
+
+                                Visit Date
+
+                            </th>
+
+                            <th>
+
+                                Person
+
+                            </th>
+
+                            <th>
+
+                                Leads Generated
+
+                            </th>
+
+                            <th>
+
+                                Actions
+
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for item in history %}
+
+                        <tr>
+
+                            <td>
+
+                                {{ item.visit_date }}
+
+                            </td>
+
+                            <td>
+
+                                {{ item.person_name }}
+
+                            </td>
+
+                            <td>
+
+                                {{ item.leads_generated }}
+
+                            </td>
+
+                            <td>
+
+                                <div class="d-flex gap-2">
+
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline-dark btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#historyModal{{ item.history_id }}">
+
+                                        <i class="bi bi-eye"></i>
+
+                                    </button>
+
+                                    <a
+                                        href="{{ url_for(
+
+                                            'edit_visit',
+
+                                            visit_id=visit.visit_id,
+
+                                            history_id=item.history_id
+
+                                        ) }}"
+                                        class="btn btn-outline-warning btn-sm">
+
+                                        <i class="bi bi-pencil"></i>
+
+                                    </a>
+
+                                    <button
+                                        type="submit"
+                                        name="delete_history"
+                                        value="{{ item.history_id }}"
+                                        class="btn btn-outline-danger btn-sm"
+                                        onclick="return confirm('Delete this visit history?')">
+
+                                        <i class="bi bi-trash"></i>
+
+                                    </button>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        <!-- ============================== -->
+                        <!-- VIEW VISIT MODAL -->
+                        <!-- ============================== -->
+
+                        <div
+                            class="modal fade"
+                            id="historyModal{{ item.history_id }}"
+                            tabindex="-1">
+
+                            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+
+                                <div class="modal-content">
+
+                                    <div class="modal-header">
+
+                                        <h5 class="modal-title">
+
+                                            Visit Details
+
+                                        </h5>
+
+                                        <button
+                                            type="button"
+                                            class="btn-close"
+                                            data-bs-dismiss="modal">
+
+                                        </button>
+
+                                    </div>
+
+                                    <div class="modal-body">
+
+                                        <div class="row">
+
+                                            <div class="col-md-6 mb-3">
+
+                                                <strong>
+
+                                                    Person Name
+
+                                                </strong>
+
+                                                <br>
+
+                                                {{ item.person_name }}
+
+                                            </div>
+
+                                            <div class="col-md-6 mb-3">
+
+                                                <strong>
+
+                                                    Designation
+
+                                                </strong>
+
+                                                <br>
+
+                                                {{ item.designation }}
+
+                                            </div>
+
+                                            <div class="col-md-6 mb-3">
+
+                                                <strong>
+
+                                                    Contact Number
+
+                                                </strong>
+
+                                                <br>
+
+                                                {{ item.contact_no }}
+
+                                            </div>
+
+                                            <div class="col-md-6 mb-3">
+
+                                                <strong>
+
+                                                    Visit Date
+
+                                                </strong>
+
+                                                <br>
+
+                                                {{ item.visit_date }}
+
+                                            </div>
+
+                                            <div class="col-md-6 mb-3">
+
+                                                <strong>
+
+                                                    Leads Generated
+
+                                                </strong>
+
+                                                <br>
+
+                                                {{ item.leads_generated }}
+
+                                            </div>
+
+                                            <div class="col-12">
+
+                                                <strong>
+
+                                                    Brief
+
+                                                </strong>
+
+                                                <hr>
+
+                                                {{ item.brief or '-' }}
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="modal-footer">
+
+                                        <button
+                                            type="button"
+                                            class="btn btn-secondary"
+                                            data-bs-dismiss="modal">
+
+                                            Close
+
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% else %}
+
+            <div class="alert alert-secondary">
+
+                No previous visits available.
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+        <div class="d-flex justify-content-end mt-4">
+
+            <button
+                type="submit"
+                name="action"
+                value="save"
+                class="btn btn-success btn">
+
+                <i class="bi bi-floppy"></i>
+
+                Save Changes
+
+            </button>
+
+        </div>
+
+    </form>
 
 </div>
 
+<script>
+
+const visitContainer = document.getElementById(
+
+    'newVisitContainer'
+
+);
+
+const addVisitButton = document.getElementById(
+
+    'addVisit'
+
+);
+
+addVisitButton.addEventListener(
+
+    'click',
+
+    function () {
+
+        const firstCard = visitContainer.querySelector(
+
+            '.new-visit-form'
+
+        );
+
+        const newCard = firstCard.cloneNode(
+
+            true
+
+        );
+
+        newCard.querySelectorAll(
+
+            'input'
+
+        ).forEach(
+
+            function (
+
+                input
+
+            ) {
+
+                input.value = '';
+
+            }
+
+        );
+
+        newCard.querySelectorAll(
+
+            'textarea'
+
+        ).forEach(
+
+            function (
+
+                textarea
+
+            ) {
+
+                textarea.value = '';
+
+            }
+
+        );
+
+        newCard.querySelector(
+
+            '.removeVisit'
+
+        ).style.display = 'block';
+
+        visitContainer.appendChild(
+
+            newCard
+
+        );
+
+    }
+
+);
+
+document.addEventListener(
+
+    'click',
+
+    function (
+
+        e
+
+    ) {
+
+        if (
+
+            e.target.closest(
+
+                '.removeVisit'
+
+            )
+
+        ) {
+
+            e.target.closest(
+
+                '.new-visit-form'
+
+            ).remove();
+
+        }
+
+    }
+
+);
 
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 

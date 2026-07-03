@@ -3,35 +3,49 @@
 
 <head>
 
-    <title>Visit Details</title>
+    <title>
+
+        Visit Details
+
+    </title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
           rel="stylesheet">
-
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 
 <body class="bg-light">
 
 <div class="container mt-4">
-    <div class="d-flex justify-content-end gap-1">
+
+    <div class="d-flex justify-content-end gap-2 mb-3">
+
         <a href="javascript:history.back()"
            class="btn btn-outline-secondary">
 
             Back
 
         </a>
+
         <a href="/dashboard"
            class="btn btn-dark">
 
-            Back To Dashboard
+            Back to Dashboard
 
-        </a>  
-    </div>   
-    <div class="card shadow p-4">
+        </a>
+
+    </div>
+
+    <!-- ======================================== -->
+    <!-- COMPANY DETAILS -->
+    <!-- ======================================== -->
+
+    <div class="card shadow p-4 mb-4">
 
         <h2 class="text-center mb-4">
 
-            Visit Details
+            Company Information
 
         </h2>
 
@@ -39,122 +53,553 @@
 
             <tr>
 
-                <th>Visit ID</th>
+                <th>
 
-                <td>{{ visit.visit_id }}</td>
+                    Company Name
 
-            </tr>
+                </th>
 
-            <tr>
+                <td>
 
-                <th>Company Name</th>
+                    {{ visit.company_name }}
 
-                <td>{{ visit.company_name }}</td>
-
-            </tr>
-
-            <tr>
-
-                <th>Person Name</th>
-
-                <td>{{ visit.person_name }}</td>
+                </td>
 
             </tr>
 
             <tr>
 
-                <th>Designation</th>
+                <th>
 
-                <td>{{ visit.designation }}</td>
+                    State
 
-            </tr>
+                </th>
 
-            <tr>
+                <td>
 
-                <th>Contact No</th>
+                    {{ visit.state }}
 
-                <td>{{ visit.contact_no }}</td>
-
-            </tr>
-
-            <tr>
-
-                <th>Address</th>
-
-                <td>{{ visit.address }}</td>
+                </td>
 
             </tr>
 
             <tr>
 
-                <th>State</th>
+                <th>
 
-                <td>{{ visit.state }}</td>
+                    Region
 
-            </tr>
+                </th>
 
-            <tr>
+                <td>
 
-                <th>Region</th>
+                    {{ visit.region }}
 
-                <td>{{ visit.region }}</td>
-
-            </tr>
-
-            <tr>
-
-                <th>ABC</th>
-
-                <td>{{ visit.abc }}</td>
+                </td>
 
             </tr>
 
             <tr>
 
-                <th>Visit Date</th>
+                <th>
 
-                <td>{{ visit.visit_date }}</td>
+                    ABC
 
-            </tr>
+                </th>
 
-            <tr>
+                <td>
 
-                <th>Leads Generated</th>
+                    {{ visit.abc }}
 
-                <td>{{ visit.leads_generated }}</td>
-
-            </tr>
-
-            <tr>
-
-                <th>Brief</th>
-
-                <td>{{ visit.brief }}</td>
+                </td>
 
             </tr>
 
             <tr>
 
-                <th>M2</th>
+                <th>
 
-                <td>{{ visit.m2 }}</td>
+                    Address
 
-            </tr>
+                </th>
 
-            <tr>
+                <td>
 
-                <th>M3</th>
+                    {{ visit.address }}
 
-                <td>{{ visit.m3 }}</td>
+                </td>
 
             </tr>
 
         </table>
 
+    </div>
+
+    <!-- ======================================== -->
+    <!-- CURRENT VISIT -->
+    <!-- ======================================== -->
+
+    <div class="card shadow p-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+
+            <h3>
+
+                Current Visit
+
+            </h3>
+
+            <a href="/edit-visit/{{ visit.visit_id }}"
+               class="btn btn-warning">
+
+                Edit Current Visit
+
+            </a>
+
+        </div>
+
+        <table class="table table-bordered">
+
+            <tr>
+
+                <th>
+
+                    Person Name
+
+                </th>
+
+                <td>
+
+                    {{ visit.person_name }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <th>
+
+                    Designation
+
+                </th>
+
+                <td>
+
+                    {{ visit.designation }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <th>
+
+                    Contact Number
+
+                </th>
+
+                <td>
+
+                    {{ visit.contact_no }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <th>
+
+                    Visit Date
+
+                </th>
+
+                <td>
+
+                    {{ visit.visit_date }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <th>
+
+                    Leads Generated
+
+                </th>
+
+                <td>
+
+                    {{ visit.leads_generated }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <th>
+
+                    Brief
+
+                </th>
+
+                <td>
+
+                    {{ visit.brief }}
+
+                </td>
+
+            </tr>
+
+        </table>
+
+    </div>
+
+    <br>
+
+    <!-- ======================================== -->
+    <!-- VISIT HISTORY -->
+    <!-- ======================================== -->
+
+    <div class="card shadow p-4">
+
+        <h3 class="mb-3">
+
+            Visit History
+
+        </h3>
+
+        {% if history %}
+
+        <div class="table-responsive">
+
+            <table class="table table-bordered table-striped">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+
+                            Visit Date
+
+                        </th>
+
+                        <th>
+
+                            Person
+
+                        </th>
+
+                        <th>
+
+                            Leads Generated
+
+                        </th>
+
+                        <th>
+
+                            Actions
+
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for item in history %}
+
+                    <tr>
+
+                        <td>
+
+                            {{ item.visit_date }}
+
+                        </td>
+
+                        <td>
+
+                            {{ item.person_name }}
+
+                        </td>
+
+                        <td>
+
+                            {{ item.leads_generated }}
+
+                        </td>
+
+                        <td>
+
+                            <button
+                                type="button"
+                                class="btn btn-outline-dark btn-sm"
+                                data-bs-toggle="modal"
+                                data-bs-target="#historyModal{{ item.history_id }}">
+
+                                <i class="bi bi-eye"></i>
+
+                            </button>
+
+                            <a
+                                href="{{ url_for(
+                                    'edit_visit',
+                                    visit_id=visit.visit_id,
+                                    history_id=item.history_id
+                                ) }}"
+                                class="btn btn-outline-warning btn-sm">
+
+                                <i class="bi bi-pencil"></i>
+
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                    <!-- ===================================== -->
+                    <!-- HISTORY DETAILS MODAL -->
+                    <!-- ===================================== -->
+
+                    <div
+                        class="modal fade"
+                        id="historyModal{{ item.history_id }}"
+                        tabindex="-1"
+                        aria-hidden="true">
+
+                        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+
+                            <div class="modal-content">
+
+                                <div class="modal-header">
+
+                                    <h4 class="modal-title">
+
+                                        <i class="bi bi-geo-alt-fill"></i>
+
+                                        Visit Details
+
+                                    </h4>
+
+                                    <button
+                                        type="button"
+                                        class="btn-close"
+                                        data-bs-dismiss="modal">
+
+                                    </button>
+
+                                </div>
+
+                                <div class="modal-body">
+
+                                    <!-- Contact Information -->
+
+                                    <div class="card mb-4">
+
+                                        <div class="card-header bg-primary text-white">
+
+                                            Contact Information
+
+                                        </div>
+
+                                        <div class="card-body">
+
+                                            <div class="row">
+
+                                                <div class="col-md-4 mb-3">
+
+                                                    <strong>Person Name</strong><br>
+
+                                                    {{ item.person_name }}
+
+                                                </div>
+
+                                                <div class="col-md-4 mb-3">
+
+                                                    <strong>Designation</strong><br>
+
+                                                    {{ item.designation }}
+
+                                                </div>
+
+                                                <div class="col-md-4 mb-3">
+
+                                                    <strong>Contact Number</strong><br>
+
+                                                    {{ item.contact_no }}
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                    <!-- Company Information -->
+
+                                    <div class="card mb-4">
+
+                                        <div class="card-header bg-secondary text-white">
+
+                                            Company Information
+
+                                        </div>
+
+                                        <div class="card-body">
+
+                                            <div class="row">
+
+                                                <div class="col-md-6 mb-3">
+
+                                                    <strong>Company Name</strong><br>
+
+                                                    {{ item.company_name }}
+
+                                                </div>
+
+                                                <div class="col-md-6 mb-3">
+
+                                                    <strong>State</strong><br>
+
+                                                    {{ item.state }}
+
+                                                </div>
+
+                                                <div class="col-md-6 mb-3">
+
+                                                    <strong>Region</strong><br>
+
+                                                    {{ item.region }}
+
+                                                </div>
+
+                                                <div class="col-md-6 mb-3">
+
+                                                    <strong>ABC</strong><br>
+
+                                                    {{ item.abc }}
+
+                                                </div>
+
+                                                <div class="col-12">
+
+                                                    <strong>Address</strong><br>
+
+                                                    {{ item.address }}
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                    <!-- Visit Information -->
+
+                                    <div class="card mb-4">
+
+                                        <div class="card-header bg-success text-white">
+
+                                            Visit Information
+
+                                        </div>
+
+                                        <div class="card-body">
+
+                                            <div class="row">
+
+                                                <div class="col-md-6 mb-3">
+
+                                                    <strong>Visit Date</strong><br>
+
+                                                    {{ item.visit_date }}
+
+                                                </div>
+
+                                                <div class="col-md-6 mb-3">
+
+                                                    <strong>Leads Generated</strong><br>
+
+                                                    {{ item.leads_generated }}
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                    <!-- Visit Brief -->
+
+                                    <div class="card">
+
+                                        <div class="card-header bg-warning">
+
+                                            Visit Brief
+
+                                        </div>
+
+                                        <div class="card-body">
+
+                                            {{ item.brief or "-" }}
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                                <div class="modal-footer">
+
+                                    <button
+                                        type="button"
+                                        class="btn btn-secondary"
+                                        data-bs-dismiss="modal">
+
+                                        Close
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <div class="alert alert-info mb-0">
+
+            No previous visits found.
+
+        </div>
+
+        {% endif %}
 
     </div>
 
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 

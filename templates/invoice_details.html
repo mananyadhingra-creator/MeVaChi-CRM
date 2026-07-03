@@ -13,19 +13,22 @@
 <body class="bg-light">
 
 <div class="container mt-5">
-    <div class="d-flex justify-content-end gap-1">
+    <div class="d-flex justify-content-end gap-2 mb-3">
+
         <a href="javascript:history.back()"
            class="btn btn-outline-secondary">
 
             Back
 
         </a>
+
         <a href="/dashboard"
            class="btn btn-dark">
 
-            Back To Dashboard
+            Back to Dashboard
 
-        </a>  
+        </a>
+
     </div>
     <h2 class="text-center mb-4">
 
@@ -336,30 +339,97 @@
 
         <h4>
 
-            Invoice PDF
+            Invoice Files
 
         </h4>
 
-        {% if invoice.invoice_pdf %}
+        {% if invoice.files %}
 
-        <a href="{{ url_for(
-                        'static',
-                        filename=invoice.invoice_pdf
-                    ) }}"
-            target="_blank"
-            class="btn btn-dark">
+        <table class="table table-bordered table-striped">
 
-            View Invoice PDF
+            <thead>
 
-        </a>
+                <tr>
+
+                    <th>
+
+                        File Name
+
+                    </th>
+
+                    <th width="250">
+
+                        Actions
+
+                    </th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for file in invoice.files %}
+
+                <tr>
+
+                    <td>
+
+                        {{ file.file_name }}
+
+                    </td>
+
+                    <td>
+
+                        <a href="{{ url_for(
+                                        'static',
+                                        filename=file.file_path
+                                    ) }}"
+                           target="_blank"
+                           class="btn btn-primary btn-sm">
+
+                            View
+
+                        </a>
+
+                        <a href="{{ url_for(
+                                        'static',
+                                        filename=file.file_path
+                                    ) }}"
+                           download
+                           class="btn btn-success btn-sm">
+
+                            Download
+
+                        </a>
+
+                        <a href="/delete-invoice-file/{{ file.file_id }}"
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm(
+                                'Delete this file?'
+                           )">
+
+                            Delete
+
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
 
         {% else %}
 
-            <p>
+            <div class="alert alert-warning">
 
-                No PDF Uploaded
+                No files uploaded.
 
-            </p>
+            </div>
 
         {% endif %}
 
