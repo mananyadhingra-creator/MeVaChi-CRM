@@ -9,6 +9,9 @@
       rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
       rel="stylesheet">
+<link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <style>
 
 body{
@@ -76,17 +79,14 @@ body{
 
     font-family:'Poppins',sans-serif;
 
-    text-align:center;
-
-    font-size:46px;
+    font-size:52px;
 
     font-weight:550;
 
-    letter-spacing:1px;
-
     color:#1f2937;
 
-    margin-bottom:30px;
+    margin:0;
+
 }
 
 .module-card{
@@ -123,28 +123,97 @@ body{
 
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 </head>
 
 <body>
 
-<div class="col-md-4">
-    <img src="{{ url_for(
-        'static',
-        filename='images/logo.png'
-    ) }}"
-        style="height: 70px;">
-</div>
+<div class="container-fluid px-4">
 
-<h1 class="dashboard-title">
+    <!-- Top Row -->
 
-    CRM Dashboard
+    <div class="position-relative mb-5">
 
-</h1>
+        <!-- Logo -->
+
+        <div class="position-absolute start-0 top-0">
+
+            <img src="{{ url_for(
+                'static',
+                filename='images/logo.png'
+            ) }}"
+            style="height:70px;">
+
+        </div>
+
+        <!-- Notification Bell -->
+
+        <div class="position-absolute end-0 top-0">
+
+            <button
+                type="button"
+                class="btn btn-light rounded-circle shadow-sm position-relative"
+                style="width:60px;height:60px;"
+                data-bs-toggle="modal"
+                data-bs-target="#notificationModal">
+
+                <i
+                    class="bi bi-bell-fill"
+                    style="font-size:24px;">
+
+                </i>
+
+                {% if notification_count > 0 %}
+
+                <span
+                    class="badge bg-danger position-absolute"
+                    style="top:6px;right:4px;">
+
+                    {{ notification_count }}
+
+                </span>
+
+                {% endif %}
+
+            </button>
+
+        </div>
+
+        <!-- Dashboard Heading -->
+
+        <div class="text-center pt-5">
+
+            <h1 class="dashboard-title">
+
+                CRM Dashboard
+
+            </h1>
+
+            <h5 class="text-muted mt-3">
+
+                {{ greeting }},
+
+                {{ session['username'] }}
+
+                👋
+
+            </h5>
+
+            <p class="text-muted">
+
+                {{ notification_count }} Pending Notifications
+
+            </p>
+
+        </div>
+
+    </div>
 
 
     <!-- SEARCH -->
 
-    <div class="d-flex justify-content-center mb-5">
+    <div class="d-flex justify-content-center mb-4">
 
         <div class="col-lg-10">
 
@@ -177,6 +246,8 @@ body{
         </div>
 
     </div>
+
+
 
     <!-- TASKS -->
 
@@ -514,55 +585,30 @@ body{
 
     </div>
 
-    <!-- ANALYTICS -->
 
-    {% if session['role'] in [
-        'ADMIN',
-        'COMMERCIALS'
-    ] %}  
-    <div class="row justify-content-center">
+</div>
 
-        <div class="col-md-4">
+<div class="row mt-4">
 
-            <div class="card analytics-card text-center">
+    <div class="col-lg-6 mb-4">
 
-                <div class="card-body">
+        <div class="card h-100">
 
-                    <h5>
+            <div class="card-body">
 
-                        Filters Replaced This Month
+                <h5 class="text-center mb-3">
 
-                    </h5>
+                    Meeting Sources
 
-                    <h4>
+                </h5>
 
-                        {{ monthly_filters }}
+                <div
+                    style="height:300px;">
 
-                    </h4>
+                    <canvas
+                        id="meetingChart">
 
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="col-md-4">
-
-            <div class="card analytics-card text-center">
-
-                <div class="card-body">
-
-                    <h5>
-
-                        Filters Replaced This Year
-
-                    </h5>
-
-                    <h4>
-
-                        {{ yearly_filters }}
-
-                    </h4>
+                    </canvas>
 
                 </div>
 
@@ -571,10 +617,1080 @@ body{
         </div>
 
     </div>
+
+    <div class="col-lg-6 mb-4">
+
+        <div class="card h-100">
+
+            <div class="card-body">
+
+                <h5 class="text-center mb-3">
+
+                    Proposal Status
+
+                </h5>
+
+                <div
+                    style="height:300px;">
+
+                    <canvas
+                        id="proposalChart">
+
+                    </canvas>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ===================== -->
+<!-- SECOND ROW -->
+<!-- ===================== -->
+
+{% if session['role']=='SALES' %}
+
+<div class="row justify-content-center">
+
+    <div class="col-lg-6">
+
+{% else %}
+
+<div class="row">
+
+    <div class="col-lg-6 mb-4">
+
+{% endif %}
+
+        <div class="card h-100">
+
+            <div class="card-body">
+
+                <h5 class="text-center">
+
+                    Business Pipeline
+
+                </h5>
+
+                <div style="height:300px;">
+
+                    <canvas id="pipelineChart"></canvas>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+{% if session['role']=='SALES' %}
+
+</div>
+
+{% endif %}
+
+    {% if session['role'] in ['ADMIN','COMMERCIALS'] %}
+
+    <div class="col-lg-6 mb-4">
+
+        <div class="card h-100">
+
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+
+                    <h5>
+
+                        Filters Replaced
+
+                    </h5>
+
+                    <form method="GET">
+
+                        <select
+
+                            name="year"
+
+                            class="form-select form-select-sm"
+
+                            onchange="this.form.submit()"
+
+                            style="width:120px;">
+
+                            {% for year in available_years %}
+
+                            <option
+
+                                value="{{ year }}"
+
+                                {% if year==selected_year %}
+
+                                selected
+
+                                {% endif %}>
+
+                                {{ year }}
+
+                            </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </form>
+
+                </div>
+
+                <div style="height:300px;">
+
+                    <canvas id="filterChart"></canvas>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
     {% endif %}
 
 </div>
 
+{% if session['role']=="ADMIN" %}
+
+<div class="row justify-content-center">
+
+    <div class="col-lg-6">
+
+        <div class="card h-100">
+
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+
+                    <h5 class="mb-0">
+
+                        Monthly Revenue
+
+                    </h5>
+
+                    <form method="GET">
+
+                        <select
+
+                            name="revenue_year"
+
+                            class="form-select form-select-sm"
+
+                            onchange="this.form.submit()"
+
+                            style="width:110px;">
+
+                            {% for year in available_years %}
+
+                                <option
+
+                                    value="{{ year }}"
+
+                                    {% if year==revenue_year %}
+
+                                        selected
+
+                                    {% endif %}>
+
+                                    {{ year }}
+
+                                </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </form>
+
+                </div>
+
+                <div style="height:300px;">
+
+                    <canvas id="revenueChart"></canvas>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endif %}
+
+<br>
+
+{% if session['role'] != 'ADMIN' %}
+<div class="card h-100">
+
+    <div class="card-body text-center">
+
+        <h5>
+
+            You're all caught up !!
+
+        </h5>
+
+        <small>
+
+            Additional analytics appear
+            based on your role.
+
+        </small>
+
+    </div>
+
+</div>
+{% endif %}
+
+
+<!-- ======================================== -->
+<!-- MORNING BRIEF -->
+<!-- ======================================== -->
+
+<div
+    class="modal fade"
+    id="morningBrief"
+    tabindex="-1"
+    data-bs-backdrop="static">
+
+    <div class="modal-dialog modal-lg">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h4>
+
+                    {{ greeting }},
+
+                    {{ session['username'] }}
+
+                    👋
+
+                </h4>
+
+            </div>
+
+            <div class="modal-body">
+
+                <h5 class="mb-4">
+
+                    Here's what's waiting for you today
+
+                </h5>
+
+                <div class="row text-center">
+
+                    <div class="col">
+
+                        <div class="card border-danger">
+
+                            <div class="card-body">
+
+                                <h3 class="text-danger">
+
+                                    {{ overdue_notifications|length }}
+
+                                </h3>
+
+                                <small>
+
+                                    Overdue
+
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col">
+
+                        <div class="card border-warning">
+
+                            <div class="card-body">
+
+                                <h3 class="text-warning">
+
+                                    {{ today_notifications|length }}
+
+                                </h3>
+
+                                <small>
+
+                                    Today
+
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col">
+
+                        <div class="card border-success">
+
+                            <div class="card-body">
+
+                                <h3 class="text-success">
+
+                                    {{ upcoming_notifications|length }}
+
+                                </h3>
+
+                                <small>
+
+                                    Upcoming
+
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button
+                    class="btn btn-outline-primary"
+                    data-bs-dismiss="modal">
+
+                    Open Dashboard
+
+                </button>
+
+                <button
+                    class="btn btn-primary"
+                    data-bs-dismiss="modal"
+                    data-bs-toggle="modal"
+                    data-bs-target="#notificationModal">
+
+                    View Notifications
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ======================================== -->
+<!-- NOTIFICATION CENTER -->
+<!-- ======================================== -->
+
+<div
+    class="modal fade"
+    id="notificationModal"
+    tabindex="-1">
+
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h4>
+
+                    🔔 Notification Center
+
+                </h4>
+
+                <button
+                    class="btn-close"
+                    data-bs-dismiss="modal">
+
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <!-- ============================== -->
+                <!-- MY NOTIFICATIONS -->
+                <!-- ============================== -->
+
+                <div class="card mb-4">
+
+                    <div class="card-header bg-primary text-white">
+
+                        👤 My Notifications
+
+                    </div>
+
+                    <div class="card-body">
+
+                        {% if my_notifications %}
+
+                            {% for item in my_notifications %}
+
+                                <div
+                                    class="border rounded p-3 mb-3">
+
+                                    <div class="d-flex justify-content-between">
+
+                                        <div>
+
+                                            <strong>
+
+                                                {{ item.title }}
+
+                                            </strong>
+
+                                            <br>
+
+                                            <small>
+
+                                                {{ item.subtitle }}
+
+                                            </small>
+
+                                        </div>
+
+                                        <div class="text-end">
+
+                                            {% if item.status == 'OVERDUE' %}
+
+                                                <span class="badge bg-danger">
+
+                                                    Overdue
+
+                                                </span>
+
+                                            {% elif item.status == 'TODAY' %}
+
+                                                <span class="badge bg-warning text-dark">
+
+                                                    Today
+
+                                                </span>
+
+                                            {% else %}
+
+                                                <span class="badge bg-success">
+
+                                                    Upcoming
+
+                                                </span>
+
+                                            {% endif %}
+
+                                            <br>
+
+                                            <small>
+
+                                                {{ item.date }}
+
+                                            </small>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            {% endfor %}
+
+                        {% else %}
+
+                            <div class="alert alert-success mb-0">
+
+                                🎉 You're all caught up!
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+                <!-- ============================== -->
+                <!-- TEAM -->
+                <!-- ============================== -->
+
+                {% if session['role'] == 'ADMIN' %}
+
+                <div class="card">
+
+                    <div class="card-header bg-dark text-white">
+
+                        👥 Team Notifications
+
+                    </div>
+
+                    <div class="card-body">
+
+                        {% if team_notifications %}
+
+                            {% for employee in team_notifications %}
+
+                                <div class="border rounded p-3 mb-4">
+
+                                    <h5>
+
+                                        {{ employee.username }}
+
+                                        <span class="badge bg-primary">
+
+                                            {{ employee.count }}
+
+                                        </span>
+
+                                    </h5>
+
+                                    <hr>
+
+                                    {% for item in employee.notifications %}
+
+                                        <div class="mb-3">
+
+                                            <strong>
+
+                                                {{ item.title }}
+
+                                            </strong>
+
+                                            <br>
+
+                                            <small>
+
+                                                {{ item.subtitle }}
+
+                                            </small>
+
+                                        </div>
+
+                                    {% endfor %}
+
+                                </div>
+
+                            {% endfor %}
+
+                            {% if commercial_notifications %}
+
+                            <div class="card mt-4">
+
+                                <div class="card-header bg-success text-white">
+
+                                    🏢 Commercial Department
+
+                                </div>
+
+                                <div class="card-body">
+
+                                    {% for item in commercial_notifications %}
+
+                                    <div class="border rounded p-3 mb-3">
+
+                                        <strong>
+
+                                            {{ item.title }}
+
+                                        </strong>
+
+                                        <br>
+
+                                        <small>
+
+                                            {{ item.subtitle }}
+
+                                        </small>
+
+                                    </div>
+
+                                    {% endfor %}
+
+                                </div>
+
+                            </div>
+
+                        {% endif %}
+
+                        {% else %}
+
+                            <div class="alert alert-success mb-0">
+
+                                No pending team notifications.
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+                {% endif %}
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal">
+
+                    Close
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+window.onload = function(){
+
+    {% if show_morning_brief %}
+
+    new bootstrap.Modal(
+
+        document.getElementById(
+
+            "morningBrief"
+
+        )
+
+    ).show();
+
+    {% endif %}
+
+};
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+
+new Chart(
+
+document.getElementById(
+
+'meetingChart'
+
+),
+
+{
+
+type:'doughnut',
+
+data:{
+
+labels:{{ meeting_labels|tojson }},
+
+datasets:[{
+
+data:{{ meeting_values|tojson }}
+
+}]
+
+},
+
+options:{
+
+responsive:true,
+
+maintainAspectRatio:false,
+
+plugins:{
+
+legend:{
+
+position:'bottom'
+
+}
+
+}
+
+}
+
+});
+
+new Chart(
+
+document.getElementById(
+
+'proposalChart'
+
+),
+
+{
+
+type:'doughnut',
+
+data:{
+
+labels:{{ proposal_labels|tojson }},
+
+datasets:[{
+
+data:{{ proposal_values|tojson }}
+
+}]
+
+},
+
+options:{
+
+responsive:true,
+
+maintainAspectRatio:false,
+
+plugins:{
+
+legend:{
+
+position:'bottom'
+
+}
+
+}
+
+}
+
+});
+
+new Chart(
+
+document.getElementById(
+
+'pipelineChart'
+
+),
+
+{
+
+type:'bar',
+
+data:{
+
+labels:
+
+{% if session['role']=="SALES" %}
+
+[
+
+'Leads',
+
+'Meetings',
+
+'Proposals'
+
+]
+
+{% else %}
+
+[
+
+'Leads',
+
+'Meetings',
+
+'Proposals',
+
+'Clients'
+
+]
+
+{% endif %}
+
+,
+
+datasets:[{
+
+label:'Records',
+
+data:
+
+{% if session['role']=="SALES" %}
+
+[
+
+{{ lead_count }},
+
+{{ meeting_count }},
+
+{{ proposal_count }}
+
+]
+
+{% else %}
+
+[
+
+{{ lead_count }},
+
+{{ meeting_count }},
+
+{{ proposal_count }},
+
+{{ client_count }}
+
+]
+
+{% endif %}
+
+}]
+
+},
+
+options:{
+
+indexAxis:'y',
+
+responsive:true,
+
+maintainAspectRatio:false,
+
+plugins:{
+
+legend:{
+
+display:false
+
+}
+
+}
+
+}
+
+});
+
+{% if session['role'] in ['ADMIN','COMMERCIALS'] %}
+
+new Chart(
+
+document.getElementById(
+
+'filterChart'
+
+),
+
+{
+
+type:'line',
+
+data:{
+
+labels:{{ filter_months|tojson }},
+
+datasets:[{
+
+    label:'Filters Replaced',
+
+    data:{{ filter_values|tojson }},
+
+    fill:true,
+
+    tension:0.35,
+
+    pointRadius:4,
+
+    pointHoverRadius:6
+
+}]
+
+},
+
+options:{
+
+    responsive:true,
+
+    maintainAspectRatio:false,
+
+    scales:{
+
+        y:{
+
+            beginAtZero:true,
+
+            min:0,
+
+            ticks:{
+
+                precision:0
+
+            }
+
+        }
+
+    },
+
+    plugins:{
+
+        legend:{
+
+            display:false
+
+        }
+
+    }
+
+}
+
+});
+
+{% endif %}
+
+{% if session['role']=="ADMIN" %}
+
+new Chart(
+
+document.getElementById(
+
+'revenueChart'
+
+),
+
+{
+
+type:'line',
+
+data:{
+
+labels:{{ months|tojson }},
+
+datasets:[{
+
+    label:'Revenue',
+
+    data:{{ revenues|tojson }},
+
+    fill:true,
+
+    tension:0.35,
+
+    pointRadius:4,
+
+    pointHoverRadius:6
+
+}]
+
+},
+
+options:{
+
+responsive:true,
+
+maintainAspectRatio:false,
+
+plugins:{
+
+legend:{
+
+display:false
+
+}
+
+}
+
+}
+
+});
+
+{% endif %}
+
+</script>
+
+<a
+
+    href="#"
+
+    class="btn btn-primary rounded-circle shadow"
+
+    data-bs-toggle="dropdown"
+
+    style="
+
+        position:fixed;
+
+        bottom:25px;
+
+        right:25px;
+
+        width:58px;
+
+        height:58px;
+
+        font-size:28px;
+
+        z-index:999;
+
+        display:flex;
+
+        align-items:center;
+
+        justify-content:center;
+
+    ">
+
+    +
+
+</a>
+
+<ul
+
+    class="dropdown-menu dropdown-menu-end"
+
+    style="
+
+        position:fixed;
+
+        bottom:95px;
+
+        right:25px;
+
+    ">
+
+    
+
+    <li>
+
+        <a
+
+            class="dropdown-item"
+
+            href="{{ url_for('reminders') }}">
+
+            🔔 Reminder
+
+        </a>
+
+    </li>
+
+</ul>
 
 </body>
 

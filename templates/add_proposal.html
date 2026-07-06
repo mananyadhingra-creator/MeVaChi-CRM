@@ -99,7 +99,7 @@
             </select>
 
         </div>
-
+        {% if session['role'] != 'COMMERCIALS' %}
         <div class="card shadow-sm p-4 mb-4">
             
             <h4>
@@ -129,7 +129,7 @@
             </select>
 
         </div>
-
+        {% endif %}
             <!-- CLIENT DETAILS -->
 
             <div class="card shadow-sm p-4 mb-4">

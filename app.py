@@ -11,6 +11,9 @@ from werkzeug.security import (
 )
 from docxtpl import DocxTemplate
 from num2words import num2words
+from openpyxl import Workbook
+from flask import send_file
+from io import BytesIO
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'static'
@@ -25,6 +28,374 @@ app.config['SQLALCHEMY_DATABASE_URI'] = \
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
+
+def get_greeting():
+
+    hour = datetime.now().hour
+
+    if 5 <= hour < 12:
+
+        return "Good Morning"
+
+    elif 12 <= hour < 17:
+
+        return "Good Afternoon"
+
+    elif 17 <= hour < 22:
+
+        return "Good Evening"
+
+    else:
+
+        return "Working Late"
+
+def get_dashboard_notifications(
+
+    username,
+
+    role
+
+):
+
+    today = date.today()
+
+    notifications = []
+
+
+
+    if role == 'SALES':
+
+        lead_base = Lead.query.filter(
+            Lead.record_owner == username
+        )
+
+        meeting_base = Meeting.query.filter(
+            Meeting.record_owner == username
+        )
+
+        proposal_base = Proposal.query.filter(
+            Proposal.record_owner == username
+        )
+
+    elif role == 'COMMERCIALS':
+
+        commercial_users = User.query.filter_by(
+            role='COMMERCIALS'
+        ).all()
+
+        usernames = [
+
+            user.username
+
+            for user in commercial_users
+
+        ]
+
+        lead_base = Lead.query.filter(
+            Lead.record_owner.in_(usernames)
+        )
+
+        meeting_base = Meeting.query.filter(
+            Meeting.record_owner.in_(usernames)
+        )
+
+        proposal_base = Proposal.query.filter(
+            Proposal.record_owner.in_(usernames)
+        )
+
+    else:
+
+        lead_base = Lead.query
+
+        meeting_base = Meeting.query
+
+        proposal_base = Proposal.query
+
+    # ========================================
+    # PERSONAL REMINDERS
+    # ========================================
+
+    reminders = Reminder.query.filter(
+
+        Reminder.created_by == username,
+
+        Reminder.status == 'PENDING',
+
+        Reminder.is_dismissed == False,
+
+        or_(
+
+            Reminder.snooze_until == None,
+
+            Reminder.snooze_until <= datetime.now()
+
+        )
+
+    ).order_by(
+
+        Reminder.reminder_date.asc(),
+
+        Reminder.reminder_time.asc()
+
+    ).all()
+
+    for reminder in reminders:
+
+        if reminder.reminder_date < today:
+
+            status = 'OVERDUE'
+
+        elif reminder.reminder_date == today:
+
+            status = 'TODAY'
+
+        else:
+
+            status = 'UPCOMING'
+
+        notifications.append({
+
+            'module': 'REMINDER',
+
+            'title': reminder.title,
+
+            'subtitle': reminder.description,
+
+            'date': reminder.reminder_date,
+
+            'priority': reminder.priority,
+
+            'status': status,
+
+            'record_id': reminder.reminder_id
+
+        })
+
+    # ========================================
+    # LEAD FOLLOWUPS
+    # ========================================
+
+    leads = lead_base.filter(
+
+        Lead.next_to_call != None
+
+    ).all()
+
+    for lead in leads:
+
+        if lead.next_to_call < today:
+
+            status = 'OVERDUE'
+
+        elif lead.next_to_call == today:
+
+            status = 'TODAY'
+
+        else:
+
+            status = 'UPCOMING'
+
+        notifications.append({
+
+            'module': 'LEAD',
+
+            'title': lead.name,
+
+            'subtitle': 'Lead Follow-up',
+
+            'date': lead.next_to_call,
+
+            'priority': 'HIGH',
+
+            'status': status,
+
+            'record_id': lead.lead_id
+
+        })
+
+    # ========================================
+    # MEETING FOLLOWUPS
+    # ========================================
+
+    meetings = meeting_base.filter(
+
+        Meeting.date_to_call_next != None
+
+    ).all()
+
+    for meeting in meetings:
+
+        if meeting.date_to_call_next < today:
+
+            status = 'OVERDUE'
+
+        elif meeting.date_to_call_next == today:
+
+            status = 'TODAY'
+
+        else:
+
+            status = 'UPCOMING'
+
+        notifications.append({
+
+            'module': 'MEETING',
+
+            'title': meeting.name,
+
+            'subtitle': 'Meeting Follow-up',
+
+            'date': meeting.date_to_call_next,
+
+            'priority': 'HIGH',
+
+            'status': status,
+
+            'record_id': meeting.meeting_id
+
+        })
+
+    # ========================================
+    # PROPOSAL FOLLOWUPS
+    # ========================================
+
+    proposals = proposal_base.filter(
+
+        Proposal.next_to_call != None
+
+    ).all()
+
+    for proposal in proposals:
+
+        if proposal.next_to_call < today:
+
+            status = 'OVERDUE'
+
+        elif proposal.next_to_call == today:
+
+            status = 'TODAY'
+
+        else:
+
+            status = 'UPCOMING'
+
+        notifications.append({
+
+            'module': 'PROPOSAL',
+
+            'title': proposal.name,
+
+            'subtitle': 'Proposal Follow-up',
+
+            'date': proposal.next_to_call,
+
+            'priority': 'HIGH',
+
+            'status': status,
+
+            'record_id': proposal.proposal_id
+
+        })
+
+    # ========================================
+    # SERVICE DUE
+    # ========================================
+
+    if role in [
+
+        'ADMIN',
+
+        'COMMERCIALS'
+
+    ]:
+
+        for client in Client.query.all():
+
+            update_client_status(
+
+                client
+
+            )
+
+            if client.service_due == 'YES':
+
+                notifications.append({
+
+                    'module': 'SERVICE',
+
+                    'title': client.client_name,
+
+                    'subtitle': 'Service Due',
+
+                    'date': client.last_service_date,
+
+                    'priority': 'HIGH',
+
+                    'status': 'TODAY',
+
+                    'record_id': client.client_id
+
+                })
+
+    # ========================================
+    # CMC DUE
+    # ========================================
+
+    if role in [
+
+        'ADMIN',
+
+        'COMMERCIALS'
+
+    ]:
+
+        cmc_clients = Client.query.filter(
+
+            Client.cmc_applicable == 'YES',
+
+            Client.next_cmc_renewal_date != None,
+
+            Client.next_cmc_renewal_date <= (
+
+                today + timedelta(days=20)
+
+            )
+
+        ).all()
+
+        for client in cmc_clients:
+
+            notifications.append({
+
+                'module': 'CMC',
+
+                'title': client.client_name,
+
+                'subtitle': 'CMC Renewal Due',
+
+                'date': client.next_cmc_renewal_date,
+
+                'priority': 'MEDIUM',
+
+                'status': 'UPCOMING',
+
+                'record_id': client.client_id
+
+            })
+
+    notifications.sort(
+
+        key=lambda x: (
+
+            x['date'] is None,
+
+            x['date']
+
+        )
+
+    )
+
+    return notifications
 
 def has_access(*allowed_roles):
 
@@ -335,6 +706,92 @@ def search_records(
 
     return query.all()
 
+def parse_date(value):
+
+    if not value:
+
+        return None
+
+    # Already a datetime object
+
+    if isinstance(
+
+        value,
+
+        datetime
+
+    ):
+
+        return value.date()
+
+    # Already a date object
+
+    if hasattr(
+
+        value,
+
+        "year"
+
+    ) and hasattr(
+
+        value,
+
+        "month"
+
+    ) and hasattr(
+
+        value,
+
+        "day"
+
+    ):
+
+        return value
+
+    value = str(
+
+        value
+
+    ).strip()
+
+    formats = [
+
+        "%Y-%m-%d",
+
+        "%d-%m-%Y",
+
+        "%d/%m/%Y",
+
+        "%d-%b-%Y",
+
+        "%d-%B-%Y",
+
+        "%d.%m.%Y",
+
+        "%m/%d/%Y",
+
+        "%Y/%m/%d"
+
+    ]
+
+    for fmt in formats:
+
+        try:
+
+            return datetime.strptime(
+
+                value,
+
+                fmt
+
+            ).date()
+
+        except ValueError:
+
+            continue
+
+    return None
+
 def log_activity(
 
     module_name,
@@ -488,6 +945,140 @@ def admin_delete_or_request(
 
         )
 
+AIR_QUALITY = {
+
+    "West Delhi": (94, 117),
+
+    "East Delhi": (110, 137),
+
+    "South Delhi": (87, 112),
+
+    "North Delhi": (96, 137),
+
+    "Gurgaon": (94, 124),
+
+    "Ghaziabad": (100, 128),
+
+    "Greater Noida": (97, 125),
+
+    "Noida": (90, 114),
+
+    "Others": (119, 219)
+
+}
+
+def get_current_quarter():
+
+    month = datetime.now().month
+
+    if month in [
+
+        1,
+        2,
+        3
+
+    ]:
+
+        return 1
+
+    elif month in [
+
+        4,
+        5,
+        6
+
+    ]:
+
+        return 2
+
+    elif month in [
+
+        7,
+        8,
+        9
+
+    ]:
+
+        return 3
+
+    return 4
+
+def get_air_quality(location):
+
+    print("FUNCTION CALLED")
+    print("LOCATION =", repr(location))
+
+    print(AIR_QUALITY)
+
+    if location in AIR_QUALITY:
+
+        print("MATCH FOUND")
+
+    else:
+
+        print("NO MATCH")
+
+    pm25, pm10 = AIR_QUALITY.get(
+        location,
+        AIR_QUALITY["Others"]
+    )
+
+    print(pm25, pm10)
+
+    quarter = get_current_quarter()
+
+    multiplier = {
+
+        1: 1.15,
+
+        2: 1.00,
+
+        3: 1.05,
+
+        4: 1.10
+
+    }
+
+    factor = multiplier[quarter]
+
+    pm25 = round(pm25 * factor)
+
+    pm10 = round(pm10 * factor)
+
+    return {
+
+        "pm25": pm25,
+
+        "pm10": pm10,
+
+        "co2": 500
+
+    }
+
+def get_proposal_template(
+
+    proposal
+
+):
+
+    if (
+
+        proposal.discount
+
+        and
+
+        float(
+
+            proposal.discount
+
+        ) > 0
+
+    ):
+
+        return "discounted_proposal_template.docx"
+
+    return "proposal_template.docx"
+
 class User(db.Model):
 
     __tablename__ = 'users'
@@ -612,7 +1203,8 @@ class Meeting(db.Model):
 
     lead_id = db.Column(
         db.Integer,
-        db.ForeignKey('leads.lead_id')
+        db.ForeignKey('leads.lead_id'),
+        nullable=True    
     )
 
     history = db.relationship(
@@ -740,7 +1332,8 @@ class Visit(db.Model):
 
     meeting_id = db.Column(
         db.Integer,
-        db.ForeignKey('meetings.meeting_id')
+        db.ForeignKey('meetings.meeting_id'),
+        nullable=True
     )
 
     state = db.Column(
@@ -829,8 +1422,8 @@ class VisitHistory(db.Model):
 
             'visits.visit_id'
 
-        )
-
+        ),
+        nullable=True
     )
 
     meeting_id = db.Column(
@@ -841,8 +1434,8 @@ class VisitHistory(db.Model):
 
             'meetings.meeting_id'
 
-        )
-
+        ),
+        nullable=True
     )
 
     state = db.Column(
@@ -948,7 +1541,8 @@ class Drawing(db.Model):
 
     visit_id = db.Column(
         db.Integer,
-        db.ForeignKey('visits.visit_id')
+        db.ForeignKey('visits.visit_id'),
+        nullable=True
     )
 
     name = db.Column(
@@ -1103,15 +1697,15 @@ class Proposal(db.Model):
 
     remarks = db.Column(db.Text)
 
-    
-
     meeting_id = db.Column(
         db.Integer,
-        db.ForeignKey('meetings.meeting_id')
+        db.ForeignKey('meetings.meeting_id'),
+        nullable=True
     )
     drawing_id = db.Column(
         db.Integer,
-        db.ForeignKey('drawings.drawing_id')
+        db.ForeignKey('drawings.drawing_id'),
+        nullable=True
     )
 
     files = db.relationship(
@@ -1127,6 +1721,7 @@ class Proposal(db.Model):
     record_owner = db.Column(
         db.String(100)
     )
+
 
 class ProposalFile(db.Model):
 
@@ -1183,7 +1778,8 @@ class SalesPipeline(db.Model):
         db.Integer,
         db.ForeignKey(
             'proposals.proposal_id'
-        )
+        ),
+        nullable=True
     )
 
     name = db.Column(
@@ -1333,7 +1929,8 @@ class Invoice(db.Model):
 
     sales_id = db.Column(
         db.Integer,
-        db.ForeignKey('sales_pipeline.sales_id')
+        db.ForeignKey('sales_pipeline.sales_id'),
+        nullable=True
     )
 
     name = db.Column(
@@ -1445,7 +2042,8 @@ class Installation(db.Model):
         db.Integer,
         db.ForeignKey(
             'sales_pipeline.sales_id'
-        )
+        ),
+        nullable=True
     )
 
     installation_for = db.Column(
@@ -1635,12 +2233,14 @@ class Client(db.Model):
 
     proposal_id = db.Column(
         db.Integer,
-        db.ForeignKey('proposals.proposal_id')
+        db.ForeignKey('proposals.proposal_id'),
+        nullable=True
     )
 
     invoice_id = db.Column(
         db.Integer,
-        db.ForeignKey('invoices.invoice_id')
+        db.ForeignKey('invoices.invoice_id'),
+        nullable=True
    )
     
     record_owner = db.Column(
@@ -1655,7 +2255,8 @@ class CustomerCareCard(db.Model):
 
     client_id = db.Column(
         db.Integer,
-        db.ForeignKey('client.client_id')
+        db.ForeignKey('client.client_id'),
+        nullable=False
     )
     client = db.relationship(
         'Client',
@@ -1795,6 +2396,100 @@ class DeleteRequest(db.Model):
         db.String(500)
     )
 
+class Reminder(db.Model):
+
+    __tablename__ = 'reminders'
+
+    reminder_id = db.Column(
+
+        db.Integer,
+
+        primary_key=True
+
+    )
+
+    title = db.Column(
+
+        db.String(200),
+
+        nullable=False
+
+    )
+
+    description = db.Column(
+
+        db.Text
+
+    )
+
+    reminder_date = db.Column(
+
+        db.Date,
+
+        nullable=False
+
+    )
+
+    reminder_time = db.Column(
+
+        db.Time
+
+    )
+
+    priority = db.Column(
+
+        db.String(20),
+
+        default='MEDIUM'
+
+    )
+
+    repeat_type = db.Column(
+
+        db.String(20),
+
+        default='NONE'
+
+    )
+
+    status = db.Column(
+
+        db.String(20),
+
+        default='PENDING'
+
+    )
+
+    snooze_until = db.Column(
+
+        db.DateTime
+
+    )
+
+    created_by = db.Column(
+
+        db.String(100),
+
+        nullable=False
+
+    )
+
+    created_on = db.Column(
+
+        db.DateTime,
+
+        default=datetime.utcnow
+
+    )
+
+    is_dismissed = db.Column(
+
+        db.Boolean,
+
+        default=False
+
+    )
+
 def indian_format(number):
 
     number = int(float(number))
@@ -1879,6 +2574,8 @@ def login():
 
             session['role'] = user.role
 
+            session['show_morning_brief'] = True
+
             if user.must_change_password == 'YES':
 
                 return redirect(
@@ -1905,8 +2602,127 @@ def dashboard():
         return redirect(
             url_for('login')
         )
+    
 
     today = date.today()
+    
+    greeting = get_greeting()
+
+    show_morning_brief = session.get(
+
+        'show_morning_brief',
+
+        False
+
+    )
+
+    my_notifications = get_dashboard_notifications(
+
+        session['username'],
+
+        session['role']
+
+    )
+
+    notifications = my_notifications
+
+    notification_count = len(
+
+        my_notifications
+
+    )
+
+    
+ 
+    team_notifications = []
+
+    commercial_notifications = []
+
+    if session.get('role') == 'ADMIN':
+
+        sales_users = User.query.filter_by(
+
+            role='SALES'
+
+        ).order_by(
+
+            User.username
+
+        ).all()
+
+        commercial_user = User.query.filter_by(
+
+            role='COMMERCIALS'
+
+        ).first()
+
+        
+
+        for user in sales_users:
+
+            employee_notifications = get_dashboard_notifications(
+
+                user.username,
+
+                user.role
+
+            )
+
+            if employee_notifications:
+
+                team_notifications.append({
+
+                    'username': user.username,
+
+                    'count': len(employee_notifications),
+
+                    'notifications': employee_notifications
+
+                })
+
+        if commercial_user:
+
+            commercial_notifications = get_dashboard_notifications(
+
+                commercial_user.username,
+
+                'COMMERCIALS'
+
+            )
+
+    overdue_notifications = [
+
+        item
+
+        for item in notifications
+
+        if item['status'] == 'OVERDUE'
+
+    ]
+
+    today_notifications = [
+
+        item
+
+        for item in notifications
+
+        if item['status'] == 'TODAY'
+
+    ]
+
+    upcoming_notifications = [
+
+        item
+
+        for item in notifications
+
+        if item['status'] == 'UPCOMING'
+
+    ]
+
+    notification_count = len(
+        notifications
+    )
 
     tomorrow = today + timedelta(days=1)
 
@@ -2144,8 +2960,453 @@ def dashboard():
     pending_delete_requests = DeleteRequest.query.filter_by(
         status='PENDING'
     ).count()
-    return render_template(
+
+# ==========================================
+# ROLE BASED QUERIES
+# ==========================================
+
+    if session.get('role') == 'SALES':
+
+        lead_query = Lead.query.filter_by(
+
+            record_owner=session['username']
+
+        )
+
+        meeting_query = Meeting.query.filter_by(
+
+            record_owner=session['username']
+
+        )
+
+        proposal_query = Proposal.query.filter_by(
+
+            record_owner=session['username']
+
+        )
+
+        client_query = Client.query.filter_by(
+
+            record_owner=session['username']
+
+        )
+
+        invoice_query = Invoice.query.filter_by(
+
+            record_owner=session['username']
+
+        )
+
+    elif session.get('role') == 'COMMERCIALS':
+
+        commercial_users = User.query.filter_by(
+
+            role='COMMERCIALS'
+
+        ).all()
+
+        usernames = [
+
+            user.username
+
+            for user in commercial_users
+
+        ]
+
+        lead_query = Lead.query.filter(
+
+            Lead.record_owner.in_(usernames)
+
+        )
+
+        meeting_query = Meeting.query.filter(
+
+            Meeting.record_owner.in_(usernames)
+
+        )
+
+        proposal_query = Proposal.query.filter(
+
+            Proposal.record_owner.in_(usernames)
+
+        )
+
+        client_query = Client.query.filter(
+
+            Client.record_owner.in_(usernames)
+
+        )
+
+        invoice_query = Invoice.query.filter(
+
+            Invoice.record_owner.in_(usernames)
+
+        )
+
+    else:
+
+        lead_query = Lead.query
+
+        meeting_query = Meeting.query
+
+        proposal_query = Proposal.query
+
+        client_query = Client.query
+
+        invoice_query = Invoice.query
+
+    lead_count = lead_query.count()
+
+    meeting_count = meeting_query.count()
+
+    proposal_count = proposal_query.count()
+
+    client_count = client_query.count()
+
+# ==========================================
+# MEETING SOURCE PIE CHART
+# ==========================================
+
+    meeting_source = meeting_query.with_entities(
+
+        Meeting.source,
+
+        func.count(Meeting.meeting_id)
+
+    ).group_by(
+
+        Meeting.source
+
+    ).all()
+
+    meeting_labels = []
+
+    meeting_values = []
+
+    for source, count in meeting_source:
+
+        meeting_labels.append(
+
+            source if source else "Unknown"
+
+        )
+
+        meeting_values.append(
+
+            count
+
+        )
+
+# ==========================================
+# PROPOSAL STATUS BAR CHART
+# ==========================================
+
+    proposal_status = proposal_query.with_entities(
+
+        Proposal.status,
+
+        func.count(Proposal.proposal_id)
+
+    ).group_by(
+
+        Proposal.status
+
+    ).all()
+
+    proposal_labels = []
+
+    proposal_values = []
+
+    for status, count in proposal_status:
+
+        proposal_labels.append(
+
+            status if status else "Unknown"
+
+        )
+
+        proposal_values.append(
+
+            count
+
+        )
+
+    current_year = datetime.now().year
+
+    available_years = list(
+
+        range(
+
+            current_year-5,
+
+            current_year+1
+
+        )
+
+    )
+
+# ==========================================
+# FILTER REPLACEMENT TREND
+# ==========================================
+
+    selected_year = request.args.get(
+
+        'year',
+
+        datetime.now().year,
+
+        type=int
+
+    )
+
+    filter_data = []
+
+    if session.get('role') in ['ADMIN', 'COMMERCIALS']:
+
+        if session.get('role') == 'COMMERCIALS':
+
+            filter_data = db.session.query(
+
+                extract(
+
+                    'month',
+
+                    CustomerCareCard.service_date
+
+                ),
+
+                func.sum(
+
+                    CustomerCareCard.no_of_filters
+
+                )
+
+            ).filter(
+
+                extract(
+
+                    'year',
+
+                    CustomerCareCard.service_date
+
+                ) == selected_year
+
+            ).group_by(
+
+                extract(
+
+                    'month',
+
+                    CustomerCareCard.service_date
+
+                )
+
+            ).order_by(
+
+                extract(
+
+                    'month',
+
+                    CustomerCareCard.service_date
+
+                )
+
+            ).all()            
+
+        else:
+
+            filter_data = db.session.query(
+
+                extract(
+
+                    'month',
+
+                    CustomerCareCard.service_date
+
+                ),
+
+                func.sum(
+
+                    CustomerCareCard.no_of_filters
+
+                )
+
+            ).filter(
+
+                extract(
+
+                    'year',
+
+                    CustomerCareCard.service_date
+
+                ) == selected_year
+
+            ).group_by(
+
+                extract(
+
+                    'month',
+
+                    CustomerCareCard.service_date
+
+                )
+
+            ).all()
+
+
+    month_names = [
+
+        'Jan','Feb','Mar','Apr','May','Jun',
+
+        'Jul','Aug','Sep','Oct','Nov','Dec'
+
+    ]
+
+    filter_dict = {
+
+        int(month): int(value or 0)
+
+        for month, value in filter_data
+
+    }
+
+    filter_months = month_names
+
+    filter_values = []
+
+    for i in range(1,13):
+
+        filter_values.append(
+
+            int(
+
+                filter_dict.get(i,0)
+
+            )
+
+        )
+
+# ==========================================
+# MONTHLY REVENUE TREND
+# ==========================================
+    
+    revenue_year = request.args.get(
+
+        'revenue_year',
+
+        datetime.now().year,
+
+        type=int
+
+    )
+
+    monthly_revenue = []
+
+    if session.get('role') == 'ADMIN':
+
+        monthly_revenue = invoice_query.with_entities(
+
+            extract(
+
+                'month',
+
+                Invoice.doi
+
+            ),
+
+            func.sum(
+
+                Invoice.total_revenue
+
+            )
+
+        ).filter(
+
+            extract(
+
+                'year',
+
+                Invoice.doi
+
+            ) == revenue_year
+
+        ).group_by(
+
+            extract(
+
+                'month',
+
+                Invoice.doi
+
+            )
+
+        ).order_by(
+
+            extract(
+
+                'month',
+
+                Invoice.doi
+
+            )
+
+        ).all()
+
+    month_names = [
+
+        'Jan','Feb','Mar','Apr','May','Jun',
+
+        'Jul','Aug','Sep','Oct','Nov','Dec'
+
+    ]
+
+    revenue_dict = {
+
+        int(month): float(amount or 0)
+
+        for month, amount in monthly_revenue
+
+    }
+
+    months = month_names
+
+    revenues = []
+
+    for i in range(1,13):
+
+        revenues.append(
+
+            revenue_dict.get(i,0)
+
+        )
+
+    response = render_template(
         'index.html',
+        lead_count=lead_count,
+        meeting_count=meeting_count,
+        proposal_count=proposal_count,
+        client_count=client_count,
+        meeting_labels=meeting_labels,
+        meeting_values=meeting_values,
+        proposal_labels=proposal_labels,
+        proposal_values=proposal_values,
+        months=months,
+        available_years=available_years,
+        selected_year=selected_year,
+        filter_months=filter_months,
+        filter_values=filter_values,
+        revenue_year=revenue_year,
+        revenues=revenues,
+        greeting=greeting,
+        show_morning_brief=show_morning_brief,
+        commercial_notifications=commercial_notifications,    
+        notifications=notifications,
+        my_notifications=my_notifications,
+        team_notifications=team_notifications,
+        overdue_notifications=overdue_notifications,
+        today_notifications=today_notifications,
+        upcoming_notifications=upcoming_notifications,
+        notification_count=notification_count,
         monthly_filters=monthly_filters,
         yearly_filters=yearly_filters,
         overdue_leads=overdue_leads,
@@ -2174,6 +3435,10 @@ def dashboard():
         cmc_due=cmc_due,
         pending_delete_requests=pending_delete_requests      
     )
+
+    session['show_morning_brief'] = False
+    
+    return response
 
 @app.route('/manage-users')
 def manage_users():
@@ -12651,19 +13916,237 @@ def organization_sales():
 
     )
 
-@app.route('/organization-invoices')
+@app.route(
+    '/organization-invoices',
+    methods=['GET', 'POST']
+)
 def organization_invoices():
 
     if session.get('role') != 'ADMIN':
         return redirect(url_for('dashboard'))
 
-    search = request.args.get('search')
+    if request.method == 'POST':
 
-    query = Invoice.query
+        sales_id = request.form.get(
+            'sales_id'
+        )
+
+        doi_input = request.form.get(
+            'doi'
+        )
+
+        if doi_input:
+
+            doi = datetime.strptime(
+                doi_input,
+                '%Y-%m-%d'
+            ).date()
+
+        else:
+
+            doi = None
+
+        invoice_no = request.form.get(
+            'invoice_no'
+        )
+
+        name = request.form.get(
+            'name'
+        )
+
+        gst_no = request.form.get(
+            'gst_no'
+        )
+
+        product_sold = request.form.get(
+            'product_sold'
+        )
+
+
+
+        total_units = request.form.get(
+            'total_units'
+        )
+
+        price_of_units = request.form.get(
+            'price_of_units'
+        )
+
+        first_year_cmc = request.form.get(
+            'first_year_cmc'
+        )
+
+        installation = request.form.get(
+            'installation'
+        )
+
+        total_sensor = request.form.get(
+            'total_sensor'
+        )
+
+        sensor_cost = request.form.get(
+            'sensor_cost'
+        )
+
+        revenue = request.form.get(
+            'revenue'
+        )
+
+        total_revenue = request.form.get(
+            'total_revenue'
+        )
+
+
+
+
+
+        invoice = Invoice(
+
+            sales_id=sales_id,
+
+            name=name,
+
+            doi=doi,
+
+            invoice_no=invoice_no,
+
+            gst_no=gst_no,
+
+            product_sold=product_sold,
+
+            total_units=total_units,
+
+            price_of_units=price_of_units,
+
+            first_year_cmc=first_year_cmc,
+
+            installation=installation,
+
+            total_sensor=total_sensor,
+
+            sensor_cost=sensor_cost,
+
+            revenue=revenue,
+
+            total_revenue=total_revenue,
+
+
+            record_owner=session[
+                'username'
+            ]    
+        )
+
+        db.session.add(
+            invoice
+        )
+        db.session.flush()
+        invoice_files = request.files.getlist(
+            'invoice_files'
+        )
+
+        for file in invoice_files:
+
+            if file and file.filename:
+
+                filename = secure_filename(
+                    file.filename
+                )
+
+                relative_path = (
+                    'invoices/' +
+                    filename
+                )
+
+                file.save(
+
+                    os.path.join(
+
+                        app.config[
+                            'UPLOAD_FOLDER'
+                        ],
+
+                        relative_path
+
+                    )
+
+                )
+
+                new_file = InvoiceFile(
+
+                    invoice_id=
+                    invoice.invoice_id,
+
+                    file_name=filename,
+
+                    file_path=relative_path,
+
+                    file_type=file.content_type
+
+                )
+
+                db.session.add(
+                    new_file
+                )
+        log_activity(
+
+            'INVOICE',
+
+            invoice.invoice_id,
+
+            'CREATED'
+
+        )  
+        db.session.commit()
+
+        return redirect(
+            url_for(
+                'add_invoice'
+            )
+        )
+
+    search=request.args.get(
+        'search'
+    )
+    if session.get(
+        'role'
+    ) == 'SALES':
+
+        base_query = Invoice.query.filter_by(
+
+            record_owner=session[
+                'username'
+            ]
+
+        )
+
+    elif session.get(
+        'role'
+    ) == 'COMMERCIALS':
+
+        commercial_users = User.query.filter_by(
+            role='COMMERCIALS'
+        ).all()
+
+        usernames = [
+            user.username
+            for user in commercial_users
+        ]
+
+        base_query = Invoice.query.filter(
+
+            Invoice.record_owner.in_(
+                usernames
+            )
+
+        )
+
+    else:
+
+        base_query = Invoice.query
 
     if search:
 
-        query = query.filter(
+        all_invoices = base_query.filter(
 
             or_(
 
@@ -12675,23 +14158,68 @@ def organization_invoices():
                     f'%{search}%'
                 ),
 
-                Invoice.record_owner.ilike(
+                Invoice.gst_no.ilike(
+                    f'%{search}%'
+                ),
+
+                Invoice.product_sold.ilike(
                     f'%{search}%'
                 )
 
             )
 
-        )
+        ).all()
 
-    invoices = query.all()
+    else:
+
+        all_invoices = base_query.all()
+
+    if session.get(
+        'role'
+    ) == 'SALES':
+
+        all_sales = SalesPipeline.query.filter_by(
+
+            record_owner=session[
+                'username'
+            ]
+
+        ).all()
+
+    elif session.get(
+        'role'
+    ) == 'COMMERCIALS':
+
+        commercial_users = User.query.filter_by(
+            role='COMMERCIALS'
+        ).all()
+
+        usernames = [
+            user.username
+            for user in commercial_users
+        ]
+    
+        all_sales = SalesPipeline.query.filter(
+
+            SalesPipeline.record_owner.in_(
+                usernames
+            )
+
+        ).all()
+
+    else:
+
+        all_sales = SalesPipeline.query.all()
 
     return render_template(
 
         'organization_invoices.html',
 
-        invoices=invoices,
+        invoices=all_invoices,
 
-        search=search
+        sales=all_sales,
+
+        search=search        
 
     )
 
@@ -14127,10 +15655,36 @@ def approve_delete_request(
 @app.route(
     '/generate-proposal/<int:proposal_id>'
 )
-def generate_proposal(proposal_id):
+def generate_proposal(
+
+    proposal_id
+
+):
 
     proposal = Proposal.query.get_or_404(
+
         proposal_id
+
+    )
+
+    location = request.args.get(
+
+        'location',
+
+        'Others'
+
+    )
+
+    air_quality = get_air_quality(
+
+        location
+
+    )
+
+    template_name = get_proposal_template(
+
+        proposal
+
     )
 
     template_path = os.path.join(
@@ -14139,12 +15693,14 @@ def generate_proposal(proposal_id):
 
         'templates',
 
-        'proposal_template.docx'
+        template_name
 
     )
 
     doc = DocxTemplate(
+
         template_path
+
     )
 
     total_mvd_cost = (
@@ -14152,24 +15708,62 @@ def generate_proposal(proposal_id):
         proposal.no_of_mvd_units *
 
         float(
+
             proposal.cost_total_per_unit
+
         )
 
     )
 
-    amount_in_words = (
+    total_amount_in_words = (
 
         num2words(
 
             int(
+
                 proposal.total_amount
+
             ),
 
             lang='en_IN'
 
         )
 
-        .replace(',', '')
+        .replace(
+
+            ',',
+
+            ''
+
+        )
+
+        .title()
+
+        + ' Rupees Only'
+
+    )
+
+    final_amount_in_words = (
+
+        num2words(
+
+            int(
+
+                proposal.final_amount
+
+            ),
+
+            lang='en_IN'
+
+        )
+
+        .replace(
+
+            ',',
+
+            ''
+
+        )
 
         .title()
 
@@ -14183,7 +15777,9 @@ def generate_proposal(proposal_id):
 
             proposal.no_of_mvd_units
 
-        ).title()
+        )
+
+        .title()
 
     )
 
@@ -14247,18 +15843,44 @@ def generate_proposal(proposal_id):
             proposal.installation_cost
         ),
 
-        'amount_in_words':
-        amount_in_words,
-
         'total_amount':
         indian_format(
             proposal.total_amount
-        )
+        ),
+
+        'total_amount_in_words':
+        total_amount_in_words,
+
+        'discount':
+        indian_format(
+            proposal.discount
+            or 0
+        ),
+
+        'final_amount':
+        indian_format(
+            proposal.final_amount
+        ),
+
+        'final_amount_in_words':
+        final_amount_in_words,
+
+        'outdoor_pm25':
+        air_quality['pm25'],
+
+        'outdoor_pm10':
+        air_quality['pm10'],
+
+        'outdoor_co2':
+        air_quality['co2']
+    
 
     }
 
     doc.render(
+
         context
+
     )
 
     output_folder = os.path.join(
@@ -14292,7 +15914,9 @@ def generate_proposal(proposal_id):
     )
 
     doc.save(
+
         output_path
+
     )
 
     return send_file(
@@ -14301,7 +15925,1029 @@ def generate_proposal(proposal_id):
 
         as_attachment=True
 
-    )        
+    )      
+
+@app.route(
+    '/generate-proforma/<int:proposal_id>'
+)
+def generate_proforma(
+
+    proposal_id
+
+):
+
+    proposal = Proposal.query.get_or_404(
+
+        proposal_id
+
+    )
+
+    proforma_no = request.args.get(
+
+        'proforma_no'
+
+    )
+
+    proforma_date = parse_date(
+
+        request.args.get(
+
+            'proforma_date'
+
+        )
+
+    )
+
+    hsn_code = request.args.get(
+
+        'hsn_code'
+
+    )
+
+    template_path = os.path.join(
+
+        app.root_path,
+
+        'templates',
+
+        'proforma_invoice_template.docx'
+
+    )
+
+    doc = DocxTemplate(
+
+        template_path
+
+    )
+    taxable_amount = float(
+
+        proposal.final_amount
+
+    ) / 1.18
+
+    gst = float(
+
+        proposal.final_amount
+
+    ) - taxable_amount
+
+    final_amount = float(
+
+        proposal.final_amount
+
+    )
+
+    total_amount_in_words = (
+
+        num2words(
+
+            int(
+
+                final_amount
+
+            ),
+
+            lang='en_IN'
+
+        )
+
+        .replace(
+
+            ',',
+
+            ''
+
+        )
+
+        .title()
+
+        + ' Rupees Only'
+
+    )
+
+    context = {
+
+        'proforma_no':
+        proforma_no,
+
+        'proforma_date':
+        proforma_date.strftime(
+            '%d-%m-%Y'
+        )
+        if proforma_date
+        else '',
+
+        'hsn_code':
+        hsn_code,
+
+        'name':
+        proposal.name,
+
+        'site_address':
+        proposal.site_address,
+
+        'product':
+        proposal.product,
+
+        'total_no_of_units':
+        proposal.total_no_of_units,
+
+        'cost_total_per_unit':
+        indian_format(
+            proposal.cost_total_per_unit
+        ),
+
+        'total_amount':
+        indian_format(
+            taxable_amount
+        ),
+
+        'gst':
+        indian_format(
+            gst
+        ),
+
+        'final_amount':
+        indian_format(
+            final_amount
+        ),
+
+        'final_amount_in_words':
+        total_amount_in_words
+
+    }
+    doc.render(
+
+        context
+
+    )
+
+    output_folder = os.path.join(
+
+        app.root_path,
+
+        'generated_proformas'
+
+    )
+
+    os.makedirs(
+
+        output_folder,
+
+        exist_ok=True
+
+    )
+
+    filename = (
+
+        f'Proforma_Invoice_{proposal.proposal_id}.docx'
+
+    )
+
+    output_path = os.path.join(
+
+        output_folder,
+
+        filename
+
+    )
+
+    doc.save(
+
+        output_path
+
+    )
+
+    return send_file(
+
+        output_path,
+
+        as_attachment=True
+
+    )
+
+@app.route(
+    '/generate-advance-receipt/<int:sales_id>'
+)
+def generate_advance_receipt(
+
+    sales_id
+
+):
+
+    sale = SalesPipeline.query.get_or_404(
+
+        sales_id
+
+    )
+
+    receipt_no = request.args.get(
+
+        'receipt_no'
+
+    )
+
+    receipt_date = parse_date(
+
+        request.args.get(
+
+            'receipt_date'
+
+        )
+
+    )
+
+    hsn_code = request.args.get(
+
+        'hsn_code'
+
+    )
+
+    template_path = os.path.join(
+
+        app.root_path,
+
+        'templates',
+
+        'advance_receipt_template.docx'
+
+    )
+
+    doc = DocxTemplate(
+
+        template_path
+
+    )
+
+    amount_in_words = (
+
+        num2words(
+
+            int(
+
+                sale.amount_received
+
+            ),
+
+            lang='en_IN'
+
+        )
+
+        .replace(
+
+            ',',
+
+            ''
+
+        )
+
+        .title()
+
+        + ' Rupees Only'
+
+    )
+
+    context = {
+
+        'receipt_no':
+        receipt_no,
+
+        'receipt_date':
+        receipt_date.strftime(
+
+            '%d-%m-%Y'
+
+        )
+        if receipt_date
+        else '',
+
+        'hsn_code':
+        hsn_code,
+
+        'name':
+        sale.name,
+
+        'address':
+        sale.address,
+
+        'revenue':
+        indian_format(
+
+            sale.revenue
+
+        ),
+
+        'total_revenue':
+        indian_format(
+
+            sale.total_revenue
+
+        ),
+
+        'amount_received':
+        indian_format(
+
+            sale.amount_received
+
+        ),
+
+        'amount_due':
+        indian_format(
+
+            sale.amount_due
+
+        ),
+
+        'amount_in_words':
+        amount_in_words
+
+    }
+
+    doc.render(
+
+        context
+
+    )
+
+    output_folder = os.path.join(
+
+        app.root_path,
+
+        'generated_advance_receipts'
+
+    )
+
+    os.makedirs(
+
+        output_folder,
+
+        exist_ok=True
+
+    )
+
+    filename = (
+
+        f'Advance_Receipt_{sale.sales_id}.docx'
+
+    )
+
+    output_path = os.path.join(
+
+        output_folder,
+
+        filename
+
+    )
+
+    doc.save(
+
+        output_path
+
+    )
+
+    return send_file(
+
+        output_path,
+
+        as_attachment=True
+
+    )
+
+@app.route(
+    '/reminders'
+)
+def reminders():
+
+    if 'user_id' not in session:
+
+        return redirect(
+            url_for(
+                'login'
+            )
+        )
+
+    today = date.today()
+
+    pending_reminders = Reminder.query.filter(
+
+        Reminder.created_by == session.get(
+            'username'
+        ),
+
+        Reminder.status == 'PENDING',
+
+        Reminder.is_dismissed == False,
+
+        or_(
+
+            Reminder.snooze_until == None,
+
+            Reminder.snooze_until <= datetime.now()
+
+        )
+
+    ).order_by(
+
+        Reminder.reminder_date.asc(),
+
+        Reminder.reminder_time.asc()
+
+    ).all()
+
+    completed_reminders = Reminder.query.filter(
+
+        Reminder.created_by == session.get(
+            'username'
+        ),
+
+        Reminder.status == 'COMPLETED'
+
+    ).order_by(
+
+        Reminder.created_on.desc()
+
+    ).all()
+
+    overdue_count = sum(
+
+        1
+
+        for reminder in pending_reminders
+
+        if reminder.reminder_date < today
+
+    )
+
+    today_count = sum(
+
+        1
+
+        for reminder in pending_reminders
+
+        if reminder.reminder_date == today
+
+    )
+
+    upcoming_count = sum(
+
+        1
+
+        for reminder in pending_reminders
+
+        if reminder.reminder_date > today
+
+    )
+
+    return render_template(
+
+        'reminders.html',
+
+        reminders=pending_reminders,
+
+        completed_reminders=completed_reminders,
+
+        overdue_count=overdue_count,
+
+        today_count=today_count,
+
+        upcoming_count=upcoming_count,
+
+        today=today
+
+    )
+
+@app.route(
+
+    '/add-reminder',
+
+    methods=['POST']
+
+)
+def add_reminder():
+
+    if 'user_id' not in session:
+
+        return redirect(
+
+            url_for(
+
+                'login'
+
+            )
+
+        )
+
+    reminder = Reminder(
+
+        title=request.form.get(
+
+            'title'
+
+        ),
+
+        description=request.form.get(
+
+            'description'
+
+        ),
+
+        reminder_date=parse_date(
+
+            request.form.get(
+
+                'reminder_date'
+
+            )
+
+        ),
+
+        reminder_time=(
+
+            datetime.strptime(
+
+                request.form.get(
+
+                    'reminder_time'
+
+                ),
+
+                '%H:%M'
+
+            ).time()
+
+            if request.form.get(
+
+                'reminder_time'
+
+            )
+
+            else None
+
+        ),
+
+        priority=request.form.get(
+
+            'priority'
+
+        ),
+
+        repeat_type=request.form.get(
+
+            'repeat_type'
+
+        ),
+
+        created_by=session.get(
+
+            'username'
+
+        )
+
+    )
+
+    db.session.add(
+
+        reminder
+
+    )
+
+    db.session.commit()
+
+    flash(
+
+        'Reminder added successfully.',
+
+        'success'
+
+    )
+
+    return redirect(
+
+        url_for(
+
+            'reminders'
+
+        )
+
+    )
+
+@app.route(
+
+    '/edit-reminder/<int:reminder_id>',
+
+    methods=['POST']
+
+)
+def edit_reminder(
+
+    reminder_id
+
+):
+
+    if 'user_id' not in session:
+
+        return redirect(
+
+            url_for(
+
+                'login'
+
+            )
+
+        )
+
+    reminder = Reminder.query.get_or_404(
+
+        reminder_id
+
+    )
+
+    if reminder.created_by != session.get(
+
+        'username'
+
+    ):
+
+        flash(
+
+            'You cannot edit this reminder.',
+
+            'danger'
+
+        )
+
+        return redirect(
+
+            url_for(
+
+                'reminders'
+
+            )
+
+        )
+
+    reminder.title = request.form.get(
+
+        'title'
+
+    )
+
+    reminder.description = request.form.get(
+
+        'description'
+
+    )
+
+    reminder.reminder_date = parse_date(
+
+        request.form.get(
+
+            'reminder_date'
+
+        )
+
+    )
+
+    reminder.reminder_time = (
+
+        datetime.strptime(
+
+            request.form.get(
+
+                'reminder_time'
+
+            ),
+
+            '%H:%M'
+
+        ).time()
+
+        if request.form.get(
+
+            'reminder_time'
+
+        )
+
+        else None
+
+    )
+
+    reminder.priority = request.form.get(
+
+        'priority'
+
+    )
+
+    reminder.repeat_type = request.form.get(
+
+        'repeat_type'
+
+    )
+
+    db.session.commit()
+
+    flash(
+
+        'Reminder updated successfully.',
+
+        'success'
+
+    )
+
+    return redirect(
+
+        url_for(
+
+            'reminders'
+
+        )
+
+    )
+
+@app.route(
+
+    '/complete-reminder/<int:reminder_id>'
+
+)
+def complete_reminder(
+
+    reminder_id
+
+):
+
+    if 'user_id' not in session:
+
+        return redirect(
+
+            url_for(
+
+                'login'
+
+            )
+
+        )
+
+    reminder = Reminder.query.get_or_404(
+
+        reminder_id
+
+    )
+
+    if reminder.created_by != session.get(
+
+        'username'
+
+    ):
+
+        flash(
+
+            'You cannot modify this reminder.',
+
+            'danger'
+
+        )
+
+        return redirect(
+
+            url_for(
+
+                'reminders'
+
+            )
+
+        )
+
+    reminder.status = 'COMPLETED'
+
+    db.session.commit()
+
+    flash(
+
+        'Reminder marked as completed.',
+
+        'success'
+
+    )
+
+    return redirect(
+
+        url_for(
+
+            'reminders'
+
+        )
+
+    )
+
+@app.route(
+
+    '/snooze-reminder/<int:reminder_id>',
+
+    methods=['POST']
+
+)
+def snooze_reminder(
+
+    reminder_id
+
+):
+
+    if 'user_id' not in session:
+
+        return redirect(
+
+            url_for(
+
+                'login'
+
+            )
+
+        )
+
+    reminder = Reminder.query.get_or_404(
+
+        reminder_id
+
+    )
+
+    if reminder.created_by != session.get(
+
+        'username'
+
+    ):
+
+        flash(
+
+            'You cannot modify this reminder.',
+
+            'danger'
+
+        )
+
+        return redirect(
+
+            url_for(
+
+                'reminders'
+
+            )
+
+        )
+
+    snooze_option = request.form.get(
+
+        'snooze_option'
+
+    )
+
+    custom_date = request.form.get(
+
+        'custom_date'
+
+    )
+
+    now = datetime.now()
+
+    if snooze_option == 'tomorrow':
+
+        reminder.snooze_until = now + timedelta(
+
+            days=1
+
+        )
+
+    elif snooze_option == '3days':
+
+        reminder.snooze_until = now + timedelta(
+
+            days=3
+
+        )
+
+    elif snooze_option == 'week':
+
+        reminder.snooze_until = now + timedelta(
+
+            days=7
+
+        )
+
+    elif snooze_option == 'custom' and custom_date:
+
+        reminder.snooze_until = datetime.combine(
+
+            parse_date(
+
+                custom_date
+
+            ),
+
+            datetime.min.time()
+
+        )
+
+    
+
+    db.session.commit()
+
+    flash(
+
+        'Reminder snoozed successfully.',
+
+        'success'
+
+    )
+
+    return redirect(
+
+        url_for(
+
+            'reminders'
+
+        )
+
+    )
+
+@app.route(
+
+    '/delete-reminder/<int:reminder_id>',
+
+    methods=['POST']
+
+)
+def delete_reminder(
+
+    reminder_id
+
+):
+
+    if 'user_id' not in session:
+
+        return redirect(
+
+            url_for(
+
+                'login'
+
+            )
+
+        )
+
+    reminder = Reminder.query.get_or_404(
+
+        reminder_id
+
+    )
+
+    if reminder.created_by != session.get(
+
+        'username'
+
+    ):
+
+        flash(
+
+            'You cannot delete this reminder.',
+
+            'danger'
+
+        )
+
+        return redirect(
+
+            url_for(
+
+                'reminders'
+
+            )
+
+        )
+
+    db.session.delete(
+
+        reminder
+
+    )
+
+    db.session.commit()
+
+    flash(
+
+        'Reminder deleted successfully.',
+
+        'success'
+
+    )
+
+    return redirect(
+
+        url_for(
+
+            'reminders'
+
+        )
+
+    )
 
 if __name__ == '__main__':
 
