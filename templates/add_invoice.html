@@ -1,12 +1,20 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 
 <head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Invoice Management</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
           rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet">
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='css/mevachi-crm.css') }}">
 
 </head>
 
@@ -26,11 +34,11 @@
     {% endif %}
 {% endwith %}
 
-<body class="bg-light">
+<body class="mevachi-app">
 
 <div class="container mt-5">
 
-    <div class="d-flex justify-content-end gap-2 mb-3">
+    <div class="d-flex justify-content-end gap-2 mb-3 mevachi-page-nav">
 
         <a href="javascript:history.back()"
            class="btn btn-outline-secondary">
@@ -463,24 +471,13 @@
                     <td>
 
                         <a href="/invoice/{{ invoice.invoice_id }}"
-                           class="btn btn-dark btn-sm">
-
-                            View
-
-                        </a>
+                           class="btn btn-outline-primary btn-sm mevachi-icon-btn" title="View" aria-label="View"><i class="bi bi-eye"></i></a>
                         <a href="/edit-invoice/{{ invoice.invoice_id }}"
-                           class="btn btn-warning btn-sm">
-
-                            Edit
-                        </a>
+                           class="btn btn-outline-warning btn-sm mevachi-icon-btn" title="Edit" aria-label="Edit"><i class="bi bi-pencil"></i></a>
                         <a href="/request-delete-invoice/{{ invoice.invoice_id }}"
-                           class="btn btn-danger btn-sm"
-                           onclick="return confirm(
+                           class="btn btn-outline-danger btn-sm mevachi-icon-btn" title="Delete" aria-label="Delete" onclick="return confirm(
                                'Delete this invoice?'
-                           )">
-
-                            Delete
-                        </a>
+                           )"><i class="bi bi-trash"></i></a>
 
                     </td>
 
@@ -564,6 +561,9 @@ document.getElementById(
 
 </script>
 
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/mevachi-ui.js') }}"></script>
 </body>
 
 </html>

@@ -1,120 +1,43 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
 
-    <title>CRM Login</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <style>
+    <title>MeVaChi CRM — Sign In</title>
 
-        body{
-
-            font-family: Arial, sans-serif;
-
-            background:#f5f7fa;
-
-            display:flex;
-
-            justify-content:center;
-
-            align-items:center;
-
-            height:100vh;
-
-            margin:0;
-
-        }
-
-        .login-box{
-
-            background:white;
-
-            padding:40px;
-
-            border-radius:12px;
-
-            box-shadow:0px 0px 15px rgba(0,0,0,0.1);
-
-            width:350px;
-
-            text-align:center;
-
-        }
-
-        input{
-
-            width:100%;
-
-            padding:12px;
-
-            margin:10px 0;
-
-            border:1px solid #ddd;
-
-            border-radius:6px;
-
-            box-sizing:border-box;
-
-        }
-
-        button{
-
-            width:100%;
-
-            padding:12px;
-
-            border:none;
-
-            border-radius:6px;
-
-            background:#2c3e50;
-
-            color:white;
-
-            font-size:16px;
-
-            cursor:pointer;
-
-        }
-
-        button:hover{
-
-            background:#1f2d3d;
-
-        }
-
-    </style>
-
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet">
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='css/mevachi-crm.css') }}">
 </head>
 
-<body>
+<body class="mevachi-login">
 
-<div class="login-box">
+<div class="mevachi-login-wrap">
 
-    <h2>CRM Login</h2>
+    <div class="mevachi-login-brand">
+        <div class="brand-icon"><i class="bi bi-wind"></i></div>
+        <h1>MeVaChi Solutions</h1>
+        <p>Clean Air · Engineered</p>
+    </div>
 
-    <form method="POST">
-
-        <input type="text"
-               name="username"
-               placeholder="Username"
-               required>
-
-        <input type="password"
-               name="password"
-               placeholder="Password"
-               required>
-
-        <button type="submit">
-
-            Login
-
-        </button>
-
-    </form>
+    <div class="mevachi-login-box">
+        <h2>Sign in to your workspace</h2>
+        <form method="POST">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit"><i class="bi bi-box-arrow-in-right"></i> Sign In</button>
+        </form>
+    </div>
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/mevachi-ui.js') }}"></script>
 </body>
 
 </html>

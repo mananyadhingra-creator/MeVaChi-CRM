@@ -1,9 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 
 <head>
 
-<title>CRM Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>MeVaChi CRM</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet">
@@ -12,250 +14,118 @@
 <link
     rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<style>
-
-body{
-
-    font-family:'Poppins',sans-serif;
-
-    background:#f5f7fa;
-
-    margin:0;
-
-    overflow-x:hidden;
-}
-
-.container{
-
-    max-width: 1400px;
-
-    margin: auto;
-
-    padding-top: 30px;
-
-}
-
-.card{
-
-    margin:10px;
-
-    padding:25px;
-
-    background:white;
-
-    border-radius:10px;
-
-    box-shadow:0px 0px 10px rgba(0,0,0,0.1);
-
-    text-decoration:none;
-
-    color:#333;
-
-    transition:0.3s;
-
-    min-height: 120px;
-
-    padding: 15px;
-
-}
-
-.analytics-card {
-
-    height: 120px;
-    
-    max-width: 400px;
-
-    margin: 10px;
-}
-
-.card:hover{
-
-    transform:scale(1.03);
-    transform:translateY(-5px);
-
-}
-
-.dashboard-title{
-
-    font-family:'Poppins',sans-serif;
-
-    font-size:52px;
-
-    font-weight:550;
-
-    color:#1f2937;
-
-    margin:0;
-
-}
-
-.module-card{
-
-    height:90px;
-
-    width: 87%;
-
-    margin: auto;
-
-    display:flex;
-
-    align-items:center;
-
-    justify-content:center;
-
-    font-size:24px;
-
-    font-weight:500;
-}
-
-.task-number{
-
-    font-size:48px;
-
-    font-weight:700;
-
-    color:#2563eb;
-}
-
-.small-stat-card{
-    height: 100px;
-}
-
-</style>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet">
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='css/mevachi-crm.css') }}">
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+
 </head>
 
-<body>
+<body class="mevachi-app mevachi-dashboard">
 
 <div class="container-fluid px-4">
 
     <!-- Top Row -->
 
-    <div class="position-relative mb-5">
-
-        <!-- Logo -->
+    <div class="position-relative mb-3 mevachi-dash-header">
 
         <div class="position-absolute start-0 top-0">
 
-            <img src="{{ url_for(
-                'static',
-                filename='images/logo.png'
-            ) }}"
-            style="height:70px;">
+            <img src="{{ url_for('static', filename='images/logo.png') }}"
+            style="height:56px;">
 
         </div>
 
-        <!-- Notification Bell -->
-
         <div class="position-absolute end-0 top-0">
 
-            <button
-                type="button"
-                class="btn btn-light rounded-circle shadow-sm position-relative"
-                style="width:60px;height:60px;"
+            <button type="button"
+                class="btn btn-light rounded-circle shadow-sm position-relative mevachi-notify-btn"
                 data-bs-toggle="modal"
                 data-bs-target="#notificationModal">
-
-                <i
-                    class="bi bi-bell-fill"
-                    style="font-size:24px;">
-
-                </i>
-
+                <i class="bi bi-bell-fill"></i>
                 {% if notification_count > 0 %}
-
-                <span
-                    class="badge bg-danger position-absolute"
-                    style="top:6px;right:4px;">
-
-                    {{ notification_count }}
-
-                </span>
-
+                <span class="badge bg-danger position-absolute">{{ notification_count }}</span>
                 {% endif %}
-
             </button>
 
         </div>
 
-        <!-- Dashboard Heading -->
-
-        <div class="text-center pt-5">
-
-            <h1 class="dashboard-title">
-
-                CRM Dashboard
-
-            </h1>
-
-            <h5 class="text-muted mt-3">
-
-                {{ greeting }},
-
-                {{ session['username'] }}
-
-                👋
-
-            </h5>
-
-            <p class="text-muted">
-
-                {{ notification_count }} Pending Notifications
-
-            </p>
-
+        <div class="text-center pt-2">
+            <h1 class="dashboard-title">MeVaChi CRM</h1>
+            <p class="dashboard-tagline mb-0">Indoor Air Quality · Smart Building Operations</p>
+            <p class="text-muted small mt-2 mb-0">{{ greeting }}, {{ session['username'] }} · {{ notification_count }} tasks pending!!</p>
         </div>
 
     </div>
+
+</div>
 
 
     <!-- SEARCH -->
 
-    <div class="d-flex justify-content-center mb-4">
+<!-- Logo + Heading Row -->
+<div class="row align-items-center mb-4">
 
-        <div class="col-lg-10">
+    <div class="col-lg-3 col-md-4">
+        <!-- Logo -->
+    </div>
 
-            <form action="{{ url_for('global_search') }}"
-                  method="GET">
+    <div class="col-lg-6 col-md-8 text-center">
+        <!-- MeVaChi CRM -->
+    </div>
 
-                <div class="input-group">
+    <div class="col-lg-3 text-end">
+        <!-- Notifications -->
+    </div>
 
-                    <input type="text"
-                           name="search"
-                           placeholder="Search anything..."
-                           class="form-control form-control-lg"
-                           style="
-                                
-                                height: 50px;
-                                font-size: 16px;
-                            ">
+</div>
 
-                    <button class="btn btn-dark"
-                            type="submit">
+<!-- SEARCH ROW -->
+<div class="row justify-content-center mevachi-dashboard-search">
 
-                        Search
+    <div class="col-12">
 
-                    </button>
+        <form action="{{ url_for('global_search') }}" method="GET">
 
-                </div>
+            <div class="input-group">
 
-            </form>
+                <span class="input-group-text">
+                    <i class="bi bi-search"></i>
+                </span>
 
-        </div>
+                <input
+                    type="text"
+                    class="form-control"
+                    name="search"
+                    placeholder="Search clients, leads, proposals..."
+                >
+
+                <button class="btn btn-primary" type="submit">
+                    Search
+                </button>
+
+            </div>
+
+        </form>
 
     </div>
 
+</div>
 
+<div class="container-fluid px-4">
 
-    <!-- TASKS -->
+    <div class="mevachi-dash-section">
+
+    <p class="mevachi-dash-section-title"><i class="bi bi-speedometer2 me-1"></i> Overview</p>
 
     {% if session['role'] == 'SALES' %}
 
-    <div class="row justify-content-center">
+    <div class="row g-3 mevachi-kpi-row">
 
-        <div class="col-md-4">
+        <div class="col-lg-4 col-md-6">
 
             <a href="{{ url_for('tasks') }}"
                style="text-decoration:none; color:inherit;">
@@ -264,7 +134,7 @@ body{
 
                     <div class="card-body">
 
-                        <h5>Followups</h5>
+                        <h5><i class="bi bi-calendar-check me-1"></i> Followups</h5>
 
                         <h4>{{ overdue_count + today_count }}</h4>
 
@@ -280,9 +150,9 @@ body{
 
     {% else %}
 
-    <div class="row justify-content-center">
+    <div class="row g-3 mevachi-kpi-row">
 
-        <div class="col-md-3">
+        <div class="col-lg-4 col-md-4 col-sm-6">
 
             <a href="{{ url_for('tasks') }}"
                style="text-decoration:none; color:inherit;">
@@ -291,7 +161,7 @@ body{
 
                     <div class="card-body">
 
-                        <h5>Followups</h5>
+                        <h5><i class="bi bi-calendar-check me-1"></i> Followups</h5>
 
                         <h4>{{ overdue_count + today_count }}</h4>
 
@@ -303,7 +173,7 @@ body{
 
         </div>
 
-        <div class="col-md-3">
+        <div class="col-lg-4 col-md-4 col-sm-6">
 
             <a href="{{ url_for('service_due') }}"
                style="text-decoration:none; color:inherit;">
@@ -312,7 +182,7 @@ body{
 
                     <div class="card-body">
 
-                        <h5>Services Due</h5>
+                        <h5><i class="bi bi-tools me-1"></i> Services Due</h5>
 
                         <h4>{{ services_due }}</h4>
 
@@ -324,7 +194,7 @@ body{
 
         </div>
 
-        <div class="col-md-3">
+        <div class="col-lg-4 col-md-4 col-sm-6">
 
             <a href="{{ url_for('cmc_due') }}"
                style="text-decoration:none; color:inherit;">
@@ -333,7 +203,7 @@ body{
 
                     <div class="card-body">
 
-                        <h5>CMC Due</h5>
+                        <h5><i class="bi bi-shield-check me-1"></i> CMC Due</h5>
 
                         <h4>{{ cmc_due }}</h4>
 
@@ -349,11 +219,13 @@ body{
 
     {% endif %}
 
+    </div>
 
-    <!-- MODULES -->
+    <div class="mevachi-dash-section">
 
+    <p class="mevachi-dash-section-title"><i class="bi bi-grid me-1"></i> Modules</p>
 
-    <div class="row justify-content-center g-3">
+    <div class="row g-3">
 
         {% if session['role'] in [
             'ADMIN',
@@ -585,10 +457,15 @@ body{
 
     </div>
 
+    </div>
 
 </div>
 
-<div class="row mt-4">
+<div class="container-fluid px-4 mevachi-dash-section">
+
+<p class="mevachi-dash-section-title px-1"><i class="bi bi-bar-chart-line me-1"></i> Analytics</p>
+
+<div class="row g-4">
 
     <div class="col-lg-6 mb-4">
 
@@ -1294,6 +1171,13 @@ window.onload = function(){
 
 <script>
 
+Chart.defaults.color = '#64748b';
+Chart.defaults.borderColor = 'rgba(14, 165, 233, 0.12)';
+Chart.defaults.datasets.doughnut.backgroundColor = ['#0d9488','#14b8a6','#0ea5e9','#10b981','#38bdf8','#0f766e'];
+Chart.defaults.datasets.bar.backgroundColor = '#0d9488';
+Chart.defaults.datasets.line.borderColor = '#0d9488';
+Chart.defaults.datasets.line.backgroundColor = 'rgba(13, 148, 136, 0.1)';
+
 new Chart(
 
 document.getElementById(
@@ -1624,55 +1508,11 @@ display:false
 
 </script>
 
-<a
-
-    href="#"
-
-    class="btn btn-primary rounded-circle shadow"
-
-    data-bs-toggle="dropdown"
-
-    style="
-
-        position:fixed;
-
-        bottom:25px;
-
-        right:25px;
-
-        width:58px;
-
-        height:58px;
-
-        font-size:28px;
-
-        z-index:999;
-
-        display:flex;
-
-        align-items:center;
-
-        justify-content:center;
-
-    ">
-
-    +
-
+<a href="#" class="btn btn-primary mevachi-fab" data-bs-toggle="dropdown" aria-label="Quick actions">
+    <i class="bi bi-plus-lg"></i>
 </a>
 
-<ul
-
-    class="dropdown-menu dropdown-menu-end"
-
-    style="
-
-        position:fixed;
-
-        bottom:95px;
-
-        right:25px;
-
-    ">
+<ul class="dropdown-menu dropdown-menu-end mevachi-fab-menu">
 
     
 
@@ -1692,6 +1532,8 @@ display:false
 
 </ul>
 
+
+<script src="{{ url_for('static', filename='js/mevachi-ui.js') }}"></script>
 </body>
 
 </html>

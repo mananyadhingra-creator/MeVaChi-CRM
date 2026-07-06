@@ -1,7 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 
 <head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>
 
@@ -11,13 +13,86 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
           rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet">
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='css/mevachi-crm.css') }}">
+
+.mevachi-dashboard-search{
+    width:100%;
+    margin:2rem auto;
+}
+
+.mevachi-dashboard-search form{
+    width:100%;
+}
+
+.mevachi-dashboard-search .input-group{
+    width:100%;
+}
+
+.mevachi-dashboard-search .form-control,
+.mevachi-dashboard-search .input-group-text{
+    height:64px;
+    font-size:1.1rem;
+}
+
+.mevachi-dashboard-search .form-control{
+    border-radius:0;
+}
+
+.mevachi-dashboard-search .input-group-text{
+    border-radius:50px 0 0 50px;
+    padding:0 1.3rem;
+    background:#fff;
+}
+
+.mevachi-dashboard-search .btn{
+    min-width:170px;
+    border-radius:0 50px 50px 0;
+    font-size:1.15rem;
+    font-weight:600;
+}
+
+@media (max-width:992px){
+
+    .mevachi-dashboard-search .btn{
+        min-width:140px;
+    }
+
+}
+
+@media (max-width:768px){
+
+    .mevachi-dashboard-search .btn{
+        min-width:120px;
+    }
+
+    .mevachi-dashboard-search .form-control,
+    .mevachi-dashboard-search .btn,
+    .mevachi-dashboard-search .input-group-text{
+        height:56px;
+    }
+
+}
+
+@media (max-width:576px){
+
+    .mevachi-dashboard-search .btn{
+        min-width:95px;
+        font-size:1rem;
+    }
+
+}
 
 </head>
 
-<body class="bg-light">
+<body class="mevachi-app">
 
 <div class="container py-5">
-    <div class="d-flex justify-content-end gap-2 mb-3">
+    <div class="d-flex justify-content-end gap-2 mb-3 mevachi-page-nav">
 
         <a href="javascript:history.back()"
            class="btn btn-outline-secondary">
@@ -145,11 +220,7 @@
                                 'edit_client',
                                 client_id=client.client_id
                             ) }}"
-                               class="btn btn-primary btn-sm">
-
-                                View
-
-                            </a>
+                               class="btn btn-outline-primary btn-sm mevachi-icon-btn" title="View" aria-label="View"><i class="bi bi-eye"></i></a>
 
                         </td>
 
@@ -177,6 +248,9 @@
 
 </div>
 
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/mevachi-ui.js') }}"></script>
 </body>
 
 </html>

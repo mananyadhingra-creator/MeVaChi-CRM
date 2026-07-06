@@ -1,7 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 
 <head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>
 
@@ -11,14 +13,20 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
           rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet">
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='css/mevachi-crm.css') }}">
 
 </head>
 
-<body class="bg-light">
+<body class="mevachi-app">
 
 <div class="container mt-5">
 
-    <div class="d-flex justify-content-end gap-2 mb-3">
+    <div class="d-flex justify-content-end gap-2 mb-3 mevachi-page-nav">
 
         <a href="javascript:history.back()"
            class="btn btn-outline-secondary">
@@ -324,11 +332,7 @@ installations|length
                         ) %}
 
                         <a href="/lead/{{ lead.lead_id }}"
-                           class="btn btn-dark btn-sm">
-
-                            View
-
-                        </a>
+                           class="btn btn-outline-primary btn-sm mevachi-icon-btn" title="View" aria-label="View"><i class="bi bi-eye"></i></a>
 
                         {% endif %}
 
@@ -337,11 +341,7 @@ installations|length
                         ) %}
 
                         <a href="/edit-lead/{{ lead.lead_id }}"
-                           class="btn btn-warning btn-sm">
-
-                            Edit
-
-                        </a>
+                           class="btn btn-outline-warning btn-sm mevachi-icon-btn" title="Edit" aria-label="Edit"><i class="bi bi-pencil"></i></a>
 
                         {% endif %}
 
@@ -350,11 +350,7 @@ installations|length
                         ) %}
 
                         <a href="/request-delete-lead/{{ lead.lead_id }}"
-                           class="btn btn-danger btn-sm">
-
-                            Delete
-
-                        </a>
+                           class="btn btn-outline-danger btn-sm mevachi-icon-btn" title="Delete" aria-label="Delete"><i class="bi bi-trash"></i></a>
 
                         {% endif %}
 
@@ -443,11 +439,7 @@ installations|length
                         ) %}
 
                         <a href="/meeting/{{ meeting.meeting_id }}"
-                           class="btn btn-dark btn-sm">
-
-                            View
-
-                        </a>
+                           class="btn btn-outline-primary btn-sm mevachi-icon-btn" title="View" aria-label="View"><i class="bi bi-eye"></i></a>
 
                         {% endif %}
 
@@ -456,11 +448,7 @@ installations|length
                         ) %}
 
                         <a href="/edit-meeting/{{ meeting.meeting_id }}"
-                           class="btn btn-warning btn-sm">
-
-                            Edit
-
-                        </a>
+                           class="btn btn-outline-warning btn-sm mevachi-icon-btn" title="Edit" aria-label="Edit"><i class="bi bi-pencil"></i></a>
 
                         {% endif %}
 
@@ -469,11 +457,7 @@ installations|length
                         ) %}
 
                         <a href="/request-delete-meeting/{{ meeting.meeting_id }}"
-                           class="btn btn-danger btn-sm">
-
-                            Delete
-
-                        </a>
+                           class="btn btn-outline-danger btn-sm mevachi-icon-btn" title="Delete" aria-label="Delete"><i class="bi bi-trash"></i></a>
 
                         {% endif %}
 
@@ -565,11 +549,7 @@ installations|length
                         ) %}
 
                         <a href="/visit/{{ visit.visit_id }}"
-                           class="btn btn-dark btn-sm">
-
-                            View
-
-                        </a>
+                           class="btn btn-outline-primary btn-sm mevachi-icon-btn" title="View" aria-label="View"><i class="bi bi-eye"></i></a>
 
                         {% endif %}
 
@@ -578,11 +558,7 @@ installations|length
                         ) %}
 
                         <a href="/edit-visit/{{ visit.visit_id }}"
-                           class="btn btn-warning btn-sm">
-
-                            Edit
-
-                        </a>
+                           class="btn btn-outline-warning btn-sm mevachi-icon-btn" title="Edit" aria-label="Edit"><i class="bi bi-pencil"></i></a>
 
                         {% endif %}
 
@@ -591,11 +567,7 @@ installations|length
                         ) %}
 
                         <a href="/request-delete-visit/{{ visit.visit_id }}"
-                           class="btn btn-danger btn-sm">
-
-                            Delete
-
-                        </a>
+                           class="btn btn-outline-danger btn-sm mevachi-icon-btn" title="Delete" aria-label="Delete"><i class="bi bi-trash"></i></a>
 
                         {% endif %}
 
@@ -677,33 +649,21 @@ installations|length
                         {% if can_view_search_result('DRAWING', drawing) %}
 
                         <a href="/drawing/{{ drawing.drawing_id }}"
-                           class="btn btn-dark btn-sm">
-
-                            View
-
-                        </a>
+                           class="btn btn-outline-primary btn-sm mevachi-icon-btn" title="View" aria-label="View"><i class="bi bi-eye"></i></a>
 
                         {% endif %}
 
                         {% if can_edit_search_result(drawing) %}
 
                         <a href="/edit-drawing/{{ drawing.drawing_id }}"
-                           class="btn btn-warning btn-sm">
-
-                            Edit
-
-                        </a>
+                           class="btn btn-outline-warning btn-sm mevachi-icon-btn" title="Edit" aria-label="Edit"><i class="bi bi-pencil"></i></a>
 
                         {% endif %}
 
                         {% if can_delete_search_result(drawing) %}
 
                         <a href="/request-delete-drawing/{{ drawing.drawing_id }}"
-                           class="btn btn-danger btn-sm">
-
-                            Delete
-
-                        </a>
+                           class="btn btn-outline-danger btn-sm mevachi-icon-btn" title="Delete" aria-label="Delete"><i class="bi bi-trash"></i></a>
 
                         {% endif %}
 
@@ -792,33 +752,21 @@ installations|length
                         {% if can_view_search_result('PROPOSAL', proposal) %}
 
                         <a href="/proposal/{{ proposal.proposal_id }}"
-                           class="btn btn-dark btn-sm">
-
-                            View
-
-                        </a>
+                           class="btn btn-outline-primary btn-sm mevachi-icon-btn" title="View" aria-label="View"><i class="bi bi-eye"></i></a>
 
                         {% endif %}
 
                         {% if can_edit_search_result(proposal) %}
 
                         <a href="/edit-proposal/{{ proposal.proposal_id }}"
-                           class="btn btn-warning btn-sm">
-
-                            Edit
-
-                        </a>
+                           class="btn btn-outline-warning btn-sm mevachi-icon-btn" title="Edit" aria-label="Edit"><i class="bi bi-pencil"></i></a>
 
                         {% endif %}
 
                         {% if can_delete_search_result(proposal) %}
 
                         <a href="/request-delete-proposal/{{ proposal.proposal_id }}"
-                           class="btn btn-danger btn-sm">
-
-                            Delete
-
-                        </a>
+                           class="btn btn-outline-danger btn-sm mevachi-icon-btn" title="Delete" aria-label="Delete"><i class="bi bi-trash"></i></a>
 
                         {% endif %}
 
@@ -904,33 +852,21 @@ installations|length
                         {% if can_view_search_result('SALES', sale) %}
 
                         <a href="/sales/{{ sale.sales_id }}"
-                           class="btn btn-dark btn-sm">
-
-                            View
-
-                        </a>
+                           class="btn btn-outline-primary btn-sm mevachi-icon-btn" title="View" aria-label="View"><i class="bi bi-eye"></i></a>
 
                         {% endif %}
 
                         {% if can_edit_search_result(sale) %}
 
                         <a href="/edit-sales/{{ sale.sales_id }}"
-                           class="btn btn-warning btn-sm">
-
-                            Edit
-
-                        </a>
+                           class="btn btn-outline-warning btn-sm mevachi-icon-btn" title="Edit" aria-label="Edit"><i class="bi bi-pencil"></i></a>
 
                         {% endif %}
 
                         {% if can_delete_search_result(sale) %}
 
                         <a href="/request-delete-sales/{{ sale.sales_id }}"
-                           class="btn btn-danger btn-sm">
-
-                            Delete
-
-                        </a>
+                           class="btn btn-outline-danger btn-sm mevachi-icon-btn" title="Delete" aria-label="Delete"><i class="bi bi-trash"></i></a>
 
                         {% endif %}
 
@@ -1015,33 +951,21 @@ installations|length
                         {% if can_view_search_result('INVOICE', invoice) %}
 
                         <a href="/invoice/{{ invoice.invoice_id }}"
-                           class="btn btn-dark btn-sm">
-
-                            View
-
-                        </a>
+                           class="btn btn-outline-primary btn-sm mevachi-icon-btn" title="View" aria-label="View"><i class="bi bi-eye"></i></a>
 
                         {% endif %}
 
                         {% if can_edit_search_result(invoice) %}
 
                         <a href="/edit-invoice/{{ invoice.invoice_id }}"
-                           class="btn btn-warning btn-sm">
-
-                            Edit
-
-                        </a>
+                           class="btn btn-outline-warning btn-sm mevachi-icon-btn" title="Edit" aria-label="Edit"><i class="bi bi-pencil"></i></a>
 
                         {% endif %}
 
                         {% if can_delete_search_result(invoice) %}
 
                         <a href="/request-delete-invoice/{{ invoice.invoice_id }}"
-                           class="btn btn-danger btn-sm">
-
-                            Delete
-
-                        </a>
+                           class="btn btn-outline-danger btn-sm mevachi-icon-btn" title="Delete" aria-label="Delete"><i class="bi bi-trash"></i></a>
 
                         {% endif %}
 
@@ -1127,33 +1051,21 @@ installations|length
                         {% if can_view_search_result('CLIENT', client) %}
 
                         <a href="/client/{{ client.client_id }}"
-                           class="btn btn-dark btn-sm">
-
-                            View
-
-                        </a>
+                           class="btn btn-outline-primary btn-sm mevachi-icon-btn" title="View" aria-label="View"><i class="bi bi-eye"></i></a>
 
                         {% endif %}
 
                         {% if can_edit_search_result(client) %}
 
                         <a href="/edit-client/{{ client.client_id }}"
-                           class="btn btn-warning btn-sm">
-
-                            Edit
-
-                        </a>
+                           class="btn btn-outline-warning btn-sm mevachi-icon-btn" title="Edit" aria-label="Edit"><i class="bi bi-pencil"></i></a>
 
                         {% endif %}
 
                         {% if can_delete_search_result(client) %}
 
                         <a href="/request-delete-client/{{ client.client_id }}"
-                           class="btn btn-danger btn-sm">
-
-                            Delete
-
-                        </a>
+                           class="btn btn-outline-danger btn-sm mevachi-icon-btn" title="Delete" aria-label="Delete"><i class="bi bi-trash"></i></a>
 
                         {% endif %}
 
@@ -1238,33 +1150,21 @@ installations|length
                         {% if can_view_search_result('SERVICE', service) %}
 
                         <a href="/service/{{ service.card_id }}"
-                           class="btn btn-dark btn-sm">
-
-                            View
-
-                        </a>
+                           class="btn btn-outline-primary btn-sm mevachi-icon-btn" title="View" aria-label="View"><i class="bi bi-eye"></i></a>
 
                         {% endif %}
 
                         {% if can_edit_search_result(service) %}
 
                         <a href="/edit-service/{{ service.card_id }}"
-                           class="btn btn-warning btn-sm">
-
-                            Edit
-
-                        </a>
+                           class="btn btn-outline-warning btn-sm mevachi-icon-btn" title="Edit" aria-label="Edit"><i class="bi bi-pencil"></i></a>
 
                         {% endif %}
 
                         {% if can_delete_search_result(service) %}
 
                         <a href="/request-delete-service/{{ service.card_id }}"
-                           class="btn btn-danger btn-sm">
-
-                            Delete
-
-                        </a>
+                           class="btn btn-outline-danger btn-sm mevachi-icon-btn" title="Delete" aria-label="Delete"><i class="bi bi-trash"></i></a>
 
                         {% endif %}
 
@@ -1380,22 +1280,14 @@ installations|length
                     <td>
 
                         <a href="/installation/{{ installation.installation_id }}"
-                           class="btn btn-dark btn-sm">
-
-                            View
-
-                        </a>
+                           class="btn btn-outline-primary btn-sm mevachi-icon-btn" title="View" aria-label="View"><i class="bi bi-eye"></i></a>
 
                         {% if can_edit_search_result(
                             installation
                         ) %}
 
                         <a href="/edit-installation/{{ installation.installation_id }}"
-                           class="btn btn-warning btn-sm">
-
-                            Edit
-
-                        </a>
+                           class="btn btn-outline-warning btn-sm mevachi-icon-btn" title="Edit" aria-label="Edit"><i class="bi bi-pencil"></i></a>
 
                         {% endif %}
 
@@ -1404,11 +1296,7 @@ installations|length
                         ) %}
 
                         <a href="/request-delete-installation/{{ installation.installation_id }}"
-                           class="btn btn-danger btn-sm">
-
-                            Delete
-
-                        </a>
+                           class="btn btn-outline-danger btn-sm mevachi-icon-btn" title="Delete" aria-label="Delete"><i class="bi bi-trash"></i></a>
 
                         {% endif %}
 
@@ -1431,6 +1319,9 @@ installations|length
 
 </div>
 
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/mevachi-ui.js') }}"></script>
 </body>
 
 </html>

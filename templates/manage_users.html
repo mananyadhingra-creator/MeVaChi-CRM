@@ -4,6 +4,8 @@
 
 <head>
 
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>
 
     User Management
@@ -11,7 +13,13 @@
 </title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
       rel="stylesheet">
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='css/mevachi-crm.css') }}">
 
 </head>
 
@@ -31,10 +39,10 @@
     {% endif %}
 {% endwith %}
 
-<body>
+<body class="mevachi-app">
 
 <div class="container mt-5">
-    <div class="d-flex justify-content-end gap-2 mb-3">
+    <div class="d-flex justify-content-end gap-2 mb-3 mevachi-page-nav">
 
         <a href="javascript:history.back()"
            class="btn btn-outline-secondary">
@@ -51,21 +59,23 @@
         </a>
 
     </div>
-    <h2>
+    <div class="mevachi-user-toolbar">
 
-        User Management
+        <h2 class="mb-0">User Management</h2>
 
-    </h2>
+        <a href="{{ url_for('add_user') }}"
+           class="btn btn-dark">
 
-    <a href="{{ url_for('add_user') }}"
-       class="btn btn-dark mb-3">
+            <i class="bi bi-person-plus me-1"></i> Add User
 
-        Add User
+        </a>
 
-    </a>
+    </div>
 
 
-    <table class="table table-bordered">
+    <div class="table-responsive">
+
+    <table class="table table-bordered table-hover align-middle mb-0">
 
         <thead>
 
@@ -137,9 +147,11 @@
                         'edit_user',
                         user_id=user.user_id
                     ) }}"
-                       class="btn btn-dark btn-sm">
+                       class="btn btn-outline-warning btn-sm mevachi-icon-btn"
+                       title="Edit"
+                       aria-label="Edit">
 
-                        Edit
+                        <i class="bi bi-pencil"></i>
 
                     </a>
                     <a href="{{ url_for(
@@ -165,8 +177,13 @@
 
     </table>
 
+    </div>
+
 </div>
 
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/mevachi-ui.js') }}"></script>
 </body>
 
 </html>
