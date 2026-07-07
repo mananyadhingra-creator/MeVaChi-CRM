@@ -22,14 +22,13 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 app.config["SECRET_KEY"] = os.getenv(
     "SECRET_KEY",
-    "mevachi_demo_secret_key_2026_change_before_production"
+    "vdoer7$3_48=md3lr7*n02d3v189m4$hhy%^lu&ufe2h2-2qvl"
 )
 
-import os
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
     "DATABASE_URL",
-    "mysql+pymysql://root:RIYA1234@localhost/crm_db"
+    "mysql+pymysql://root:IWIWgslswszNUtcNMEZIESpVhLqLSIYg@hayabusa.proxy.rlwy.net:37924/railway"
 )
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -122,29 +121,24 @@ def get_dashboard_notifications(
     # PERSONAL REMINDERS
     # ========================================
 
-    reminders = Reminder.query.filter(
-
-        Reminder.created_by == username,
-
-        Reminder.status == 'PENDING',
-
-        Reminder.is_dismissed == False,
-
-        or_(
-
-            Reminder.snooze_until == None,
-
-            Reminder.snooze_until <= datetime.now()
-
+    reminders = (
+        Reminder.query
+        .filter(
+            Reminder.created_by == username,
+            Reminder.status == "PENDING",
+            Reminder.is_dismissed == False,
+            or_(
+                Reminder.snooze_until == None,
+                Reminder.snooze_until <= datetime.now()
+            )
         )
-
-    ).order_by(
-
-        Reminder.reminder_date.asc(),
-
-        Reminder.reminder_time.asc()
-
-    ).all()
+        .order_by(
+            Reminder.reminder_date.asc(),
+            Reminder.reminder_time.asc()
+        )
+        .limit(25)
+        .all()
+    )
 
     for reminder in reminders:
 
@@ -2855,44 +2849,35 @@ def dashboard():
         Proposal.next_to_call <= week_end
     ).all()
 
+    clients = Client.query.filter(
+        or_(
+            Client.last_service_date.isnot(None),
+            Client.activation_date.isnot(None)
+        )
+    ).all()
+
     service_due_clients = []
 
-    for client in Client.query.all():
-        update_client_status(client)
-        if client.last_service_date:
+    for client in clients:
 
-            due_date = (
-                client.last_service_date
-                + timedelta(
-                    days=client.service_interval_days
-                )
-            )
+        base_date = (
+            client.last_service_date
+            if client.last_service_date
+            else client.activation_date
+        )
 
-        elif client.activation_date:
-
-            due_date = (
-                client.activation_date
-                + timedelta(
-                    days=client.service_interval_days
-                )
-            )
-
-        else:
-
-            continue
+        due_date = base_date + timedelta(
+            days=client.service_interval_days
+        )
 
         if due_date <= today:
-
-            service_due_clients.append(
-                client
-            )
+            service_due_clients.append(client)
 
     service_due_clients.sort(
-
-        key=lambda x:
-        x.last_service_date
-        or x.activation_date
-        or date.min
+        key=lambda c: (
+            c.last_service_date
+            or c.activation_date
+        )
     )
 
     cmc_due_clients = Client.query.filter(
@@ -3006,18 +2991,13 @@ def dashboard():
 
     elif session.get('role') == 'COMMERCIALS':
 
-        commercial_users = User.query.filter_by(
-
-            role='COMMERCIALS'
-
-        ).all()
-
         usernames = [
-
-            user.username
-
-            for user in commercial_users
-
+            username
+            for (username,) in db.session.query(
+                User.username
+            ).filter(
+                User.role == "COMMERCIALS"
+            ).all()
         ]
 
         lead_query = Lead.query.filter(

@@ -1241,21 +1241,23 @@ body.mevachi-login::before {
     margin-bottom: 2rem;
 }
 
-.mevachi-login-brand .brand-icon {
-    width: 64px;
-    height: 64px;
-    border-radius: var(--mv-radius);
-    background: var(--mv-gradient-brand);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1rem;
-    box-shadow: var(--mv-shadow-lg);
+.mevachi-login-brand .brand-icon{
+    width:90px;
+    height:90px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin:0 auto 1rem;
+    background:transparent !important;
+    box-shadow:none !important;
+    border:none !important;
 }
 
-.mevachi-login-brand .brand-icon i {
-    font-size: 1.75rem;
-    color: var(--mv-white);
+.mevachi-login-brand .brand-icon img{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    display:block;
 }
 
 .mevachi-login-brand h1 {
@@ -2013,6 +2015,35 @@ a.mevachi-fab.btn {
     white-space:nowrap;
 }
 
+.mevachi-notify-btn i{
+    margin:0 !important;
+    padding:0 !important;
+    line-height:1 !important;
+    font-size:22px;
+    display:block;
+}
+
+.mevachi-notify-btn{
+    position:relative !important;
+    overflow:visible !important;
+}
+
+.mevachi-notify-btn .badge{
+    position:absolute !important;
+    inset:auto auto calc(100% - 12px) calc(100% - 12px);
+    transform:none !important;
+
+    min-width:20px;
+    height:20px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:50%;
+    z-index:100;
+}
+
 /* Large Desktop */
 @media (min-width:1600px){
     .mevachi-dashboard-search{
@@ -2255,14 +2286,10 @@ a.mevachi-fab.btn {
     font-size:.78rem !important;
 }
 
-.mevachi-notify-btn{
-    width:46px !important;
-    height:46px !important;
-}
 
-.mevachi-notify-btn i{
-    font-size:17px;
-}
+
+
+
 
 }
 
