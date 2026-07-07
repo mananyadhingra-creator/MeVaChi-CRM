@@ -2085,26 +2085,79 @@ a.mevachi-fab.btn {
 /* Mobile */
 @media (max-width:576px){
 
-    .mevachi-dashboard-search{
-        width:96%;
-    }
-
-    .mevachi-dashboard-search .input-group-text{
-        width:46px;
-        min-width:46px;
-        height:40px;
-    }
-
-    .mevachi-dashboard-search .form-control{
-        height:40px;
-        font-size:.9rem;
-    }
-
-    .mevachi-dashboard-search .btn{
-        flex-basis:95px;
-        height:40px;
-        font-size:.9rem;
-    }
+.mevachi-dashboard-search{
+    width:94%;
+    margin:1rem auto;
 }
 
+.mevachi-dashboard-search .input-group{
+    display:flex;
+    flex-wrap:nowrap;
+}
 
+.mevachi-dashboard-search .input-group-text{
+    width:38px;
+    min-width:38px;
+    height:38px;
+}
+
+.mevachi-dashboard-search .form-control{
+    height:38px;
+    font-size:.9rem;
+}
+
+.mevachi-dashboard-search .btn{
+    flex:0 0 100px;
+    height:38px;
+    font-size:.9rem;
+}
+
+}
+
+/* ===============================
+   Mobile Dashboard Header Fix
+================================*/
+
+@media (max-width:768px){
+
+.mevachi-dash-header{
+    padding-top:90px;
+    text-align:center;
+}
+
+.mevachi-dash-header .position-absolute.start-0{
+    left:50% !important;
+    transform:translateX(-50%);
+    top:0 !important;
+}
+
+.mevachi-dash-header .position-absolute.start-0 img{
+    height:58px !important;
+}
+
+.mevachi-dash-header .position-absolute.end-0{
+    right:15px !important;
+    top:10px !important;
+}
+
+.dashboard-title{
+    font-size:2rem !important;
+    line-height:1.15;
+}
+
+.dashboard-tagline{
+    font-size:.9rem;
+}
+
+.mevachi-logo{
+    height:56px;
+    width:auto;
+}
+
+@media(max-width:768px){
+
+.mevachi-logo{
+    height:48px;
+}
+
+}
