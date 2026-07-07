@@ -20,10 +20,17 @@ UPLOAD_FOLDER = 'static'
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-app.secret_key = "crm_secret_key"
+app.config["SECRET_KEY"] = os.getenv(
+    "SECRET_KEY",
+    "mevachi_demo_secret_key_2026_change_before_production"
+)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = \
-'mysql+pymysql://root:RIYA1234@localhost/crm_db'
+import os
+
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
+    "DATABASE_URL",
+    "mysql+pymysql://root:RIYA1234@localhost/crm_db"
+)
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
