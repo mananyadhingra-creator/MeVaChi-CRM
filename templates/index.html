@@ -30,39 +30,57 @@
 
     <!-- Top Row -->
 
-    <div class="position-relative mb-3 mevachi-dash-header">
+    <div class="mevachi-header">
 
-        <div class="position-absolute start-0 top-0">
+        <div class="mevachi-header-row">
 
-            <img
-            src="{{ url_for('static', filename='images/logo.png') }}"
-            class="mevachi-logo">
+            <div class="mevachi-header-logo">
+
+                <img
+                    src="{{ url_for('static', filename='images/logo.png') }}"
+                    alt="MeVaChi Logo">
+
+            </div>
+
+            <div class="mevachi-header-bell">
+
+                <button
+                    type="button"
+                    class="btn btn-light rounded-circle shadow-sm position-relative mevachi-notify-btn"
+                    data-bs-toggle="modal"
+                    data-bs-target="#notificationModal">
+
+                    <i class="bi bi-bell-fill"></i>
+
+                    {% if notification_count > 0 %}
+                    <span class="badge bg-danger position-absolute">
+                        {{ notification_count }}
+                    </span>
+                    {% endif %}
+
+                </button>
+
+            </div>
 
         </div>
 
-        <div class="position-absolute end-0 top-0">
+        <div class="mevachi-header-center">
 
-            <button type="button"
-                class="btn btn-light rounded-circle shadow-sm position-relative mevachi-notify-btn"
-                data-bs-toggle="modal"
-                data-bs-target="#notificationModal">
-                <i class="bi bi-bell-fill"></i>
-                {% if notification_count > 0 %}
-                <span class="badge bg-danger position-absolute">{{ notification_count }}</span>
-                {% endif %}
-            </button>
+            <h1 class="dashboard-title">
+                MeVaChi CRM
+            </h1>
 
-        </div>
+            <p class="dashboard-tagline mb-0">
+                Indoor Air Quality · Smart Building Operations
+            </p>
 
-        <div class="text-center pt-2">
-            <h1 class="dashboard-title">MeVaChi CRM</h1>
-            <p class="dashboard-tagline mb-0">Indoor Air Quality · Smart Building Operations</p>
-            <p class="text-muted small mt-2 mb-0">{{ greeting }}, {{ session['username'] }} · {{ notification_count }} tasks pending!!</p>
+            <p class="text-muted small mt-2 mb-0">
+                {{ greeting }}, {{ session['username'] }} · {{ notification_count }} tasks pending!!
+            </p>
+
         </div>
 
     </div>
-
-</div>
 
 
     <!-- SEARCH -->

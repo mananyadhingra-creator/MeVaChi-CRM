@@ -329,14 +329,9 @@ small, .small {
     height: 60px;
 }
 
-.mevachi-notify-btn .bi-bell-fill {
-    font-size: 24px;
-}
 
-.mevachi-notify-btn .badge {
-    top: 6px;
-    right: 4px;
-}
+
+
 
 .mevachi-dashboard .btn-light.rounded-circle,
 .mevachi-notify-btn {
@@ -988,26 +983,7 @@ textarea.form-control {
 
 /* ── Enterprise Dashboard ── */
 
-.mevachi-dash-header {
-    padding-top: 0.75rem;
-    margin-bottom: 1rem;
-}
 
-.mevachi-dash-header .dashboard-title {
-    font-size: clamp(1.75rem, 4vw, 2.5rem);
-    font-weight: 700;
-    background: var(--mv-gradient-brand);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin: 0;
-}
-
-.mevachi-dash-header .dashboard-tagline {
-    font-size: 0.8125rem;
-    color: var(--mv-text-muted);
-    margin-top: 0.25rem;
-}
 
 .mevachi-dash-section {
     margin-bottom: 1.25rem;
@@ -2114,50 +2090,196 @@ a.mevachi-fab.btn {
 
 }
 
-/* ===============================
-   Mobile Dashboard Header Fix
-================================*/
-
-@media (max-width:768px){
-
-.mevachi-dash-header{
-    padding-top:90px;
-    text-align:center;
-}
-
-.mevachi-dash-header .position-absolute.start-0{
-    left:50% !important;
-    transform:translateX(-50%);
-    top:0 !important;
-}
-
-.mevachi-dash-header .position-absolute.start-0 img{
-    height:58px !important;
-}
-
-.mevachi-dash-header .position-absolute.end-0{
-    right:15px !important;
-    top:10px !important;
-}
-
-.dashboard-title{
-    font-size:2rem !important;
-    line-height:1.15;
-}
-
-.dashboard-tagline{
-    font-size:.9rem;
-}
-
 .mevachi-logo{
     height:56px;
     width:auto;
+    max-width:none;
 }
 
 @media(max-width:768px){
 
 .mevachi-logo{
     height:48px;
+}
+
+}
+
+/* ===== Responsive Header ===== */
+
+.mevachi-header{
+    margin-bottom:20px;
+}
+
+.mevachi-header-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:15px;
+}
+
+.mevachi-header-logo{
+    height:56px;
+    width:auto;
+    flex-shrink:0;
+}
+
+.dashboard-title{
+    flex:1;
+    text-align:center;
+    margin:0;
+}
+
+
+
+@media(max-width:768px){
+
+.mevachi-header-logo{
+    height:46px;
+}
+
+.dashboard-title{
+    font-size:1.8rem !important;
+}
+
+.mevachi-notify-btn{
+    width:52px;
+    height:52px;
+}
+
+}
+
+@media(max-width:480px){
+
+.mevachi-header-logo{
+    height:40px;
+}
+
+.dashboard-title{
+    font-size:1.45rem !important;
+}
+
+.dashboard-tagline{
+    font-size:.78rem;
+}
+
+}
+
+/* ===========================================
+   Responsive Dashboard Header
+=========================================== */
+
+.mevachi-header{
+    margin-bottom:1.8rem;
+}
+
+.mevachi-header-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    margin-bottom:1rem;
+}
+
+.mevachi-header-logo img{
+    height:58px;
+    width:auto;
+    display:block;
+}
+
+.mevachi-header-bell{
+    flex-shrink:0;
+}
+
+.mevachi-notify-btn{
+    width:52px !important;
+    height:52px !important;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.mevachi-notify-btn i{
+    font-size:20px;
+}
+
+.mevachi-header-center{
+    text-align:center;
+}
+
+.dashboard-title{
+    margin-bottom:.35rem;
+}
+
+.dashboard-tagline{
+    margin-bottom:.4rem;
+}
+
+/* ---------- Tablet ---------- */
+
+@media(max-width:992px){
+
+.mevachi-header-logo img{
+    height:52px;
+}
+
+.dashboard-title{
+    font-size:2rem !important;
+}
+
+}
+
+/* ---------- Mobile ---------- */
+
+@media(max-width:768px){
+
+.mevachi-header{
+    margin-bottom:1.5rem;
+}
+
+.mevachi-header-row{
+    align-items:flex-start;
+}
+
+.mevachi-header-logo img{
+    height:46px;
+}
+
+.dashboard-title{
+    font-size:1.7rem !important;
+}
+
+.dashboard-tagline{
+    font-size:.85rem;
+}
+
+.text-muted.small{
+    font-size:.78rem !important;
+}
+
+.mevachi-notify-btn{
+    width:46px !important;
+    height:46px !important;
+}
+
+.mevachi-notify-btn i{
+    font-size:17px;
+}
+
+}
+
+/* ---------- Small Phones ---------- */
+
+@media(max-width:430px){
+
+.mevachi-header-logo img{
+    height:40px;
+}
+
+.dashboard-title{
+    font-size:1.45rem !important;
+}
+
+.dashboard-tagline{
+    font-size:.75rem;
 }
 
 }
