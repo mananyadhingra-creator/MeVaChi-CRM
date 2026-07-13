@@ -3,7 +3,7 @@ from flask import send_file
 from openpyxl import Workbook
 from openpyxl.styles import Font
 from sqlalchemy import or_
-from datetime import datetime
+from datetime import datetime, date
 
 
 def export_to_excel(
@@ -68,15 +68,14 @@ def export_to_excel(
 
         ):
 
-            value = getattr(
+            value = getattr(record, field, "")
 
-                record,
+            if value is None:
+                value = ""
 
-                field,
+            elif isinstance(value, (datetime, date)):
+                value = value.strftime("%d-%m-%Y")
 
-                ""
-
-            )
 
             sheet.cell(
 
@@ -136,7 +135,7 @@ def apply_export_filters(
     # SEARCH
     # ======================================
 
-    search = request.form.get(
+    search = request.values.get(
 
         'search'
 
@@ -178,13 +177,13 @@ def apply_export_filters(
     # DATE RANGE
     # ======================================
 
-    start_date = request.form.get(
+    start_date = request.values.get(
 
         'start_date'
 
     )
 
-    end_date = request.form.get(
+    end_date = request.values.get(
 
         'end_date'
 
@@ -236,7 +235,7 @@ def apply_export_filters(
     # STATUS
     # ======================================
 
-    status = request.form.get(
+    status = request.values.get(
 
         'status'
 
@@ -260,7 +259,7 @@ def apply_export_filters(
     # RECORD OWNER
     # ======================================
 
-    owner = request.form.get(
+    owner = request.values.get(
 
         'record_owner'
 
@@ -288,7 +287,7 @@ def apply_export_filters(
 
         for form_field, model_field in custom_filters.items():
 
-            value = request.form.get(
+            value = request.values.get(
 
                 form_field
 

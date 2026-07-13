@@ -60,7 +60,15 @@
 
         </div>
 
+        <a id="exportLeadBtn"
+           href="#"
+           class="btn btn-outline-success">
 
+            <i class="bi bi-file-earmark-excel"></i>
+
+            Export to Excel
+
+        </a>
 
     </div>
 
@@ -69,31 +77,93 @@
         <div class="card-body">
 
             <form method="GET"
-                  class="mb-3 mevachi-table-search">
+                  class="mb-3"
+                  id="leadFilterForm">
+            
+                <input
+                    type="hidden"
+                    name="view"
+                    value="{{ page_view }}">
 
-                <div class="input-group flex-nowrap">
+                <div class="row g-2">
 
-                    <input type="text"
-                           name="search"
-                           class="form-control"
-                           placeholder="Search Leads"
-                           value="{{ search or '' }}">
+                    <div class="col-md-4">
 
-                    <button class="btn btn-dark"
+                        <input
+                            type="text"
+                            name="search"
+                            value="{{ request.args.get('search','') }}"
+                            class="form-control"
+                            placeholder="Search Leads">
+
+                    </div>
+
+                    <div class="col-md-2">
+
+                        <input
+                            type="date"
+                            name="start_date"
+                            value="{{ request.args.get('start_date','') }}"
+                            class="form-control">
+
+                    </div>
+
+                    <div class="col-md-2">
+
+                        <input
+                            type="date"
+                            name="end_date"
+                            value="{{ request.args.get('end_date','') }}"
+                            class="form-control">
+
+                    </div>
+
+                    <div class="col-md-2">
+
+                        <select
+                            name="record_owner"
+                            class="form-select">
+
+                            <option value="">
+                                All Owners
+                            </option>
+
+                            {% for owner in owners %}
+
+                            <option
+                                value="{{ owner.username }}"
+                                {% if request.args.get('record_owner') == owner.username %}
+                                selected
+                                {% endif %}>
+
+                                {{ owner.full_name }}
+
+                            </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-2 d-flex gap-2">
+
+                        <button
+                            class="btn btn-dark w-100"
                             type="submit">
 
-                        Search
+                            Search
 
-                    </button>
+                        </button>
 
-                    <a href="{{ url_for(
-                        'organization_leads'
-                    ) }}"
-                       class="btn btn-outline-secondary">
+                        <a href="{{ url_for('organization_leads') }}"
+                           class="btn btn-secondary">
 
-                        Clear
+                            Clear
 
-                    </a>
+                        </a>
+
+                    </div>
 
                 </div>
 
@@ -241,6 +311,43 @@
 
 </div>
 
+<script>
+
+document
+.getElementById(
+    "exportLeadBtn"
+)
+.addEventListener(
+
+    "click",
+
+    function(e){
+
+        e.preventDefault();
+
+        const params = new URLSearchParams(
+
+            new FormData(
+
+                document.getElementById(
+
+                    "leadFilterForm"
+
+                )
+
+            )
+
+        );
+
+        window.location =
+            "{{ url_for('export_leads') }}?"
+            + params.toString();
+
+    }
+
+);
+
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ url_for('static', filename='js/mevachi-ui.js') }}"></script>

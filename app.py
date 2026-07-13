@@ -14,6 +14,13 @@ from num2words import num2words
 from openpyxl import Workbook
 from flask import send_file
 from io import BytesIO
+import time
+from helpers import (
+    export_to_excel,
+    apply_export_filters,
+    export_filtered_query
+)
+from decimal import Decimal
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'static'
@@ -35,6 +42,12 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
+MONTH_NAMES = [
+    'Jan','Feb','Mar','Apr',
+    'May','Jun','Jul','Aug',
+    'Sep','Oct','Nov','Dec'
+]
+
 def get_greeting():
 
     hour = datetime.now().hour
@@ -47,13 +60,58 @@ def get_greeting():
 
         return "Good Afternoon"
 
-    elif 17 <= hour < 22:
+    elif 17 <= hour < 19:
 
         return "Good Evening"
 
     else:
 
         return "Working Late"
+
+def update_client_status(client):
+
+    today = datetime.today().date()
+
+    if client.installation_date:
+
+        client.cmc_due_days = (
+            today -
+            client.installation_date
+        ).days
+
+    else:
+
+        client.cmc_due_days = 0
+
+    client.cmc_due = (
+        'YES'
+        if client.cmc_due_days >= 345
+        else 'NO'
+    )
+
+    if client.last_service_date:
+
+        client.last_service_days = (
+            today -
+            client.last_service_date
+        ).days
+
+    elif client.activation_date:
+
+        client.last_service_days = (
+            today -
+            client.activation_date
+        ).days
+
+    else:
+
+        client.last_service_days = 0
+
+    client.service_due = (
+        'YES'
+        if client.last_service_days >= client.service_interval_days
+        else 'NO'
+    )
 
 def get_dashboard_notifications(
 
@@ -109,13 +167,27 @@ def get_dashboard_notifications(
             Proposal.record_owner.in_(usernames)
         )
 
+    
+
     else:
 
-        lead_base = Lead.query
+        lead_base = Lead.query.filter(
 
-        meeting_base = Meeting.query
+            Lead.record_owner == username
 
-        proposal_base = Proposal.query
+        )
+
+        meeting_base = Meeting.query.filter(
+
+            Meeting.record_owner == username
+
+        )
+
+        proposal_base = Proposal.query.filter(
+
+            Proposal.record_owner == username
+
+        )
 
     # ========================================
     # PERSONAL REMINDERS
@@ -178,7 +250,7 @@ def get_dashboard_notifications(
 
     leads = lead_base.filter(
 
-        Lead.next_to_call != None
+        Lead.next_to_call <= today + timedelta(days=30)
 
     ).all()
 
@@ -220,7 +292,7 @@ def get_dashboard_notifications(
 
     meetings = meeting_base.filter(
 
-        Meeting.date_to_call_next != None
+        Meeting.date_to_call_next <= today + timedelta(days=30)
 
     ).all()
 
@@ -262,7 +334,7 @@ def get_dashboard_notifications(
 
     proposals = proposal_base.filter(
 
-        Proposal.next_to_call != None
+        Proposal.next_to_call <= today + timedelta(days=30)
 
     ).all()
 
@@ -302,23 +374,27 @@ def get_dashboard_notifications(
     # SERVICE DUE
     # ========================================
 
-    if role in [
+    if role in ['ADMIN', 'COMMERCIALS']:
 
-        'ADMIN',
+        clients = Client.query.filter(
+            or_(
+                Client.last_service_date.isnot(None),
+                Client.activation_date.isnot(None)
+            )
+        ).all()
 
-        'COMMERCIALS'
+        for client in clients:
 
-    ]:
-
-        for client in Client.query.all():
-
-            update_client_status(
-
-                client
-
+            base_date = (
+                client.last_service_date
+                or client.activation_date
             )
 
-            if client.service_due == 'YES':
+            due_date = base_date + timedelta(
+                days=client.service_interval_days
+            )
+
+            if due_date <= today:
 
                 notifications.append({
 
@@ -328,7 +404,7 @@ def get_dashboard_notifications(
 
                     'subtitle': 'Service Due',
 
-                    'date': client.last_service_date,
+                    'date': due_date,
 
                     'priority': 'HIGH',
 
@@ -397,6 +473,80 @@ def get_dashboard_notifications(
     )
 
     return notifications
+
+def get_role_queries(username, role):
+
+    if role == "SALES":
+
+        return (
+            Lead.query.filter_by(record_owner=username),
+            Meeting.query.filter_by(record_owner=username),
+            Proposal.query.filter_by(record_owner=username),
+            Client.query.filter_by(record_owner=username),
+            Invoice.query.filter_by(record_owner=username)
+        )
+
+    elif role == "COMMERCIALS":
+
+        usernames = [
+            u for (u,) in db.session.query(User.username)
+            .filter(User.role == "COMMERCIALS")
+            .all()
+        ]
+
+        return (
+            Lead.query.filter(Lead.record_owner.in_(usernames)),
+            Meeting.query.filter(Meeting.record_owner.in_(usernames)),
+            Proposal.query.filter(Proposal.record_owner.in_(usernames)),
+            Client.query.filter(Client.record_owner.in_(usernames)),
+            Invoice.query.filter(Invoice.record_owner.in_(usernames))
+        )
+
+    return (
+        Lead.query,
+        Meeting.query,
+        Proposal.query,
+        Client.query,
+        Invoice.query
+    )
+
+def categorize_followups(query, column, today):
+
+    tomorrow = today + timedelta(days=1)
+    week_end = today + timedelta(days=7)
+
+    records = query.filter(
+        column != None,
+        column <= week_end
+    ).all()
+
+    overdue = []
+    today_list = []
+    tomorrow_list = []
+    week = []
+
+    for record in records:
+
+        followup_date = getattr(record, column.key)
+
+        if followup_date < today:
+            overdue.append(record)
+
+        elif followup_date == today:
+            today_list.append(record)
+
+        elif followup_date == tomorrow:
+            tomorrow_list.append(record)
+
+        elif tomorrow < followup_date <= week_end:
+            week.append(record)
+
+    return (
+        overdue,
+        today_list,
+        tomorrow_list,
+        week
+    )
 
 def has_access(*allowed_roles):
 
@@ -823,50 +973,6 @@ def log_activity(
 
     db.session.add(log)
 
-def update_client_status(client):
-
-    today = datetime.today().date()
-
-    if client.installation_date:
-
-        client.cmc_due_days = (
-            today -
-            client.installation_date
-        ).days
-
-    else:
-
-        client.cmc_due_days = 0
-
-    client.cmc_due = (
-        'YES'
-        if client.cmc_due_days >= 345
-        else 'NO'
-    )
-
-    if client.last_service_date:
-
-        client.last_service_days = (
-            today -
-            client.last_service_date
-        ).days
-
-    elif client.activation_date:
-
-        client.last_service_days = (
-            today -
-            client.activation_date
-        ).days
-
-    else:
-
-        client.last_service_days = 0
-
-    client.service_due = (
-        'YES'
-        if client.last_service_days >= client.service_interval_days
-        else 'NO'
-    )
 
 def admin_delete_or_request(
     model,
@@ -1080,6 +1186,42 @@ def get_proposal_template(
 
     return "proposal_template.docx"
 
+def indian_format(number):
+
+    number = int(float(number))
+
+    s = str(number)
+
+    if len(s) <= 3:
+
+        return s
+
+    last3 = s[-3:]
+
+    rest = s[:-3]
+
+    parts = []
+
+    while len(rest) > 2:
+
+        parts.insert(
+            0,
+            rest[-2:]
+        )
+
+        rest = rest[:-2]
+
+    if rest:
+
+        parts.insert(
+            0,
+            rest
+        )
+
+    return ",".join(
+        parts + [last3]
+    )
+
 class User(db.Model):
 
     __tablename__ = 'users'
@@ -1137,15 +1279,19 @@ class Lead(db.Model):
 
     date_of_1st_followup = db.Column(db.Date)
 
-    next_to_call = db.Column(db.Date)
+    record_owner = db.Column(
+        db.String(100),
+        index=True
+    )
+
+    next_to_call = db.Column(
+        db.Date,
+        index=True
+    )
 
     recent = db.Column(db.Text)
 
-    record_owner = db.Column(
-        db.String(100)
-    )
-
-
+    
 class Meeting(db.Model):
 
     __tablename__ = 'meetings'
@@ -1180,7 +1326,10 @@ class Meeting(db.Model):
 
     mode_of_meeting = db.Column(db.String(50))
 
-    meeting_status = db.Column(db.String(50))
+    meeting_status = db.Column(
+        db.String(50),
+        index=True
+    )
 
     meeting_conducted_by = db.Column(db.String(100))
 
@@ -1192,7 +1341,10 @@ class Meeting(db.Model):
 
     date_of_last_followup = db.Column(db.Date)
 
-    date_to_call_next = db.Column(db.Date)
+    date_to_call_next = db.Column(
+        db.Date,
+        index=True
+    )
 
     final_remarks = db.Column(db.Text)
 
@@ -1219,8 +1371,9 @@ class Meeting(db.Model):
     )
 
     record_owner = db.Column(
-        db.String(100)
-    )    
+        db.String(100),
+        index=True
+    )  
 
 class MeetingHistory(db.Model):
 
@@ -1690,11 +1843,17 @@ class Proposal(db.Model):
 
     proposal_shared_by = db.Column(db.String(100))
 
-    status = db.Column(db.String(50))
+    status = db.Column(
+        db.String(50),
+        index=True
+    )
 
     date_of_last_followup = db.Column(db.Date)
 
-    next_to_call = db.Column(db.Date)
+    next_to_call = db.Column(
+        db.Date,
+        index=True
+    )
 
     remarks = db.Column(db.Text)
 
@@ -1720,7 +1879,8 @@ class Proposal(db.Model):
     )
 
     record_owner = db.Column(
-        db.String(100)
+        db.String(100),
+        index=True
     )
 
 
@@ -1917,6 +2077,66 @@ class SalesPipeline(db.Model):
 
     record_owner = db.Column(
         db.String(100)
+    )
+
+class PaymentHistory(db.Model):
+
+    __tablename__ = 'payment_history'
+
+    payment_id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    sales_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            'sales_pipeline.sales_id'
+        ),
+        nullable=False
+    )
+
+    payment_date = db.Column(
+        db.Date,
+        nullable=False
+    )
+
+    payment_amount = db.Column(
+        db.Numeric(12,2),
+        nullable=False
+    )
+
+    payment_mode = db.Column(
+        db.String(50),
+        nullable=False
+    )
+
+    transaction_reference = db.Column(
+        db.String(100)
+    )
+
+    remarks = db.Column(
+        db.Text
+    )
+
+    created_by = db.Column(
+        db.String(100)
+    )
+
+    sale = db.relationship(
+
+        'SalesPipeline',
+
+        backref=db.backref(
+
+            'payments',
+
+            lazy=True,
+
+            cascade='all, delete-orphan'
+
+        )
+
     )
 
 class Invoice(db.Model):
@@ -2202,13 +2422,19 @@ class Client(db.Model):
 
     solution_working = db.Column(db.String(20))
 
-    cmc_applicable = db.Column(db.String(10))
+    cmc_applicable = db.Column(
+        db.String(10),
+        index=True
+    )
 
     cmc_due_days = db.Column(db.Integer)
 
     cmc_due = db.Column(db.String(10))
 
-    next_cmc_renewal_date = db.Column(db.Date)
+    next_cmc_renewal_date = db.Column(
+        db.Date,
+        index=True
+    )
 
     cmc_amount = db.Column(db.Numeric(10,2))
 
@@ -2245,7 +2471,8 @@ class Client(db.Model):
    )
     
     record_owner = db.Column(
-        db.String(100)
+        db.String(100),
+        index=True
     )
 
 class CustomerCareCard(db.Model):
@@ -2424,11 +2651,9 @@ class Reminder(db.Model):
     )
 
     reminder_date = db.Column(
-
         db.Date,
-
-        nullable=False
-
+        nullable=False,
+        index=True
     )
 
     reminder_time = db.Column(
@@ -2454,11 +2679,9 @@ class Reminder(db.Model):
     )
 
     status = db.Column(
-
         db.String(20),
-
-        default='PENDING'
-
+        default='PENDING',
+        index=True
     )
 
     snooze_until = db.Column(
@@ -2468,11 +2691,9 @@ class Reminder(db.Model):
     )
 
     created_by = db.Column(
-
         db.String(100),
-
-        nullable=False
-
+        nullable=False,
+        index=True
     )
 
     created_on = db.Column(
@@ -2484,47 +2705,9 @@ class Reminder(db.Model):
     )
 
     is_dismissed = db.Column(
-
         db.Boolean,
-
-        default=False
-
-    )
-
-def indian_format(number):
-
-    number = int(float(number))
-
-    s = str(number)
-
-    if len(s) <= 3:
-
-        return s
-
-    last3 = s[-3:]
-
-    rest = s[:-3]
-
-    parts = []
-
-    while len(rest) > 2:
-
-        parts.insert(
-            0,
-            rest[-2:]
-        )
-
-        rest = rest[:-2]
-
-    if rest:
-
-        parts.insert(
-            0,
-            rest
-        )
-
-    return ",".join(
-        parts + [last3]
+        default=False,
+        index=True
     )
 
 with app.app_context():
@@ -2603,9 +2786,14 @@ def dashboard():
         return redirect(
             url_for('login')
         )
-    
+
+    start = time.perf_counter()    
 
     today = date.today()
+
+    now = datetime.now()
+    current_year = now.year
+    current_month = now.month
     
     greeting = get_greeting()
 
@@ -2721,58 +2909,14 @@ def dashboard():
 
     ]
 
-    notification_count = len(
-        notifications
+    lead_query, meeting_query, proposal_query, client_query, invoice_query = get_role_queries(
+        session['username'],
+        session['role']
     )
 
-    tomorrow = today + timedelta(days=1)
-
-    week_end = today + timedelta(days=7)
-
-    if session.get('role') == 'SALES':
-
-        lead_base = Lead.query.filter(
-            Lead.record_owner == session['username']
-        )
-
-        meeting_base = Meeting.query.filter(
-            Meeting.record_owner == session['username']
-        )
-
-        proposal_base = Proposal.query.filter(
-            Proposal.record_owner == session['username']
-        )
-
-    elif session.get('role') == 'COMMERCIALS':
-
-        commercial_users = User.query.filter_by(
-            role='COMMERCIALS'
-        ).all()
-
-        usernames = [
-            user.username
-            for user in commercial_users
-        ]
-
-        lead_base = Lead.query.filter(
-            Lead.record_owner.in_(usernames)
-        )
-
-        meeting_base = Meeting.query.filter(
-            Meeting.record_owner.in_(usernames)
-        )
-
-        proposal_base = Proposal.query.filter(
-            Proposal.record_owner.in_(usernames)
-        )
-
-    else:
-
-        lead_base = Lead.query
-
-        meeting_base = Meeting.query
-
-        proposal_base = Proposal.query
+    lead_base = lead_query
+    meeting_base = meeting_query
+    proposal_base = proposal_query
 
     commercial_count = (
 
@@ -2787,67 +2931,39 @@ def dashboard():
         proposal_base.count()
 
     )
-    # OVERDUE
 
-    overdue_leads = lead_base.filter(
-        Lead.next_to_call < today
-    ).all()
+    (
+        overdue_leads,
+        today_leads,
+        tomorrow_leads,
+        week_leads
+    ) = categorize_followups(
+        lead_base,
+        Lead.next_to_call,
+        today
+    )
 
-    overdue_meetings = meeting_base.filter(
-        Meeting.date_to_call_next < today
-    ).all()
+    (
+        overdue_meetings,
+        today_meetings,
+        tomorrow_meetings,
+        week_meetings
+    ) = categorize_followups(
+        meeting_base,
+        Meeting.date_to_call_next,
+        today
+    )
 
-    overdue_proposals = proposal_base.filter(
-        Proposal.next_to_call < today
-    ).all()
-
-
-    # DUE TODAY
-
-    today_leads = lead_base.filter(
-        Lead.next_to_call == today
-    ).all()
-
-    today_meetings = meeting_base.filter(
-        Meeting.date_to_call_next == today
-    ).all()
-
-    today_proposals = proposal_base.filter(
-        Proposal.next_to_call == today
-    ).all()
-
-
-    # DUE TOMORROW
-
-    tomorrow_leads = lead_base.filter(
-        Lead.next_to_call == tomorrow
-    ).all()
-
-    tomorrow_meetings = meeting_base.filter(
-        Meeting.date_to_call_next == tomorrow
-    ).all()
-
-    tomorrow_proposals = proposal_base.filter(
-        Proposal.next_to_call == tomorrow
-    ).all()
-
-
-    # DUE THIS WEEK
-
-    week_leads = lead_base.filter(
-        Lead.next_to_call > tomorrow,
-        Lead.next_to_call <= week_end
-    ).all()
-
-    week_meetings = meeting_base.filter(
-        Meeting.date_to_call_next > tomorrow,
-        Meeting.date_to_call_next <= week_end
-    ).all()
-
-    week_proposals = proposal_base.filter(
-        Proposal.next_to_call > tomorrow,
-        Proposal.next_to_call <= week_end
-    ).all()
+    (
+        overdue_proposals,
+        today_proposals,
+        tomorrow_proposals,
+        week_proposals
+    ) = categorize_followups(
+        proposal_base,
+        Proposal.next_to_call,
+        today
+    )
 
     clients = Client.query.filter(
         or_(
@@ -2911,13 +3027,10 @@ def dashboard():
         + len(week_meetings)
         + len(week_proposals)
     )
-    services_due = len(
-        service_due_clients
-    )
 
-    cmc_due = len(
-        cmc_due_clients
-    )    
+    services_due = len(service_due_clients)
+
+    cmc_due = len(cmc_due_clients)   
 
     monthly_filters = db.session.query(
         func.sum(
@@ -2927,12 +3040,12 @@ def dashboard():
         extract(
             'month',
             CustomerCareCard.service_date
-        ) == datetime.now().month,
+        ) == current_month,
 
         extract(
             'year',
             CustomerCareCard.service_date
-        ) == datetime.now().year
+        ) == current_year
     ).scalar()
 
     monthly_filters = monthly_filters or 0
@@ -2945,7 +3058,7 @@ def dashboard():
         extract(
             'year',
             CustomerCareCard.service_date
-        ) == datetime.now().year
+        ) == current_year
     ).scalar()
 
     yearly_filters = yearly_filters or 0
@@ -2953,102 +3066,13 @@ def dashboard():
         status='PENDING'
     ).count()
 
-# ==========================================
-# ROLE BASED QUERIES
-# ==========================================
 
-    if session.get('role') == 'SALES':
-
-        lead_query = Lead.query.filter_by(
-
-            record_owner=session['username']
-
-        )
-
-        meeting_query = Meeting.query.filter_by(
-
-            record_owner=session['username']
-
-        )
-
-        proposal_query = Proposal.query.filter_by(
-
-            record_owner=session['username']
-
-        )
-
-        client_query = Client.query.filter_by(
-
-            record_owner=session['username']
-
-        )
-
-        invoice_query = Invoice.query.filter_by(
-
-            record_owner=session['username']
-
-        )
-
-    elif session.get('role') == 'COMMERCIALS':
-
-        usernames = [
-            username
-            for (username,) in db.session.query(
-                User.username
-            ).filter(
-                User.role == "COMMERCIALS"
-            ).all()
-        ]
-
-        lead_query = Lead.query.filter(
-
-            Lead.record_owner.in_(usernames)
-
-        )
-
-        meeting_query = Meeting.query.filter(
-
-            Meeting.record_owner.in_(usernames)
-
-        )
-
-        proposal_query = Proposal.query.filter(
-
-            Proposal.record_owner.in_(usernames)
-
-        )
-
-        client_query = Client.query.filter(
-
-            Client.record_owner.in_(usernames)
-
-        )
-
-        invoice_query = Invoice.query.filter(
-
-            Invoice.record_owner.in_(usernames)
-
-        )
-
-    else:
-
-        lead_query = Lead.query
-
-        meeting_query = Meeting.query
-
-        proposal_query = Proposal.query
-
-        client_query = Client.query
-
-        invoice_query = Invoice.query
-
-    lead_count = lead_query.count()
-
-    meeting_count = meeting_query.count()
-
-    proposal_count = proposal_query.count()
-
-    client_count = client_query.count()
+    lead_count, meeting_count, proposal_count, client_count = (
+        lead_query.count(),
+        meeting_query.count(),
+        proposal_query.count(),
+        client_query.count()
+    )
 
 # ==========================================
 # MEETING SOURCE PIE CHART
@@ -3066,23 +3090,15 @@ def dashboard():
 
     ).all()
 
-    meeting_labels = []
+    meeting_labels = [
+        source or "Unknown"
+        for source, _ in meeting_source
+    ]
 
-    meeting_values = []
-
-    for source, count in meeting_source:
-
-        meeting_labels.append(
-
-            source if source else "Unknown"
-
-        )
-
-        meeting_values.append(
-
-            count
-
-        )
+    meeting_values = [
+        count
+        for _, count in meeting_source
+    ]
 
 # ==========================================
 # PROPOSAL STATUS BAR CHART
@@ -3098,27 +3114,17 @@ def dashboard():
 
         Proposal.status
 
-    ).all()
+    ).all()    
 
-    proposal_labels = []
+    proposal_labels = [
+        status or "Unknown"
+        for status, _ in proposal_status
+    ]
 
-    proposal_values = []
-
-    for status, count in proposal_status:
-
-        proposal_labels.append(
-
-            status if status else "Unknown"
-
-        )
-
-        proposal_values.append(
-
-            count
-
-        )
-
-    current_year = datetime.now().year
+    proposal_values = [
+        count
+        for _, count in proposal_status
+    ]    
 
     available_years = list(
 
@@ -3140,7 +3146,7 @@ def dashboard():
 
         'year',
 
-        datetime.now().year,
+        current_year,
 
         type=int
 
@@ -3150,104 +3156,23 @@ def dashboard():
 
     if session.get('role') in ['ADMIN', 'COMMERCIALS']:
 
-        if session.get('role') == 'COMMERCIALS':
+        filter_data = (
+            db.session.query(
+                extract('month', CustomerCareCard.service_date),
+                func.sum(CustomerCareCard.no_of_filters)
+            )
+            .filter(
+                extract('year', CustomerCareCard.service_date) == selected_year
+            )
+            .group_by(
+                extract('month', CustomerCareCard.service_date)
+            )
+            .order_by(
+                extract('month', CustomerCareCard.service_date)
+            )
+            .all()
+        )
 
-            filter_data = db.session.query(
-
-                extract(
-
-                    'month',
-
-                    CustomerCareCard.service_date
-
-                ),
-
-                func.sum(
-
-                    CustomerCareCard.no_of_filters
-
-                )
-
-            ).filter(
-
-                extract(
-
-                    'year',
-
-                    CustomerCareCard.service_date
-
-                ) == selected_year
-
-            ).group_by(
-
-                extract(
-
-                    'month',
-
-                    CustomerCareCard.service_date
-
-                )
-
-            ).order_by(
-
-                extract(
-
-                    'month',
-
-                    CustomerCareCard.service_date
-
-                )
-
-            ).all()            
-
-        else:
-
-            filter_data = db.session.query(
-
-                extract(
-
-                    'month',
-
-                    CustomerCareCard.service_date
-
-                ),
-
-                func.sum(
-
-                    CustomerCareCard.no_of_filters
-
-                )
-
-            ).filter(
-
-                extract(
-
-                    'year',
-
-                    CustomerCareCard.service_date
-
-                ) == selected_year
-
-            ).group_by(
-
-                extract(
-
-                    'month',
-
-                    CustomerCareCard.service_date
-
-                )
-
-            ).all()
-
-
-    month_names = [
-
-        'Jan','Feb','Mar','Apr','May','Jun',
-
-        'Jul','Aug','Sep','Oct','Nov','Dec'
-
-    ]
 
     filter_dict = {
 
@@ -3257,21 +3182,12 @@ def dashboard():
 
     }
 
-    filter_months = month_names
+    filter_months = MONTH_NAMES
 
-    filter_values = []
-
-    for i in range(1,13):
-
-        filter_values.append(
-
-            int(
-
-                filter_dict.get(i,0)
-
-            )
-
-        )
+    filter_values = [
+        int(filter_dict.get(i, 0))
+        for i in range(1, 13)
+    ]
 
 # ==========================================
 # MONTHLY REVENUE TREND
@@ -3281,7 +3197,7 @@ def dashboard():
 
         'revenue_year',
 
-        datetime.now().year,
+        current_year,
 
         type=int
 
@@ -3355,17 +3271,12 @@ def dashboard():
 
     }
 
-    months = month_names
+    months = MONTH_NAMES
 
-    revenues = []
-
-    for i in range(1,13):
-
-        revenues.append(
-
-            revenue_dict.get(i,0)
-
-        )
+    revenues = [
+        revenue_dict.get(i, 0)
+        for i in range(1, 13)
+    ]
 
     response = render_template(
         'index.html',
@@ -3424,6 +3335,8 @@ def dashboard():
     )
 
     session['show_morning_brief'] = False
+
+    print(f"Dashboard took {time.perf_counter() - start:.2f} sec")
     
     return response
 
@@ -3811,41 +3724,57 @@ def add_lead():
 
         base_query = Lead.query
 
-    if search:
+    base_query = apply_export_filters(
 
-        all_leads = base_query.filter(
-            or_(
-                Lead.name.ilike(
-                    f'%{search}%'
-                ),
-                Lead.reference.ilike(
-                    f'%{search}%'
-                ),
-                Lead.location.ilike(
-                    f'%{search}%'
-                ),
-                Lead.phone.ilike(
-                    f'%{search}%'
-                ),
-                Lead.responses.ilike(
-                    f'%{search}%'
-                ),
-                Lead.recent.ilike(
-                    f'%{search}%'
-                )
-                
-            )
-        ).all()
+        query=base_query,
 
-    else:
-        all_leads=base_query.all()
+        model=Lead,
+
+        request=request,
+
+        date_field="next_to_call",
+
+        search_fields=[
+
+            "name",
+
+            "reference",
+
+            "location",
+
+            "phone",
+
+            "responses",
+
+            "recent"
+
+        ]
+
+    )
+
+    all_leads = base_query.all()
+
+    owners = User.query.order_by(
+        User.full_name
+    ).all()
 
     return render_template(
+
         'add_lead.html',
+
         leads=all_leads,
-        admin_view=session.get(
-            'role'
-        ) == 'ADMIN'
+
+        owners=owners,
+
+        admin_view=(
+            session.get('role')
+            == 'ADMIN'
+        ),
+
+        page_view='commercial',
+
+        clear_route='add_lead'
+
     )
 
 @app.route('/lead/<int:lead_id>')
@@ -4197,9 +4126,11 @@ def add_meeting():
         # COMPANY DETAILS
         # ===========================
 
-        lead_id = request.form.get(
-
-            'lead_id'
+        lead_id = (
+            
+            int(request.form ["lead_id"])
+            if request.form.get("lead_id")
+            else None
 
         )
 
@@ -4613,12 +4544,6 @@ def add_meeting():
             )
 
         )
-    search = request.args.get(
-
-        'search'
-
-    )
-
     if session.get(
 
         'role'
@@ -4667,57 +4592,35 @@ def add_meeting():
 
         base_query = Meeting.query
 
-    if search:
+    base_query = apply_export_filters(
 
-        base_query = base_query.filter(
+        query=base_query,
 
-            or_(
+        model=Meeting,
 
-                Meeting.firm_name.ilike(
+        request=request,
 
-                    f'%{search}%'
+        date_field="date_of_meeting",
 
-                ),
+        status_field="meeting_status",
 
-                Meeting.name.ilike(
+        search_fields=[
 
-                    f'%{search}%'
+            "firm_name",
 
-                ),
+            "name",
 
-                Meeting.contact_no.ilike(
+            "contact_no",
 
-                    f'%{search}%'
+            "reference",
 
-                ),
+            "source",
 
-                Meeting.reference.ilike(
+            "email"
 
-                    f'%{search}%'
+        ]
 
-                ),
-
-                Meeting.source.ilike(
-
-                    f'%{search}%'
-
-                ),
-
-                Meeting.email.ilike(
-
-                    f'%{search}%'
-
-                ),
-
-                Meeting.meeting_status.ilike(
-
-                    f'%{search}%'
-
-                )
-
-            )
-
-        )
+    )
 
     all_meetings = base_query.order_by(
 
@@ -4784,7 +4687,11 @@ def add_meeting():
 
             'role'
 
-        ) == 'ADMIN'
+        ) == 'ADMIN',
+
+        page_view='commercial',
+
+        clear_route='add_meeting'
 
     )
 
@@ -6158,10 +6065,12 @@ def add_visit():
         # COMPANY DETAILS
         # ===========================
 
-        meeting_id = request.form.get(
+        meeting_id = (
+            
+            int(request.form ['meeting_id'])
 
-            'meeting_id'
-
+            if request.form.get('meeting_id')
+            else None
         )
 
         company_name = request.form.get(
@@ -6684,10 +6593,12 @@ def edit_visit(
 
         static_data = {
 
-            'meeting_id': request.form.get(
+            'meeting_id' : (
+            
+                int(request.form ['meeting_id'])
 
-                'meeting_id'
-
+                if request.form.get('meeting_id')
+                else None
             ),
 
             'company_name': request.form.get(
@@ -7412,8 +7323,10 @@ def add_drawing():
         )
     if request.method == 'POST':
 
-        visit_id = request.form.get(
-            'visit_id'
+        visit_id = (
+            int(request.form['visit_id'])
+            if request.form.get('visit_id')
+            else None
         )
 
         name = request.form.get(
@@ -8022,9 +7935,17 @@ def add_proposal():
 
     if request.method == 'POST':
 
-        meeting_id = request.form.get('meeting_id')
+        meeting_id = (
+            int(request.form['meeting_id'])
+            if request.form.get('meeting_id')
+            else None
+        )
 
-        drawing_id = request.form.get('drawing_id')
+        drawing_id = (
+            int(request.form['drawing_id'])
+            if request.form.get('drawing_id')
+            else None
+        )
 
         reference_no = request.form.get('reference_no')
 
@@ -8308,136 +8229,63 @@ def add_proposal():
                 'add_proposal'
             )
         ) 
-    search=request.args.get(
-        'search'
-    )
-    if session.get(
-        'role'
-    ) == 'SALES':
+    base_query = apply_export_filters(
 
-        base_query = Proposal.query.filter_by(
+        query=base_query,
 
-            record_owner=session[
-                'username'
-            ]
+        model=Proposal,
 
-        )
+        request=request,
 
-    elif session.get(
-        'role'
-    ) == 'COMMERCIALS':
+        date_field="next_to_call",
 
-        commercial_users = User.query.filter_by(
+        status_field="status",
 
-            role='COMMERCIALS'
+        search_fields=[
 
-        ).all()
+            "reference_no",
 
-        usernames = [
+            "name",
 
-            user.username
+            "phone_no_client",
 
-            for user in commercial_users
+            "source",
+
+            "type",
+
+            "reference_source_details",
+
+            "phone_no_source",
+
+            "contact_person",
+
+            "phone_no_contact_person",
+
+            "email",
+
+            "site_address",
+
+            "state",
+
+            "type_of_units",
+
+            "product",
+
+            "proposal_prepared_by",
+
+            "proposal_shared_by",
+
+            "remarks"
 
         ]
 
-        base_query = Proposal.query.filter(
+    )
 
-            Proposal.record_owner.in_(
-                usernames
-            )
+    all_proposals = base_query.order_by(
 
-        )
+        Proposal.proposal_id.desc()
 
-    else:
-
-        base_query = Proposal.query
-
-    if search:
-
-        all_proposals = base_query.filter(
-
-            or_(
-
-                Proposal.reference_no.ilike(
-                    f'%{search}%'
-                ),
-
-                Proposal.name.ilike(
-                    f'%{search}%'
-                ),
-
-                Proposal.phone_no_client.ilike(
-                    f'%{search}%'
-                ),
-
-                Proposal.source.ilike(
-                    f'%{search}%'
-                ),
-
-                Proposal.type.ilike(
-                    f'%{search}%'
-                ),
-
-                Proposal.reference_source_details.ilike(
-                    f'%{search}%'
-                ),
-
-                Proposal.phone_no_source.ilike(
-                    f'%{search}%'
-                ),
-
-                Proposal.contact_person.ilike(
-                    f'%{search}%'
-                ),
-
-                Proposal.phone_no_contact_person.ilike(
-                    f'%{search}%'
-                ),
-
-                Proposal.email.ilike(
-                    f'%{search}%'
-                ),
-
-                Proposal.site_address.ilike(
-                    f'%{search}%'
-                ),
-
-                Proposal.state.ilike(
-                    f'%{search}%'
-                ),
-
-                Proposal.type_of_units.ilike(
-                    f'%{search}%'
-                ),
-
-                Proposal.product.ilike(
-                    f'%{search}%'
-                ),
-
-                Proposal.proposal_prepared_by.ilike(
-                    f'%{search}%'
-                ),
-
-                Proposal.proposal_shared_by.ilike(
-                    f'%{search}%'
-                ),
-
-                Proposal.status.ilike(
-                    f'%{search}%'
-                ),
-
-                Proposal.remarks.ilike(
-                    f'%{search}%'
-                )
-
-            )
-
-        ).all()
-
-    else:
-
-        all_proposals = base_query.all()
+    ).all()
     if session.get(
         'role'
     ) == 'SALES':
@@ -8507,13 +8355,27 @@ def add_proposal():
 
         all_drawings = Drawing.query.all()
     return render_template(
+
         'add_proposal.html',
+
         proposals=all_proposals,
+
         meetings=all_meetings,
+
         drawings=all_drawings,
-        admin_view=session.get(
-            'role'
-        ) == 'ADMIN'
+
+        admin_view=(
+
+            session.get('role')
+
+            == 'ADMIN'
+
+        ),
+
+        page_view='commercial',
+
+        clear_route='add_proposal'
+
     )
 
 @app.route('/proposal/<int:proposal_id>')
@@ -8644,12 +8506,16 @@ def edit_proposal(proposal_id):
         all_drawings = Drawing.query.all()
 
     if request.method == 'POST':
-        proposal.meeting_id = request.form.get(
-            'meeting_id'
+        proposal.meeting_id = (
+            int(request.form['meeting_id'])
+            if request.form.get('meeting_id')
+            else None
         )
 
-        proposal.drawing_id = request.form.get(
-            'drawing_id'
+        proposal.drawinging_id = (
+            int(request.form['drawing_id'])
+            if request.form.get('drawing_id')
+            else None
         )
 
         proposal.reference_no = request.form.get(
@@ -9049,8 +8915,10 @@ def add_sales():
         )
     if request.method == 'POST':
 
-        proposal_id = request.form.get(
-            'proposal_id'
+        proposal_id=(
+            int(request.form['proposal_id'])
+            if request.form.get('proposal_id')
+            else None
         )
 
         name = request.form.get(
@@ -9092,6 +8960,28 @@ def add_sales():
         sales_person = request.form.get(
             'sales_person'
         )
+
+        price = Decimal(request.form.get('price_of_units') or 0)
+
+        cmc = Decimal(request.form.get('first_year_cmc') or 0)
+
+        installation = Decimal(request.form.get('installation') or 0)
+
+        sensor_cost = Decimal(request.form.get('sensor_cost') or 0)
+
+        total_sensor = Decimal(request.form.get('total_sensor') or 0)
+
+        discount = Decimal(request.form.get('discount') or 0)
+
+        revenue = (
+            price +
+            cmc +
+            installation +
+            (total_sensor * sensor_cost) -
+            discount
+        )
+
+        total_revenue = revenue * Decimal("1.18")
 
         sales = SalesPipeline(
             proposal_id=proposal_id,
@@ -9148,13 +9038,13 @@ def add_sales():
 
             discount=request.form.get('discount'),
 
-            revenue=request.form.get('revenue'),
+            revenue=revenue,
 
-            amount_received=request.form.get('amount_received'),
+            amount_received=0,
 
-            amount_due=request.form.get('amount_due'),
+            amount_due=total_revenue,
 
-            total_revenue=request.form.get('total_revenue'),
+            total_revenue=total_revenue,
 
             gst_no=request.form.get('gst_no'),
 
@@ -9170,6 +9060,8 @@ def add_sales():
             sales
         )
         db.session.flush()
+
+
         log_activity(
 
             'SALES',
@@ -9345,6 +9237,8 @@ def add_sales():
 
         proposals=all_proposals,
 
+        
+
         admin_view=session.get(
             'role'
         ) == 'ADMIN'        
@@ -9365,6 +9259,17 @@ def sales_details(sales_id):
     sale = SalesPipeline.query.get_or_404(
         sales_id
     )
+    payments = PaymentHistory.query.filter_by(
+
+        sales_id=sale.sales_id
+
+    ).order_by(
+
+        PaymentHistory.payment_date.desc(),
+
+        PaymentHistory.payment_id.desc()
+
+    ).all()
     if not can_view_record(
 
         sale.record_owner
@@ -9377,8 +9282,15 @@ def sales_details(sales_id):
             )
         )
     return render_template(
+
         'sales_details.html',
-        sale=sale
+
+        sale=sale,
+
+        payments=payments,
+
+        today=date.today()
+
     )
 
 @app.route(
@@ -9398,6 +9310,17 @@ def edit_sales(sales_id):
     sales = SalesPipeline.query.get_or_404(
         sales_id
     )
+    payments = PaymentHistory.query.filter_by(
+
+        sales_id=sales.sales_id
+
+    ).order_by(
+
+        PaymentHistory.payment_date.desc(),
+
+        PaymentHistory.payment_id.desc()
+
+    ).all()
     if not can_access_record(
 
         sales.record_owner
@@ -9448,8 +9371,10 @@ def edit_sales(sales_id):
 
     if request.method == 'POST':
 
-        sales.proposal_id = request.form.get(
-            'proposal_id'
+        sales.proposal_id = (
+            int(request.form['proposal_id'])
+            if request.form.get('proposal_id')
+            else None
         )
 
         sales.name = request.form.get(
@@ -9583,21 +9508,31 @@ def edit_sales(sales_id):
             'discount'
         )
 
-        sales.revenue = request.form.get(
-            'revenue'
+        price = Decimal(request.form.get('price_of_units') or 0)
+
+        cmc = Decimal(request.form.get('first_year_cmc') or 0)
+
+        installation = Decimal(request.form.get('installation') or 0)
+
+        sensor_cost = Decimal(request.form.get('sensor_cost') or 0)
+
+        total_sensor = Decimal(request.form.get('total_sensor') or 0)
+
+        discount = Decimal(request.form.get('discount') or 0)
+
+        revenue = (
+            price +
+            cmc +
+            installation +
+            (total_sensor * sensor_cost) -
+            discount
         )
 
-        sales.amount_received = request.form.get(
-            'amount_received'
-        )
+        total_revenue = revenue * Decimal("1.18")
 
-        sales.amount_due = request.form.get(
-            'amount_due'
-        )
+        sales.revenue = revenue
 
-        sales.total_revenue = request.form.get(
-            'total_revenue'
-        )
+        sales.total_revenue = total_revenue
 
         sales.gst_no = request.form.get(
             'gst_no'
@@ -9610,6 +9545,39 @@ def edit_sales(sales_id):
         sales.total_cmc = request.form.get(
             'total_cmc'
         )
+
+        total_received = db.session.query(
+
+            db.func.coalesce(
+
+                db.func.sum(
+
+                    PaymentHistory.payment_amount
+
+                ),
+
+                0
+
+            )
+
+        ).filter(
+
+            PaymentHistory.sales_id == sales.sales_id
+
+        ).scalar()
+
+        sales.amount_received = total_received
+
+        sales.amount_due = Decimal(
+
+            sales.total_revenue or 0
+
+        ) - Decimal(
+
+            total_received or 0
+
+        )
+
         db.session.flush()
         log_activity(
 
@@ -9629,9 +9597,17 @@ def edit_sales(sales_id):
         )
 
     return render_template(
+
         'edit_sales.html',
+
         sales=sales,
-        proposals=all_proposals
+
+        proposals=all_proposals,
+
+        payments=payments,
+
+        today=date.today()
+
     )
 
 @app.route(
@@ -9756,6 +9732,287 @@ def request_delete_sales(sales_id):
 
     )
 
+@app.route(
+    '/add-payment/<int:sales_id>',
+    methods=['POST']
+)
+def add_payment(
+    sales_id
+):
+
+    if not has_access(
+        'ADMIN',
+        'SALES',
+        'COMMERCIALS'
+    ):
+        return redirect(
+            url_for(
+                'dashboard'
+            )
+        )
+
+    sale = SalesPipeline.query.get_or_404(
+        sales_id
+    )
+
+    payment = PaymentHistory(
+
+        sales_id=sale.sales_id,
+
+        payment_date=datetime.strptime(
+            request.form['payment_date'],
+            '%Y-%m-%d'
+        ).date(),
+
+        payment_amount=request.form['payment_amount'],
+
+        payment_mode=request.form['payment_mode'],
+
+        transaction_reference=request.form.get(
+            'transaction_reference'
+        ),
+
+        remarks=request.form.get(
+            'remarks'
+        ),
+
+        created_by=session.get(
+            'username'
+        )
+
+    )
+
+    db.session.add(
+        payment
+    )
+
+    db.session.flush()
+
+    total_received = db.session.query(
+
+        db.func.coalesce(
+
+            db.func.sum(
+
+                PaymentHistory.payment_amount
+
+            ),
+
+            0
+
+        )
+
+    ).filter(
+
+        PaymentHistory.sales_id == sale.sales_id
+
+    ).scalar()
+
+    sale.amount_received = total_received
+
+    sale.amount_due = (
+
+        sale.total_revenue or 0
+
+    ) - (
+
+        total_received or 0
+
+    )
+
+    db.session.commit()
+
+    flash(
+        'Payment added successfully.',
+        'success'
+    )
+
+    return redirect(
+
+        url_for(
+
+            'edit_sales',
+
+            sales_id=sale.sales_id
+
+        )
+
+    )
+
+@app.route(
+    '/delete-payment/<int:payment_id>'
+)
+def delete_payment(
+    payment_id
+):
+
+    payment = PaymentHistory.query.get_or_404(
+        payment_id
+    )
+
+    sale = payment.sale
+
+    db.session.delete(
+        payment
+    )
+
+    db.session.flush()
+
+    total_received = db.session.query(
+
+        db.func.coalesce(
+
+            db.func.sum(
+
+                PaymentHistory.payment_amount
+
+            ),
+
+            0
+
+        )
+
+    ).filter(
+
+        PaymentHistory.sales_id == sale.sales_id
+
+    ).scalar()
+
+    sale.amount_received = total_received
+
+    sale.amount_due = (
+
+        sale.total_revenue or 0
+
+    ) - (
+
+        total_received or 0
+
+    )
+
+    db.session.commit()
+
+    flash(
+        'Payment deleted successfully.',
+        'success'
+    )
+
+    return redirect(
+
+        url_for(
+
+            'edit_sales',
+
+            sales_id=sale.sales_id
+
+        )
+
+    )
+
+@app.route(
+    '/edit-payment/<int:payment_id>',
+    methods=['POST']
+)
+def edit_payment(
+    payment_id
+):
+
+    payment = PaymentHistory.query.get_or_404(
+
+        payment_id
+
+    )
+
+    sale = payment.sale
+
+    payment.payment_date = datetime.strptime(
+
+        request.form.get(
+
+            'payment_date'
+
+        ),
+
+        '%Y-%m-%d'
+
+    ).date()
+
+    payment.payment_amount = request.form.get(
+
+        'payment_amount'
+
+    )
+
+    payment.payment_mode = request.form.get(
+
+        'payment_mode'
+
+    )
+
+    payment.transaction_reference = request.form.get(
+
+        'transaction_reference'
+
+    )
+
+    payment.remarks = request.form.get(
+
+        'remarks'
+
+    )
+
+    total_received = db.session.query(
+
+        db.func.coalesce(
+
+            db.func.sum(
+
+                PaymentHistory.payment_amount
+
+            ),
+
+            0
+
+        )
+
+    ).filter(
+
+        PaymentHistory.sales_id == sale.sales_id
+
+    ).scalar()
+
+    sale.amount_received = total_received
+
+    sale.amount_due = (
+
+        sale.total_revenue
+
+        -
+
+        total_received
+
+    )
+
+    db.session.commit()
+
+    flash(
+
+        'Payment updated.'
+
+    )
+
+    return redirect(
+
+        url_for(
+
+            'edit_sales',
+
+            sales_id=sale.sales_id
+
+        )
+
+    )
+
 @app.route('/add-invoice',
            methods=['GET','POST'])
 def add_invoice():
@@ -9770,8 +10027,10 @@ def add_invoice():
         )
     if request.method == 'POST':
 
-        sales_id = request.form.get(
-            'sales_id'
+        sales_id = (
+            int(request.form['sales_id'])
+            if request.form.get('sales_id')
+            else None
         )
 
         doi_input = request.form.get(
@@ -9950,6 +10209,13 @@ def add_invoice():
     search=request.args.get(
         'search'
     )
+    start_date = request.args.get(
+        'start_date'
+    )
+
+    end_date = request.args.get(
+        'end_date'
+    )
     if session.get(
         'role'
     ) == 'SALES':
@@ -9989,7 +10255,7 @@ def add_invoice():
 
     if search:
 
-        all_invoices = base_query.filter(
+        base_query = base_query.filter(
 
             or_(
 
@@ -10011,11 +10277,29 @@ def add_invoice():
 
             )
 
-        ).all()
+        )
 
-    else:
+    if start_date:
 
-        all_invoices = base_query.all()
+        base_query = base_query.filter(
+
+            Invoice.doi >= start_date
+
+        )
+
+    if end_date:
+
+        base_query = base_query.filter(
+
+            Invoice.doi <= end_date
+
+        )
+
+    all_invoices = base_query.order_by(
+
+    Invoice.invoice_id.desc()
+
+).all()
 
     if session.get(
         'role'
@@ -10062,9 +10346,19 @@ def add_invoice():
 
         sales=all_sales,
 
+        search=search,
+
+        start_date=start_date,
+
+        end_date=end_date,
+
+        page_view='my',
+
+        clear_route='add_invoice',
+
         admin_view=session.get(
             'role'
-        ) == 'ADMIN'        
+        ) == 'ADMIN'
 
     )
 
@@ -10165,8 +10459,10 @@ def edit_invoice(invoice_id):
         all_sales = SalesPipeline.query.all()
 
     if request.method == 'POST':
-        invoice.sales_id = request.form.get(
-            'sales_id'
+        invoice.sales_id = (
+            int(request.form['sales_id'])
+            if request.form.get('sales_id')
+            else None
         )
 
         doi_input = request.form.get(
@@ -10492,8 +10788,10 @@ def add_installation():
 
         installation = Installation(
 
-            sales_id=request.form.get(
-                'sales_id'
+            sales_id = (
+                int(request.form['sales_id'])
+                if request.form.get('sales_id')
+                else None
             ),
 
             installation_for=request.form.get(
@@ -10862,8 +11160,10 @@ def edit_installation(
 
     if request.method == 'POST':
 
-        installation.sales_id = request.form.get(
-            'sales_id'
+        installation.sales_id = (
+            int(request.form['sales_id'])
+            if request.form.get('sales_id')
+            else None
         )
 
         installation.installation_for = request.form.get(
@@ -11247,12 +11547,16 @@ def add_client():
 
     if request.method == 'POST':
 
-        proposal_id = request.form.get(
-            'proposal_id'
+        proposal_id = (
+            int(request.form['proposal_id'])
+            if request.form.get('proposal_id')
+            else None
         )
 
-        invoice_id = request.form.get(
-            'invoice_id'
+        invoice_id = (
+            int(request.form['invoice_id'])
+            if request.form.get('invoice_id')
+            else None
         )
 
         installation_date = (
@@ -11697,12 +12001,16 @@ def edit_client(client_id):
     all_invoices = Invoice.query.all()
 
     if request.method == 'POST':
-        client.proposal_id = request.form.get(
-            'proposal_id'
+        client.proposal_id = (
+            int(request.form['proposal_id'])
+            if request.form.get('proposal_id')
+            else None
         )
 
-        client.invoice_id = request.form.get(
-            'invoice_id'
+        client.invoice_id = (
+            int(request.form['invoice_id'])
+            if request.form.get('invoice_id')
+            else None
         )
         installation_date = (
             datetime.strptime(
@@ -12751,32 +13059,37 @@ def employee_leads(
         username=username
     ).first_or_404()
 
-    search = request.args.get(
-        'search'
-    )
-
     query = Lead.query.filter_by(
         record_owner=username
     )
 
-    if search:
+    query = apply_export_filters(
 
-        query = query.filter(
-            or_(
-                Lead.name.ilike(
-                    f'%{search}%'
-                ),
-                Lead.reference.ilike(
-                    f'%{search}%'
-                ),
-                Lead.location.ilike(
-                    f'%{search}%'
-                ),
-                Lead.phone.ilike(
-                    f'%{search}%'
-                )
-            )
-        )
+        query=query,
+
+        model=Lead,
+
+        request=request,
+
+        date_field="next_to_call",
+
+        search_fields=[
+
+            "name",
+
+            "reference",
+
+            "location",
+
+            "phone",
+
+            "responses",
+
+            "recent"
+
+        ]
+
+    )
 
     leads = query.order_by(
         Lead.lead_id.desc()
@@ -12790,7 +13103,7 @@ def employee_leads(
 
         leads=leads,
 
-        search=search
+        page_view='employee'
 
     )
 
@@ -12817,35 +13130,46 @@ def employee_meetings(
         username=username
     ).first_or_404()
 
-    search = request.args.get(
-        'search'
-    )
-
     query = Meeting.query.filter_by(
+
         record_owner=username
+
     )
 
-    if search:
+    query = apply_export_filters(
 
-        query = query.filter(
-            or_(
-                Meeting.name.ilike(
-                    f'%{search}%'
-                ),
-                Meeting.reference.ilike(
-                    f'%{search}%'
-                ),
-                Meeting.firm_name.ilike(
-                    f'%{search}%'
-                ),
-                Meeting.contact_no.ilike(
-                    f'%{search}%'
-                )
-            )
-        )
+        query=query,
+
+        model=Meeting,
+
+        request=request,
+
+        date_field="date_of_meeting",
+
+        status_field="meeting_status",
+
+        search_fields=[
+
+            "firm_name",
+
+            "name",
+
+            "contact_no",
+
+            "reference",
+
+            "source",
+
+            "email"
+
+        ]
+
+    )
 
     meetings = query.order_by(
-        Meeting.meeting_id.desc()
+
+        Meeting.date_of_meeting.desc()
+
     ).all()
 
     return render_template(
@@ -12856,7 +13180,7 @@ def employee_meetings(
 
         meetings=meetings,
 
-        search=search
+        page_view='employee'
 
     )
 
@@ -13009,35 +13333,68 @@ def employee_proposals(
         username=username
     ).first_or_404()
 
-    search = request.args.get(
-        'search'
-    )
-
     query = Proposal.query.filter_by(
+
         record_owner=username
+
     )
 
-    if search:
+    query = apply_export_filters(
 
-        query = query.filter(
-            or_(
-                Proposal.name.ilike(
-                    f'%{search}%'
-                ),
-                Proposal.reference_no.ilike(
-                    f'%{search}%'
-                ),
-                Proposal.address.ilike(
-                    f'%{search}%'
-                ),
-                Proposal.contact_no.ilike(
-                    f'%{search}%'
-                )
-            )
-        )
+        query=query,
+
+        model=Proposal,
+
+        request=request,
+
+        date_field="next_to_call",
+
+        status_field="status",
+
+        search_fields=[
+
+            "reference_no",
+
+            "name",
+
+            "phone_no_client",
+
+            "source",
+
+            "type",
+
+            "reference_source_details",
+
+            "phone_no_source",
+
+            "contact_person",
+
+            "phone_no_contact_person",
+
+            "email",
+
+            "site_address",
+
+            "state",
+
+            "type_of_units",
+
+            "product",
+
+            "proposal_prepared_by",
+
+            "proposal_shared_by",
+
+            "remarks"
+
+        ]
+
+    )
 
     proposals = query.order_by(
+
         Proposal.proposal_id.desc()
+
     ).all()
 
     return render_template(
@@ -13048,7 +13405,7 @@ def employee_proposals(
 
         proposals=proposals,
 
-        search=search
+        page_view='employee'
 
     )
 
@@ -13143,6 +13500,14 @@ def employee_invoices(
         'search'
     )
 
+    start_date = request.args.get(
+        'start_date'
+    )
+
+    end_date = request.args.get(
+        'end_date'
+    )
+
     query = Invoice.query.filter_by(
         record_owner=username
     )
@@ -13150,24 +13515,49 @@ def employee_invoices(
     if search:
 
         query = query.filter(
+
             or_(
+
                 Invoice.name.ilike(
                     f'%{search}%'
                 ),
+
                 Invoice.invoice_no.ilike(
                     f'%{search}%'
                 ),
+
                 Invoice.gst_no.ilike(
                     f'%{search}%'
                 ),
+
                 Invoice.product_sold.ilike(
                     f'%{search}%'
                 )
+
             )
+
+        )
+
+    if start_date:
+
+        query = query.filter(
+
+            Invoice.doi >= start_date
+
+        )
+
+    if end_date:
+
+        query = query.filter(
+
+            Invoice.doi <= end_date
+
         )
 
     invoices = query.order_by(
+
         Invoice.invoice_id.desc()
+
     ).all()
 
     return render_template(
@@ -13178,7 +13568,13 @@ def employee_invoices(
 
         invoices=invoices,
 
-        search=search
+        search=search,
+
+        start_date=start_date,
+
+        end_date=end_date,
+
+        page_view='employee'
 
     )
 
@@ -13208,29 +13604,87 @@ def commercial_department():
 def commercial_leads():
 
     if not has_access(
+
         'ADMIN',
+
         'COMMERCIALS'
+
     ):
 
         return redirect(
+
             url_for(
                 'dashboard'
             )
+
         )
 
     commercial_users = User.query.filter_by(
+
         role='COMMERCIALS'
+
     ).all()
 
     usernames = [
+
         user.username
+
         for user in commercial_users
+
     ]
 
-    leads = Lead.query.filter(
+    query = Lead.query.filter(
+
         Lead.record_owner.in_(
             usernames
         )
+
+    )
+
+    query = apply_export_filters(
+
+        query=query,
+
+        model=Lead,
+
+        request=request,
+
+        date_field="next_to_call",
+
+        
+
+        search_fields=[
+
+            "name",
+
+            "reference",
+
+            "location",
+
+            "phone",
+
+            "responses",
+
+            "recent"
+
+        ]
+
+    )
+
+    leads = query.order_by(
+
+        Lead.lead_id.desc()
+
+    ).all()
+
+    owners = User.query.filter_by(
+
+        role='COMMERCIALS'
+
+    ).order_by(
+
+        User.full_name
+
     ).all()
 
     return render_template(
@@ -13239,10 +13693,16 @@ def commercial_leads():
 
         leads=leads,
 
+        owners=owners,
+
         admin_view=(
             session.get('role')
             == 'ADMIN'
-        )
+        ),
+
+        page_view='commercial',
+
+        clear_route='commercial_leads'
 
     )
 
@@ -13258,24 +13718,73 @@ def commercial_meetings():
         )
 
     commercial_users = User.query.filter_by(
+
         role='COMMERCIALS'
+
     ).all()
 
     usernames = [
+
         user.username
+
         for user in commercial_users
+
     ]
 
-    meetings = Meeting.query.filter(
+    query = Meeting.query.filter(
+
         Meeting.record_owner.in_(
+
             usernames
+
         )
+
+    )
+
+    query = apply_export_filters(
+
+        query=query,
+
+        model=Meeting,
+
+        request=request,
+
+        date_field="date_of_meeting",
+
+        status_field="meeting_status",
+
+        search_fields=[
+
+            "firm_name",
+
+            "name",
+
+            "contact_no",
+
+            "reference",
+
+            "source",
+
+            "email"
+
+        ]
+
+    )
+
+    meetings = query.order_by(
+
+        Meeting.date_of_meeting.desc()
+
     ).all()
 
     leads = Lead.query.filter(
+
         Lead.record_owner.in_(
+
             usernames
+
         )
+
     ).all()
 
     return render_template(
@@ -13287,9 +13796,16 @@ def commercial_meetings():
         leads=leads,
 
         admin_view=(
+
             session.get('role')
+
             == 'ADMIN'
-        )
+
+        ),
+
+        page_view='commercial',
+
+        clear_route='commercial_meetings'
 
     )
 
@@ -13407,10 +13923,72 @@ def commercial_proposals():
         for user in commercial_users
     ]
 
-    proposals = Proposal.query.filter(
-        Proposal.record_owner.in_(
-            usernames
-        )
+    query = Proposal.query.filter(
+
+    Proposal.record_owner.in_(
+
+        usernames
+
+    )
+
+)
+
+    query = apply_export_filters(
+
+        query=query,
+
+        model=Proposal,
+
+        request=request,
+
+        date_field="next_to_call",
+
+        status_field="status",
+
+        search_fields=[
+
+            "reference_no",
+
+            "name",
+
+            "phone_no_client",
+
+            "source",
+
+            "type",
+
+            "reference_source_details",
+
+            "phone_no_source",
+
+            "contact_person",
+
+            "phone_no_contact_person",
+
+            "email",
+
+            "site_address",
+
+            "state",
+
+            "type_of_units",
+
+            "product",
+
+            "proposal_prepared_by",
+
+            "proposal_shared_by",
+
+            "remarks"
+
+        ]
+
+    )
+
+    proposals = query.order_by(
+
+        Proposal.proposal_id.desc()
+
     ).all()
 
     meetings = Meeting.query.filter(
@@ -13436,9 +14014,16 @@ def commercial_proposals():
         drawings=drawings,
 
         admin_view=(
+
             session.get('role')
+
             == 'ADMIN'
-        )
+
+        ),
+
+        page_view='commercial',
+
+        clear_route='commercial_proposals'
 
     )
 
@@ -13574,7 +14159,7 @@ def commercial_clients():
     '/organization'
 )
 def organization():
-
+    start = time.perf_counter()
     if session.get(
         'role'
     ) != 'ADMIN':
@@ -13592,6 +14177,7 @@ def organization():
     total_sales = SalesPipeline.query.count()
     total_invoices = Invoice.query.count()
     total_clients = Client.query.count()
+    print(f"Organisation took {time.perf_counter() - start:.2f} sec")
     return render_template(
         'organization.html',
         total_leads=total_leads,
@@ -13619,43 +14205,45 @@ def organization_leads():
             )
         )
 
-    search = request.args.get(
-        'search'
-    )
-
     query = Lead.query
 
-    if search:
+    query = apply_export_filters(
 
-        query = query.filter(
+        query=query,
 
-            or_(
+        model=Lead,
 
-                Lead.name.ilike(
-                    f'%{search}%'
-                ),
+        request=request,
 
-                Lead.reference.ilike(
-                    f'%{search}%'
-                ),
+        date_field="next_to_call",
 
-                Lead.location.ilike(
-                    f'%{search}%'
-                ),
+        owner_field="record_owner",
 
-                Lead.phone.ilike(
-                    f'%{search}%'
-                ),
+        search_fields=[
 
-                Lead.record_owner.ilike(
-                    f'%{search}%'
-                )
+            "name",
 
-            )
+            "reference",
 
-        )
+            "location",
 
-    leads = query.all()
+            "phone",
+
+            "responses",
+
+            "recent"
+
+        ]
+
+    )
+
+    leads = query.order_by(
+        Lead.lead_id.desc()
+    ).all()
+
+    owners = User.query.order_by(
+        User.full_name
+    ).all() 
 
     return render_template(
 
@@ -13663,7 +14251,11 @@ def organization_leads():
 
         leads=leads,
 
-        search=search
+        owners=owners,
+
+        page_view='organization',
+
+        clear_route='organization_leads'
 
     )
 
@@ -13673,37 +14265,51 @@ def organization_meetings():
     if session.get('role') != 'ADMIN':
         return redirect(url_for('dashboard'))
 
-    search = request.args.get('search')
-
     query = Meeting.query
 
-    if search:
+    query = apply_export_filters(
 
-        query = query.filter(
+        query=query,
 
-            or_(
+        model=Meeting,
 
-                Meeting.name.ilike(
-                    f'%{search}%'
-                ),
+        request=request,
 
-                Meeting.firm_name.ilike(
-                    f'%{search}%'
-                ),
+        date_field="date_of_meeting",
 
-                Meeting.contact_no.ilike(
-                    f'%{search}%'
-                ),
+        status_field="meeting_status",
 
-                Meeting.record_owner.ilike(
-                    f'%{search}%'
-                )
+        owner_field="record_owner",
 
-            )
+        search_fields=[
 
-        )
+            "firm_name",
 
-    meetings = query.all()
+            "name",
+
+            "contact_no",
+
+            "reference",
+
+            "source",
+
+            "email"
+
+        ]
+
+    )
+
+    meetings = query.order_by(
+
+        Meeting.date_of_meeting.desc()
+
+    ).all()
+
+    owners = User.query.order_by(
+
+        User.full_name
+
+    ).all()
 
     return render_template(
 
@@ -13711,7 +14317,11 @@ def organization_meetings():
 
         meetings=meetings,
 
-        search=search
+        owners=owners,
+
+        page_view='organization',
+
+        clear_route='organization_meetings'
 
     )
 
@@ -13813,37 +14423,73 @@ def organization_proposals():
     if session.get('role') != 'ADMIN':
         return redirect(url_for('dashboard'))
 
-    search = request.args.get('search')
-
     query = Proposal.query
 
-    if search:
+    query = apply_export_filters(
 
-        query = query.filter(
+        query=query,
 
-            or_(
+        model=Proposal,
 
-                Proposal.reference_no.ilike(
-                    f'%{search}%'
-                ),
+        request=request,
 
-                Proposal.name.ilike(
-                    f'%{search}%'
-                ),
+        date_field="next_to_call",
 
-                Proposal.phone_no_client.ilike(
-                    f'%{search}%'
-                ),
+        status_field="status",
 
-                Proposal.record_owner.ilike(
-                    f'%{search}%'
-                )
+        owner_field="record_owner",
 
-            )
+        search_fields=[
 
-        )
+            "reference_no",
 
-    proposals = query.all()
+            "name",
+
+            "phone_no_client",
+
+            "source",
+
+            "type",
+
+            "reference_source_details",
+
+            "phone_no_source",
+
+            "contact_person",
+
+            "phone_no_contact_person",
+
+            "email",
+
+            "site_address",
+
+            "state",
+
+            "type_of_units",
+
+            "product",
+
+            "proposal_prepared_by",
+
+            "proposal_shared_by",
+
+            "remarks"
+
+        ]
+
+    )
+
+    proposals = query.order_by(
+
+        Proposal.proposal_id.desc()
+
+    ).all()
+
+    owners = User.query.order_by(
+
+        User.full_name
+
+    ).all()
 
     return render_template(
 
@@ -13851,7 +14497,11 @@ def organization_proposals():
 
         proposals=proposals,
 
-        search=search
+        owners=owners,
+
+        page_view='organization',
+
+        clear_route='organization_proposals'
 
     )
 
@@ -14094,6 +14744,17 @@ def organization_invoices():
     search=request.args.get(
         'search'
     )
+    start_date = request.args.get(
+        'start_date'
+    )
+
+    end_date = request.args.get(
+        'end_date'
+    )
+
+    owner = request.args.get(
+        'owner'
+    )
     if session.get(
         'role'
     ) == 'SALES':
@@ -14133,7 +14794,7 @@ def organization_invoices():
 
     if search:
 
-        all_invoices = base_query.filter(
+        base_query = base_query.filter(
 
             or_(
 
@@ -14155,11 +14816,37 @@ def organization_invoices():
 
             )
 
-        ).all()
+        )
 
-    else:
+    if start_date:
 
-        all_invoices = base_query.all()
+        base_query = base_query.filter(
+
+            Invoice.doi >= start_date
+
+        )
+
+    if end_date:
+
+        base_query = base_query.filter(
+
+            Invoice.doi <= end_date
+
+        )
+
+    if owner:
+
+        base_query = base_query.filter(
+
+            Invoice.record_owner == owner
+
+        )
+
+    all_invoices = base_query.order_by(
+
+        Invoice.invoice_id.desc()
+
+    ).all()
 
     if session.get(
         'role'
@@ -14198,6 +14885,12 @@ def organization_invoices():
 
         all_sales = SalesPipeline.query.all()
 
+    owners = db.session.query(
+
+        Invoice.record_owner
+
+    ).distinct().all()
+
     return render_template(
 
         'organization_invoices.html',
@@ -14206,7 +14899,17 @@ def organization_invoices():
 
         sales=all_sales,
 
-        search=search        
+        search=search,
+
+        start_date=start_date,
+
+        end_date=end_date,
+
+        owner=owner,
+
+        owners=owners,
+
+        page_view='organization'
 
     )
 
@@ -16114,7 +16817,8 @@ def generate_proforma(
     )
 
 @app.route(
-    '/generate-advance-receipt/<int:sales_id>'
+    '/generate-advance-receipt/<int:sales_id>',
+    methods=['POST']
 )
 def generate_advance_receipt(
 
@@ -16128,7 +16832,19 @@ def generate_advance_receipt(
 
     )
 
-    receipt_no = request.args.get(
+    payment_id = request.form.get(
+
+        'payment_id'
+
+    )
+
+    payment = PaymentHistory.query.get_or_404(
+
+        payment_id
+
+    )
+
+    receipt_no = request.form.get(
 
         'receipt_no'
 
@@ -16136,7 +16852,7 @@ def generate_advance_receipt(
 
     receipt_date = parse_date(
 
-        request.args.get(
+        request.form.get(
 
             'receipt_date'
 
@@ -16144,7 +16860,7 @@ def generate_advance_receipt(
 
     )
 
-    hsn_code = request.args.get(
+    hsn_code = request.form.get(
 
         'hsn_code'
 
@@ -16172,7 +16888,7 @@ def generate_advance_receipt(
 
             int(
 
-                sale.amount_received
+                payment.payment_amount
 
             ),
 
@@ -16231,10 +16947,23 @@ def generate_advance_receipt(
 
         ),
 
+        'payment_date':
+        payment.payment_date.strftime(
+
+            '%d-%m-%Y'
+
+        ),
+
+        'payment_mode':
+        payment.payment_mode,
+
+        'transaction_reference':
+        payment.transaction_reference or '',
+
         'amount_received':
         indian_format(
 
-            sale.amount_received
+            payment.payment_amount
 
         ),
 
@@ -16274,7 +17003,7 @@ def generate_advance_receipt(
 
     filename = (
 
-        f'Advance_Receipt_{sale.sales_id}.docx'
+        f'Advance_Receipt_{sale.name}_{payment.payment_date:%d-%m-%Y}.docx'
 
     )
 
@@ -16936,8 +17665,689 @@ def delete_reminder(
 
     )
 
-if __name__ == '__main__':
+@app.route(
+    '/export-leads'
+)
+def export_leads():
 
-    app.run(debug=False)
+    view = request.args.get(
+        'view'
+    )
+
+    if view == 'organization':
+
+        query = Lead.query
+
+    elif view == 'commercial':
+
+        commercial_users = User.query.filter_by(
+            role='COMMERCIALS'
+        ).all()
+
+        usernames = [
+
+            user.username
+
+            for user in commercial_users
+
+        ]
+
+        query = Lead.query.filter(
+
+            Lead.record_owner.in_(
+                usernames
+            )
+
+        )
+
+    elif view == 'employee':
+
+        username = request.args.get(
+            'username'
+        )
+
+        query = Lead.query.filter_by(
+            record_owner=username
+        )
+
+    else:
+
+        query = Lead.query
+
+    query = apply_export_filters(
+
+        query=query,
+
+        model=Lead,
+
+        request=request,
+
+        date_field="next_to_call",
+
+        owner_field="record_owner",
+
+        search_fields=[
+
+            "name",
+
+            "reference",
+
+            "location",
+
+            "phone",
+
+            "responses",
+
+            "recent"
+
+        ]
+
+    )
+
+    return export_filtered_query(
+
+        query=query,
+
+        headers=[
+
+            "Lead ID",
+
+            "Name",
+
+            "Reference",
+
+            "Location",
+
+            "Phone",
+
+            "Responses",
+
+            "Date of 1st Followup",
+
+            "Next To Call",
+
+            "Recent",
+
+            "Record Owner"
+
+        ],
+
+        fields=[
+
+            "lead_id",
+
+            "name",
+
+            "reference",
+
+            "location",
+
+            "phone",
+
+            "responses",
+
+            "date_of_1st_followup",
+
+            "next_to_call",
+
+            "recent",
+
+            "record_owner"
+
+        ],
+
+        filename=f"Leads_{datetime.now():%d-%m-%Y}.xlsx"
+
+    )
+
+@app.route(
+    '/export-meetings'
+)
+def export_meetings():
+
+    view = request.args.get(
+        'view'
+    )
+
+    if view == 'organization':
+
+        query = Meeting.query
+
+    elif view == 'commercial':
+
+        commercial_users = User.query.filter_by(
+
+            role='COMMERCIALS'
+
+        ).all()
+
+        usernames = [
+
+            user.username
+
+            for user in commercial_users
+
+        ]
+
+        query = Meeting.query.filter(
+
+            Meeting.record_owner.in_(
+
+                usernames
+
+            )
+
+        )
+
+    elif view == 'employee':
+
+        username = request.args.get(
+
+            'username'
+
+        )
+
+        query = Meeting.query.filter_by(
+
+            record_owner=username
+
+        )
+
+    else:
+
+        query = Meeting.query
+
+    query = apply_export_filters(
+
+        query=query,
+
+        model=Meeting,
+
+        request=request,
+
+        date_field="date_of_meeting",
+
+        status_field="meeting_status",
+
+        owner_field="record_owner",
+
+        search_fields=[
+
+            "firm_name",
+
+            "name",
+
+            "contact_no",
+
+            "reference",
+
+            "source",
+
+            "email"
+
+        ]
+
+    )
+
+    return export_filtered_query(
+
+        query=query,
+
+        headers=[
+
+            "Meeting ID",
+
+            "Company",
+
+            "Contact Person",
+
+            "Reference",
+
+            "Source",
+
+            "Contact Number",
+
+            "Email",
+
+            "Meeting Date",
+
+            "Meeting Status",
+
+            "Next Followup",
+
+            "Record Owner"
+
+        ],
+
+        fields=[
+
+            "meeting_id",
+
+            "firm_name",
+
+            "name",
+
+            "reference",
+
+            "source",
+
+            "contact_no",
+
+            "email",
+
+            "date_of_meeting",
+
+            "meeting_status",
+
+            "date_to_call_next",
+
+            "record_owner"
+
+        ],
+
+        filename=f"Meetings_{datetime.now():%d-%m-%Y}.xlsx"
+
+    )
+
+@app.route(
+    '/export-proposals'
+)
+def export_proposals():
+
+    view = request.args.get(
+        'view'
+    )
+
+    if view == 'organization':
+
+        query = Proposal.query
+
+    elif view == 'commercial':
+
+        commercial_users = User.query.filter_by(
+            role='COMMERCIALS'
+        ).all()
+
+        usernames = [
+
+            user.username
+
+            for user in commercial_users
+
+        ]
+
+        query = Proposal.query.filter(
+
+            Proposal.record_owner.in_(
+
+                usernames
+
+            )
+
+        )
+
+    elif view == 'employee':
+
+        username = request.args.get(
+            'username'
+        )
+
+        query = Proposal.query.filter_by(
+
+            record_owner=username
+
+        )
+
+    else:
+
+        query = Proposal.query
+
+    query = apply_export_filters(
+
+        query=query,
+
+        model=Proposal,
+
+        request=request,
+
+        date_field="next_to_call",
+
+        status_field="status",
+
+        owner_field="record_owner",
+
+        search_fields=[
+
+            "reference_no",
+
+            "name",
+
+            "phone_no_client",
+
+            "source",
+
+            "type",
+
+            "reference_source_details",
+
+            "phone_no_source",
+
+            "contact_person",
+
+            "phone_no_contact_person",
+
+            "email",
+
+            "site_address",
+
+            "state",
+
+            "type_of_units",
+
+            "product",
+
+            "proposal_prepared_by",
+
+            "proposal_shared_by",
+
+            "remarks"
+
+        ]
+
+    )
+
+    return export_filtered_query(
+
+        query=query,
+
+        headers=[
+
+            "Proposal ID",
+
+            "Reference No",
+
+            "Client Name",
+
+            "Phone",
+
+            "Source",
+
+            "Product",
+
+            "Proposal Status",
+
+            "Proposal Sent",
+
+            "Next Follow-up",
+
+            "Final Amount",
+
+            "Record Owner"
+
+        ],
+
+        fields=[
+
+            "proposal_id",
+
+            "reference_no",
+
+            "name",
+
+            "phone_no_client",
+
+            "source",
+
+            "product",
+
+            "status",
+
+            "date_of_proposal_sent",
+
+            "next_to_call",
+
+            "final_amount",
+
+            "record_owner"
+
+        ],
+
+        filename=f"Proposals_{datetime.now():%d-%m-%Y}.xlsx"
+
+    )
+
+@app.route('/export-invoices')
+def export_invoices():
+
+    if not has_access(
+        'ADMIN',
+        'SALES',
+        'COMMERCIALS'
+    ):
+
+        return redirect(
+            url_for(
+                'dashboard'
+            )
+        )
+
+    view = request.args.get(
+        'view',
+        'my'
+    )
+
+    username = request.args.get(
+        'username'
+    )
+
+    query = Invoice.query
+
+    if view == 'employee':
+
+        query = query.filter(
+
+            Invoice.record_owner == username
+
+        )
+
+    elif view == 'organization':
+
+        pass
+
+    else:
+
+        if session.get(
+            'role'
+        ) == 'SALES':
+
+            query = query.filter(
+
+                Invoice.record_owner == session[
+                    'username'
+                ]
+
+            )
+
+        elif session.get(
+            'role'
+        ) == 'COMMERCIALS':
+
+            commercial_users = User.query.filter_by(
+
+                role='COMMERCIALS'
+
+            ).all()
+
+            usernames = [
+
+                user.username
+
+                for user in commercial_users
+
+            ]
+
+            query = query.filter(
+
+                Invoice.record_owner.in_(
+
+                    usernames
+
+                )
+
+            )
+
+    query = apply_export_filters(
+
+        query=query,
+
+        model=Invoice,
+
+        request=request,
+
+        date_field='doi',
+
+        owner_field='record_owner',
+
+        search_fields=[
+
+            'name',
+
+            'invoice_no',
+
+            'gst_no',
+
+            'product_sold'
+
+        ]
+
+    )
+
+    invoices = query.order_by(
+
+        Invoice.invoice_id.desc()
+
+    ).all()
+
+    wb = Workbook()
+
+    ws = wb.active
+
+    ws.title = 'Invoices'
+
+    headers = [
+
+        'Invoice ID',
+
+        'Sales ID',
+
+        'Name',
+
+        'Date of Invoice',
+
+        'Invoice No',
+
+        'GST No',
+
+        'Product',
+
+        'Total Units',
+
+        'Price of Units',
+
+        'First Year CMC',
+
+        'Installation',
+
+        'Total Sensors',
+
+        'Sensor Cost',
+
+        'Revenue',
+
+        'Total Revenue',
+
+        'Record Owner'
+
+    ]
+
+    ws.append(
+
+        headers
+
+    )
+
+    for invoice in invoices:
+
+        ws.append([
+
+            invoice.invoice_id,
+
+            invoice.sales_id,
+
+            invoice.name,
+
+            invoice.doi,
+
+            invoice.invoice_no,
+
+            invoice.gst_no,
+
+            invoice.product_sold,
+
+            invoice.total_units,
+
+            float(invoice.price_of_units or 0),
+
+            float(invoice.first_year_cmc or 0),
+
+            float(invoice.installation or 0),
+
+            invoice.total_sensor,
+
+            float(invoice.sensor_cost or 0),
+
+            float(invoice.revenue or 0),
+
+            float(invoice.total_revenue or 0),
+
+            invoice.record_owner
+
+        ])
+
+    output = BytesIO()
+
+    wb.save(
+
+        output
+
+    )
+
+    output.seek(
+
+        0
+
+    )
+
+    return send_file(
+
+        output,
+
+        as_attachment=True,
+
+        download_name='Invoices.xlsx',
+
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
+    )
+
+if __name__ == "__main__":
+
+    debug_mode = os.getenv("RENDER") is None
+
+    app.run(
+        host="0.0.0.0",
+        port=5000,
+        debug=debug_mode
+    )
 
     

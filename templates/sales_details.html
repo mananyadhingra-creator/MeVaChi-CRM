@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 
 <head>
@@ -517,7 +517,7 @@
 
         <div class="row">
 
-            <div class="col-md-4 mb-3">
+            <div class="col-md-12 mb-3">
 
                 <label class="form-label">
 
@@ -525,42 +525,15 @@
 
                 </label>
 
-                <input type="text"
-                       class="form-control"
-                       value="{{ sale.revenue }}"
-                       readonly>
+                <input
+                    type="text"
+                    class="form-control"
+                    value="{{ sale.revenue }}"
+                    readonly>
 
             </div>
 
-            <div class="col-md-4 mb-3">
-
-                <label class="form-label">
-
-                    Amount Received
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ sale.amount_received }}"
-                       readonly>
-
-            </div>
-
-            <div class="col-md-4 mb-3">
-
-                <label class="form-label">
-
-                    Amount Due
-
-                </label>
-
-                <input type="text"
-                       class="form-control"
-                       value="{{ sale.amount_due }}"
-                       readonly>
-
-            </div>
+            
 
         </div>
 
@@ -630,6 +603,234 @@
 
     </div>
 
+    <div class="card shadow-sm p-4 mb-4">
+
+        <h4 class="mb-4">
+
+            Payment Summary
+
+        </h4>
+
+        <div class="row text-center">
+
+            <div class="col-md-3">
+
+                <div class="border rounded p-3 h-100">
+
+                    <h6 class="text-muted">
+
+                        Total Revenue
+
+                    </h6>
+
+                    <h4 class="mb-0 text-primary">
+
+                        ₹ {{ "{:,.2f}".format(sale.total_revenue or 0) }}
+
+                    </h4>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-3">
+
+                <div class="border rounded p-3 h-100">
+
+                    <h6 class="text-muted">
+
+                        Amount Received
+
+                    </h6>
+
+                    <h4 class="mb-0 text-success">
+
+                        ₹ {{ "{:,.2f}".format(sale.amount_received or 0) }}
+
+                    </h4>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-3">
+
+                <div class="border rounded p-3 h-100">
+
+                    <h6 class="text-muted">
+
+                        Amount Due
+
+                    </h6>
+
+                    <h4 class="mb-0 text-danger">
+
+                        ₹ {{ "{:,.2f}".format(sale.amount_due or 0) }}
+
+                    </h4>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-3">
+
+                <div class="border rounded p-3 h-100">
+
+                    <h6 class="text-muted">
+
+                        Payment Status
+
+                    </h6>
+
+                    {% if (sale.amount_due or 0) <= 0 %}
+
+                        <span class="badge bg-success fs-6">
+
+                            Fully Paid
+
+                        </span>
+
+                    {% elif (sale.amount_received or 0) > 0 %}
+
+                        <span class="badge bg-warning text-dark fs-6">
+
+                            Partially Paid
+
+                        </span>
+
+                    {% else %}
+
+                        <span class="badge bg-danger fs-6">
+
+                            Payment Pending
+
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="card shadow-sm p-4 mb-4">
+
+        <h4 class="mb-4">
+
+            Payment History
+
+        </h4>
+
+        {% if payments %}
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle">
+
+                <thead class="table-light">
+
+                    <tr>
+
+                        <th>Date</th>
+
+                        <th>Amount</th>
+
+                        <th>Mode</th>
+
+                        <th>Transaction Ref.</th>
+
+                        <th>Added By</th>
+
+                        <th>Remarks</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for payment in payments %}
+
+                    <tr>
+
+                        <td>
+
+                            {{ payment.payment_date.strftime('%d %b %Y') }}
+
+                        </td>
+
+                        <td class="fw-bold text-success">
+
+                            ₹ {{ "{:,.2f}".format(payment.payment_amount) }}
+
+                        </td>
+
+                        <td>
+
+                            <span class="badge bg-info text-dark">
+
+                                {{ payment.payment_mode }}
+
+                            </span>
+
+                        </td>
+
+                        <td>
+
+                            {{ payment.transaction_reference or "-" }}
+
+                        </td>
+
+                        <td>
+
+                            {{ payment.created_by or "-" }}
+
+                        </td>
+
+                        <td>
+
+                            {{ payment.remarks or "-" }}
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <div class="text-center py-5">
+
+            <i class="bi bi-cash-stack display-4 text-muted"></i>
+
+            <h5 class="mt-3">
+
+                No Payment History
+
+            </h5>
+
+            <p class="text-muted mb-0">
+
+                No payments have been recorded for this sale yet.
+
+            </p>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
     <br>
 
     <div class="mevachi-generator-actions">
@@ -666,7 +867,7 @@
                 </div>
 
                 <form
-                    method="GET"
+                    method="POST"
                     action="{{ url_for(
 
                         'generate_advance_receipt',
@@ -676,6 +877,43 @@
                     ) }}">
 
                     <div class="modal-body">
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+
+                                Payment
+
+                            </label>
+
+                            <select
+                                name="payment_id"
+                                class="form-select"
+                                required>
+
+                                <option value="">
+
+                                    Select Payment
+
+                                </option>
+
+                                {% for payment in payments %}
+
+                                <option value="{{ payment.payment_id }}">
+
+                                    {{ payment.payment_date.strftime('%d %b %Y') }}
+                                    |
+                                    ₹ {{ "{:,.2f}".format(payment.payment_amount) }}
+                                    |
+                                    {{ payment.payment_mode }}
+
+                                </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                        </div>
 
                         <div class="mb-3">
 
@@ -705,6 +943,7 @@
                                 type="date"
                                 name="receipt_date"
                                 class="form-control"
+                                value="{{ today }}"
                                 required>
 
                         </div>

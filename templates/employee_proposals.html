@@ -60,7 +60,16 @@
 
         </div>
 
+        <a
+            id="exportProposalBtn"
+            href="#"
+            class="btn btn-outline-success">
 
+            <i class="bi bi-file-earmark-excel"></i>
+
+            Export to Excel
+
+        </a>
 
     </div>
 
@@ -69,22 +78,127 @@
         <div class="card-body">
 
             <form method="GET"
-                  class="mb-3 mevachi-table-search">
-                <div class="input-group flex-nowrap">
-                    <input type="text"
-                           name="search"
-                           value="{{request.args.get('search','')}}"
-                           class="form-control"
-                           placeholder="Search">
-                    <button type="submit"
-                            class="btn btn-dark">
-                        Search
-                    </button>
-                    <a href="{{ url_for('add_proposal') }}"
-                       class="btn btn-secondary">
-                        Clear
-                    </a>
+                  class="mb-3"
+                  id="proposalFilterForm">
+
+                <input
+                    type="hidden"
+                    name="view"
+                    value="{{ page_view }}">
+
+                <input
+                    type="hidden"
+                    name="username"
+                    value="{{ user.username }}">
+
+                <div class="row g-2">
+
+                    <div class="col-md-4">
+
+                        <input
+                            type="text"
+                            name="search"
+                            value="{{ request.args.get('search','') }}"
+                            class="form-control"
+                            placeholder="Search">
+
+                    </div>
+
+                    <div class="col-md-2">
+
+                        <input
+                            type="date"
+                            name="start_date"
+                            value="{{ request.args.get('start_date','') }}"
+                            class="form-control">
+
+                    </div>
+
+                    <div class="col-md-2">
+
+                        <input
+                            type="date"
+                            name="end_date"
+                            value="{{ request.args.get('end_date','') }}"
+                            class="form-control">
+
+                    </div>
+
+                    <div class="col-md-2">
+
+                        <select
+                            name="status"
+                            class="form-select">
+
+                            <option value="">
+                                All Status
+                            </option>
+
+                            <option value="Drafting"
+                                {% if request.args.get('status') == 'Drafting' %}selected{% endif %}>
+                                Drafting
+                            </option>
+
+                            <option value="Proposal Submit"
+                                {% if request.args.get('status') == 'Proposal Submit' %}selected{% endif %}>
+                                Proposal Submit
+                            </option>
+
+                            <option value="On Hold"
+                                {% if request.args.get('status') == 'On Hold' %}selected{% endif %}>
+                                On Hold
+                            </option>
+
+                            <option value="PO Received"
+                                {% if request.args.get('status') == 'PO Received' %}selected{% endif %}>
+                                PO Received
+                            </option>
+
+                            <option value="Advance Received"
+                                {% if request.args.get('status') == 'Advance Received' %}selected{% endif %}>
+                                Advance Received
+                            </option>
+
+                            <option value="Withdrawn by MVC"
+                                {% if request.args.get('status') == 'Withdrawn by MVC' %}selected{% endif %}>
+                                Withdrawn by MVC
+                            </option>
+
+                            <option value="Declined by Customer"
+                                {% if request.args.get('status') == 'Declined by Customer' %}selected{% endif %}>
+                                Declined by Customer
+                            </option>
+
+                            <option value="PI Sent"
+                                {% if request.args.get('status') == 'PI Sent' %}selected{% endif %}>
+                                PI Sent
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-2 d-flex gap-2">
+
+                        <button
+                            type="submit"
+                            class="btn btn-dark w-100">
+
+                            Search
+
+                        </button>
+
+                        <a href="{{ url_for('employee_proposals', username=user.username) }}"
+                           class="btn btn-secondary">
+
+                            Clear
+
+                        </a>
+
+                    </div>
+
                 </div>
+
             </form>
 
             <table class="table table-bordered table-striped">
@@ -157,7 +271,39 @@
 
 </div>
 
+<script>
 
+document.getElementById("exportProposalBtn").addEventListener(
+
+    "click",
+
+    function(e){
+
+        e.preventDefault();
+
+        const params = new URLSearchParams(
+
+            new FormData(
+
+                document.getElementById(
+
+                    "proposalFilterForm"
+
+                )
+
+            )
+
+        );
+
+        window.location =
+            "{{ url_for('export_proposals') }}?" +
+            params.toString();
+
+    }
+
+);
+
+</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ url_for('static', filename='js/mevachi-ui.js') }}"></script>
 </body>

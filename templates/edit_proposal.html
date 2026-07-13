@@ -809,12 +809,83 @@
 
                     </label>
 
-                    <input type="text"
-                           name="status"
-                           value="{{ proposal.status }}"
-                           class="form-control">
+                    <select
+                        name="status"
+                        class="form-select">
 
-                </div>
+                        <option value="Drafting"
+                            {% if proposal.status == 'Drafting' %}
+                            selected
+                            {% endif %}>
+
+                            Drafting
+
+                        </option>
+
+                        <option value="Proposal Submit"
+                            {% if proposal.status == 'Proposal Submit' %}
+                            selected
+                            {% endif %}>
+
+                            Proposal Submit
+
+                        </option>
+
+                        <option value="On Hold"
+                            {% if proposal.status == 'On Hold' %}
+                            selected
+                            {% endif %}>
+
+                            On Hold
+
+                        </option>
+
+                        <option value="PO Received"
+                            {% if proposal.status == 'PO Received' %}
+                            selected
+                            {% endif %}>
+
+                            PO Received
+
+                        </option>
+
+                        <option value="Advance Received"
+                            {% if proposal.status == 'Advance Received' %}
+                            selected
+                            {% endif %}>
+
+                            Advance Received
+
+                        </option>
+
+                        <option value="Withdrawn by MVC"
+                            {% if proposal.status == 'Withdrawn by MVC' %}
+                            selected
+                            {% endif %}>
+
+                            Withdrawn by MVC
+
+                        </option>
+
+                        <option value="Declined by Customer"
+                            {% if proposal.status == 'Declined by Customer' %}
+                            selected
+                            {% endif %}>
+
+                            Declined by Customer
+
+                        </option>
+
+                        <option value="PI Sent"
+                            {% if proposal.status == 'PI Sent' %}
+                            selected
+                            {% endif %}>
+
+                            PI Sent
+
+                        </option>
+
+                    </select>
 
                 <div class="mb-3">
 

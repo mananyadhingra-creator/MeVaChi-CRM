@@ -408,22 +408,68 @@
         </h3>
 
         <form method="GET"
-              class="mb-3">
-            <div class="input-group">
-                <input type="text"
-                       name="search"
-                       value="{{request.args.get('search','')}}"
-                       class="form-control"
-                       placeholder="Search">
-                <button type="submit"
-                        class="btn btn-dark">
-                    Search
-                </button>
-                <a href="{{ url_for('add_invoice') }}"
-                   class="btn btn-secondary">
-                    Clear
-                </a>
+              class="mb-3"
+              id="invoiceFilterForm">
+
+            <input
+                type="hidden"
+                name="view"
+                value="{{ page_view }}">
+
+            <div class="row g-2">
+
+                <div class="col-md-4">
+
+                    <input
+                        type="text"
+                        name="search"
+                        value="{{ request.args.get('search','') }}"
+                        class="form-control"
+                        placeholder="Search">
+
+                </div>
+
+                <div class="col-md-2">
+
+                    <input
+                        type="date"
+                        name="start_date"
+                        value="{{ request.args.get('start_date','') }}"
+                        class="form-control">
+
+                </div>
+
+                <div class="col-md-2">
+
+                    <input
+                        type="date"
+                        name="end_date"
+                        value="{{ request.args.get('end_date','') }}"
+                        class="form-control">
+
+                </div>
+
+                <div class="col-md-2 d-flex gap-2">
+
+                    <button
+                        class="btn btn-dark w-100"
+                        type="submit">
+
+                        Search
+
+                    </button>
+
+                    <a href="{{ url_for('add_invoice') }}"
+                       class="btn btn-secondary">
+
+                        Clear
+
+                    </a>
+
+                </div>
+
             </div>
+
         </form>
 
         <table class="table table-bordered table-striped">
@@ -561,6 +607,36 @@ document.getElementById(
 
 </script>
 
+<script>
+
+const exportInvoicesBtn =
+    document.getElementById(
+        'exportInvoicesBtn'
+    );
+
+if (exportInvoicesBtn) {
+
+    exportInvoicesBtn.addEventListener(
+        'click',
+        function () {
+
+            const params =
+                new URLSearchParams(
+
+                    window.location.search
+
+                );
+
+            window.location.href =
+                "/export-invoices?" +
+                params.toString();
+
+        }
+    );
+
+}
+
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ url_for('static', filename='js/mevachi-ui.js') }}"></script>
