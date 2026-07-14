@@ -7337,8 +7337,10 @@ def add_drawing():
             'address'
         )
 
-        iterations = request.form.get(
-            'iterations'
+        iterations = (
+            int(request.form['iterations'])
+            if request.form.get('iterations')
+            else None
         )
 
         moca = request.form.get(
@@ -7973,38 +7975,90 @@ def add_proposal():
 
         total_area_sqft = request.form.get('total_area_sqft')
 
-        no_of_mvd_units = request.form.get('no_of_mvd_units')
-        no_of_mvd_max_units = request.form.get('no_of_mvd_max_units')
+        no_of_mvd_units = (
+            int(request.form['no_of_mvd_units'])
+            if request.form.get('no_of_mvd_units')
+            else None
+        )
+        no_of_mvd_max_units = (
+            int(request.form['no_of_mvd_max_units'])
+            if request.form.get('no_of_mvd_max_units')
+            else None
+        )
 
-        total_no_of_units = request.form.get('total_no_of_units')
+        total_no_of_units = (
+            int(request.form['total_no_of_units'])
+            if request.form.get('total_no_of_units')
+            else None
+        )
 
         type_of_units = request.form.get('type_of_units')
 
         product = request.form.get('product')
 
-        cost_total_per_unit = request.form.get('cost_total_per_unit')
+        cost_total_per_unit = (
+            Decimal(request.form['cost_total_per_unit'])
+            if request.form.get('cost_total_per_unit')
+            else None
+        )
 
-        no_of_monitors = request.form.get('no_of_monitors')
+        no_of_monitors = (
+            int(request.form['no_of_monitors'])
+            if request.form.get('no_of_monitors')
+            else None
+        )
 
         cmc = request.form.get('cmc')
 
-        per_unit_cost = request.form.get('per_unit_cost')
+        per_unit_cost = (
+            Decimal(request.form['per_unit_cost'])
+            if request.form.get('per_unit_cost')
+            else None
+        )
 
-        per_unit_cost_max_unit = request.form.get('per_unit_cost_max_unit')
+        per_unit_cost_max_unit = (
+            Decimal(request.form['per_unit_cost_max_unit'])
+            if request.form.get('per_unit_cost_max_unit')
+            else None
+        )
 
-        cmc_cost = request.form.get('cmc_cost')
+        cmc_cost = (
+            Decimal(request.form['cmc_cost'])
+            if request.form.get('cmc_cost')
+            else None
+        )
 
-        monitor_cost = request.form.get('monitor_cost')
+        monitor_cost = (
+            Decimal(request.form['monitor_cost'])
+            if request.form.get('monitor_cost')
+            else None
+        )
 
-        installation_cost = request.form.get('installation_cost')
+        installation_cost = (
+            Decimal(request.form['installation_cost'])
+            if request.form.get('installation_cost')
+            else None
+        )
     
-        total_amount = request.form.get('total_amount')
+        total_amount = (
+            Decimal(request.form['total_amount'])
+            if request.form.get('total_amount')
+            else None
+        )
 
         cmc_starting_period = request.form.get('cmc_starting_period')
 
-        discount = request.form.get('discount')
+        discount = (
+            Decimal(request.form['discount'])
+            if request.form.get('discount')
+            else None
+        ) 
 
-        final_amount = request.form.get('final_amount')
+        final_amount = (
+            Decimal(request.form['final_amount'])
+            if request.form.get('final_amount')
+            else None
+        )
 
         proposal_prepared_by = request.form.get('proposal_prepared_by')
 
@@ -8600,53 +8654,81 @@ def edit_proposal(proposal_id):
         proposal.type_of_units = request.form.get(
             'type_of_units'
         )
-        proposal.no_of_mvd_units = request.form.get(
-            'no_of_mvd_units'
+        proposal.no_of_mvd_units = (
+            int(request.form['no_of_mvd_units'])
+            if request.form.get('no_of_mvd_units')
+            else None
         )
-        proposal.no_of_mvd_max_units = request.form.get(
-            'no_of_mvd_max_units'
+        proposal.no_of_mvd_max_units = (
+            int(request.form['no_of_mvd_max_units'])
+            if request.form.get('no_of_mvd_max_units')
+            else None
         )
-        proposal.total_no_of_units = request.form.get(
-            'total_no_of_units'
+
+        proposal.total_no_of_units = (
+            int(request.form['total_no_of_units'])
+            if request.form.get('total_no_of_units')
+            else None
         )
         proposal.product = request.form.get(
             'product'
         )
-        proposal.cost_total_per_unit = request.form.get(
-            'cost_total_per_unit'
+        proposal.cost_total_per_unit = (
+            Decimal(request.form['cost_total_per_unit'])
+            if request.form.get('cost_total_per_unit')
+            else None
         )
-        proposal.no_of_monitors = request.form.get(
-            'no_of_monitors'
+
+        proposal.no_of_monitors = (
+            int(request.form['no_of_monitors'])
+            if request.form.get('no_of_monitors')
+            else None
         )
         proposal.cmc = request.form.get(
             'cmc'
         )
-        proposal.per_unit_cost = request.form.get(
-            'per_unit_cost'
+        proposal.per_unit_cost = (
+            Decimal(request.form['per_unit_cost'])
+            if request.form.get('per_unit_cost')
+            else None
         )
-        proposal.per_unit_cost_max_unit = request.form.get(
-            'per_unit_cost_max_unit'
+        proposal.per_unit_cost_max_unit = (
+            Decimal(request.form['per_unit_cost_max_unit'])
+            if request.form.get('per_unit_cost_max_unit')
+            else None
         )
-        proposal.cmc_cost = request.form.get(
-            'cmc_cost'
+        proposal.cmc_cost = (
+            Decimal(request.form['cmc_cost'])
+            if request.form.get('cmc_cost')
+            else None
         )
-        proposal.monitor_cost = request.form.get(
-            'monitor_cost'
+        proposal.monitor_cost = (
+            Decimal(request.form['monitor_cost'])
+            if request.form.get('monitor_cost')
+            else None
         )
-        proposal.installation_cost = request.form.get(
-            'installation_cost'
+        proposal.installation_cost = (
+            Decimal(request.form['installation_cost'])
+            if request.form.get('installation_cost')
+            else None
         )
-        proposal.total_amount = request.form.get(
-            'total_amount'
+        proposal.total_amount = (
+            Decimal(request.form['total_amount'])
+            if request.form.get('total_amount')
+            else None
         )
         proposal.cmc_starting_period = request.form.get(
             'cmc_starting_period'
         )
-        proposal.discount = request.form.get(
-            'discount'
+        proposal.discount = (
+            Decimal(request.form['discount'])
+            if request.form.get('discount')
+            else None
         )
-        proposal.final_amount = request.form.get(
-            'final_amount'
+        proposal.final_amount = (
+            Decimal(request.form['final_amount'])
+            if request.form.get('final_amount')
+            else None
         )
         proposal.proposal_prepared_by = request.form.get(
             'proposal_prepared_by'
@@ -9060,21 +9142,49 @@ def add_sales():
 
             followup_date=datetime.strptime(request.form.get('followup_date'), '%Y-%m-%d').date() if request.form.get('followup_date') else None,
             
-            no_of_site_visits=request.form.get('no_of_site_visits'),
+            no_of_site_visits = (
+                int(request.form['no_of_site_visits'])
+                if request.form.get('no_of_site_visits')
+                else None
+            ),
 
-            area_covered=request.form.get('area_covered'),
+            area_covered=(
+                Decimal(request.form['area_covered'])
+                if request.form.get('area_covered')
+                else None
+            ),
 
-            total_units=request.form.get('total_units'),
+            total_units = (
+                int(request.form['total_units'])
+                if request.form.get('total_units')
+                else None
+            ),
 
-            price_of_units=request.form.get('price_of_units'),
+            price_of_units=(
+                Decimal(request.form['price_of_units'])
+                if request.form.get('price_of_units')
+                else None
+            ),
 
-            first_year_cmc=request.form.get('first_year_cmc'),
+            first_year_cmc=(
+                Decimal(request.form['first_year_cmc'])
+                if request.form.get('first_year_cmc')
+                else None
+            ),
 
-            installation=request.form.get('installation'),
+            installation=(
+                Decimal(request.form['installation'])
+                if request.form.get('installation')
+                else None
+            ),
 
             total_sensor=request.form.get('total_sensor'),
 
-            sensor_cost=request.form.get('sensor_cost'),
+            sensor_cost=(
+                Decimal(request.form['sensor_cost'])
+                if request.form.get('sensor_cost')
+                else None
+            ),
 
             discount=request.form.get('discount'),
 
@@ -9088,9 +9198,17 @@ def add_sales():
 
             gst_no=request.form.get('gst_no'),
 
-            cmc_onwards=request.form.get('cmc_onwards'),
+            cmc_onwards=(
+                Decimal(request.form['cmc_onwards'])
+                if request.form.get('cmc_onwards')
+                else None
+            ),
 
-            total_cmc=request.form.get('total_cmc'),
+            total_cmc=(
+                Decimal(request.form['total_cmc'])
+                if request.form.get('total_cmc')
+                else None
+            ),
             record_owner=session[
                 'username'
             ]    
@@ -9512,40 +9630,55 @@ def edit_sales(sales_id):
             else None
         )
 
-        sales.no_of_site_visits = request.form.get(
-            'no_of_site_visits'
+        sales.no_of_site_visits = (
+            int(request.form['no_of_site_visits'])
+            if request.form.get('no_of_site_visits')
+            else None
         )
 
-        sales.area_covered = request.form.get(
-            'area_covered'
+        sales.area_covered=(
+            Decimal(request.form['area_covered'])
+            if request.form.get('area_covered')
+            else None
         )
 
-        sales.total_units = request.form.get(
-            'total_units'
+        sales.total_units = (
+            int(request.form['total_units'])
+            if request.form.get('total_units')
+            else None
         )
 
-        sales.price_of_units = request.form.get(
-            'price_of_units'
+        sales.price_of_units=(
+            Decimal(request.form['price_of_units'])
+            if request.form.get('price_of_units')
+            else None
+        )
+        sales.first_year_cmc=(
+            Decimal(request.form['first_year_cmc'])
+            if request.form.get('first_year_cmc')
+            else None
         )
 
-        sales.first_year_cmc = request.form.get(
-            'first_year_cmc'
-        )
-
-        sales.installation = request.form.get(
-            'installation'
+        sales.installation=(
+            Decimal(request.form['installation'])
+            if request.form.get('installation')
+            else None
         )
 
         sales.total_sensor = request.form.get(
             'total_sensor'
         )
 
-        sales.sensor_cost = request.form.get(
-            'sensor_cost'
-        )
+        sales.sensor_cost=(
+            Decimal(request.form['sensor_cost'])
+            if request.form.get('sensor_cost')
+            else None
+        ) 
 
-        sales.discount = request.form.get(
-            'discount'
+        sales.discount=(
+            Decimal(request.form['discount'])
+            if request.form.get('discount')
+            else None
         )
 
         price = Decimal(request.form.get('price_of_units') or 0)
@@ -9578,12 +9711,16 @@ def edit_sales(sales_id):
             'gst_no'
         )
 
-        sales.cmc_onwards = request.form.get(
-            'cmc_onwards'
+        sales.cmc_onwards=(
+            Decimal(request.form['cmc_onwards'])
+            if request.form.get('cmc_onwards')
+            else None
         )
 
-        sales.total_cmc = request.form.get(
-            'total_cmc'
+        sales.total_cmc=(
+            Decimal(request.form['total_cmc'])
+            if request.form.get('total_cmc')
+            else None
         )
 
         total_received = db.session.query(
@@ -10106,36 +10243,50 @@ def add_invoice():
 
 
 
-        total_units = request.form.get(
-            'total_units'
+        total_units = (
+            int(request.form['total_units'])
+            if request.form.get('total_units')
+            else None
         )
 
-        price_of_units = request.form.get(
-            'price_of_units'
+        price_of_units = (
+            Decimal(request.form['price_of_units'])
+            if request.form.get('price_of_units')
+            else None
         )
 
-        first_year_cmc = request.form.get(
-            'first_year_cmc'
+        first_year_cmc = (
+            Decimal(request.form['first_year_cmc'])
+            if request.form.get('first_year_cmc')
+            else None
         )
 
-        installation = request.form.get(
-            'installation'
+        installation = (
+            Decimal(request.form['installation'])
+            if request.form.get('installation')
+            else None
         )
 
         total_sensor = request.form.get(
             'total_sensor'
         )
 
-        sensor_cost = request.form.get(
-            'sensor_cost'
+        sensor_cost = (
+            Decimal(request.form['sensor_cost'])
+            if request.form.get('sensor_cost')
+            else None
         )
 
-        revenue = request.form.get(
-            'revenue'
+        revenue = (
+            Decimal(request.form['revenue'])
+            if request.form.get('revenue')
+            else None
         )
 
-        total_revenue = request.form.get(
-            'total_revenue'
+        total_revenue = (
+            Decimal(request.form['total_revenue'])
+            if request.form.get('total_revenue')
+            else None
         )
 
 
@@ -10536,31 +10687,45 @@ def edit_invoice(invoice_id):
             'product_sold'
         )
 
-        invoice.total_units = request.form.get(
-            'total_units'
+        invoice.total_units = (
+            int(request.form['total_units'])
+            if request.form.get('total_units')
+            else None
         )
 
-        invoice.price_of_units = request.form.get(
-            'price_of_units'
+        invoice.price_of_units = (
+            Decimal(request.form['price_of_units'])
+            if request.form.get('price_of_units')
+            else None
         )
 
-        invoice.first_year_cmc = request.form.get(
-            'first_year_cmc'
+        invoice.first_year_cmc = (
+            Decimal(request.form['first_year_cmc'])
+            if request.form.get('first_year_cmc')
+            else None
         )
-        invoice.installation = request.form.get(
-            'installation'
+        invoice.installation = (
+            Decimal(request.form['installation'])
+            if request.form.get('installation')
+            else None
         )
         invoice.total_sensor = request.form.get(
             'total_sensor'
         )
-        invoice.sensor_cost = request.form.get(
-            'sensor_cost'
+        invoice.sensor_cost = (
+            Decimal(request.form['sensor_cost'])
+            if request.form.get('sensor_cost')
+            else None
         )
-        invoice.revenue = request.form.get(
-            'revenue'
+        invoice.revenue = (
+            Decimal(request.form['revenue'])
+            if request.form.get('revenue')
+            else None
         )
-        invoice.total_revenue = request.form.get(
-            'total_revenue'
+        invoice.total_revenue = (
+            Decimal(request.form['total_revenue'])
+            if request.form.get('total_revenue')
+            else None
         )
         invoice_files = request.files.getlist(
             'invoice_files'
@@ -11771,8 +11936,10 @@ def add_client():
                 'filter_colour'
             ),
 
-            no_of_units_installed=request.form.get(
-                'no_of_units_installed'
+            no_of_units_installed=(
+                int(request.form['no_of_units_installed'])
+                if request.form.get('no_of_units_installed')
+                else None
             ),
 
             solution_working=request.form.get(
@@ -11792,8 +11959,10 @@ def add_client():
             next_cmc_renewal_date=
             next_cmc_renewal_date,
 
-            cmc_amount=request.form.get(
-                'cmc_amount'
+            cmc_amount=(
+                Decimal(request.form['cmc_amount'])
+                if request.form.get('cmc_amount')
+                else None
             ),
 
             last_service_days=
@@ -11816,8 +11985,10 @@ def add_client():
                 'service_for'
             ),
 
-            no_of_filters_replaced=request.form.get(
-                'no_of_filters_replaced'
+            no_of_filters_replaced=(
+                int(request.form['no_of_filters_replaced'])
+                if request.form.get('no_of_filters_replaced')
+                else None
             ),
 
             pre_service_msg=request.form.get(
@@ -12216,8 +12387,10 @@ def edit_client(client_id):
             'filter_colour'
         )
 
-        client.no_of_units_installed=request.form.get(
-            'no_of_units_installed'
+        client.no_of_units_installed=(
+            int(request.form['no_of_units_installed'])
+            if request.form.get('no_of_units_installed')
+            else None
         )
 
         client.solution_working=request.form.get(
@@ -12234,8 +12407,10 @@ def edit_client(client_id):
 
         client.next_cmc_renewal_date=next_cmc_renewal_date
 
-        client.cmc_amount=request.form.get(
-            'cmc_amount'
+        client.cmc_amount=(
+            Decimal(request.form['cmc_amount'])
+            if request.form.get('cmc_amount')
+            else None
         )
 
         client.last_service_days=last_service_days
@@ -12254,8 +12429,10 @@ def edit_client(client_id):
             'service_for'
         )
 
-        client.no_of_filters_replaced=request.form.get(
-            'no_of_filters_replaced'
+        client.no_of_filters_replaced=(
+            int(request.form['no_of_filters_replaced'])
+            if request.form.get('no_of_filters_replaced')
+            else None
         )
 
         client.pre_service_msg=request.form.get(
@@ -12579,8 +12756,10 @@ def add_service(client_id):
                 'service_of'
             ),
 
-            no_of_filters=request.form.get(
-                'no_of_filters'
+            no_of_filters=(
+                int(request.form['no_of_filters'])
+                if request.form.get('no_of_filters')
+                else None
             ),
 
             controller_changed=request.form.get(
@@ -12754,8 +12933,10 @@ def edit_service(card_id):
             'service_of'
         )
 
-        service.no_of_filters = request.form.get(
-            'no_of_filters'
+        service.no_of_filters=(
+            int(request.form['no_of_filters'])
+            if request.form.get('no_of_filters')
+            else None
         )
 
         service.controller_changed = request.form.get(
