@@ -3363,8 +3363,6 @@ def dashboard():
     
     return response
 
-print("Greeting:", get_greeting())
-print("Hour:", datetime.now(pytz.timezone("Asia/Kolkata")))
 
 @app.route('/manage-users')
 def manage_users():
