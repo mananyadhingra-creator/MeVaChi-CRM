@@ -466,10 +466,72 @@
 
                         </label>
 
-                        <input type="text"
-                               name="product"
-                               value="{{ proposal.product }}"
-                               class="form-control">
+                        <select
+                            id="product"
+                            name="product"
+                            class="form-select">
+
+                            <option value="">
+                                Select Product
+                            </option>
+
+                            <option value="Cab Unit" {% if proposal.product == 'Cab Unit' %}selected{% endif %}>
+                                Cab Unit
+                            </option>
+
+                            <option value="Cab Unit + Monitor" {% if proposal.product == 'Cab Unit + Monitor' %}selected{% endif %}>
+                                Cab Unit + Monitor
+                            </option>
+
+                            <option value="Cab Unit + Monitor + CMC" {% if proposal.product == 'Cab Unit + Monitor + CMC' %}selected{% endif %}>
+                                Cab Unit + Monitor + CMC
+                            </option>
+
+                            <option value="Cab Unit + Installation + CMC" {% if proposal.product == 'Cab Unit + Installation + CMC' %}selected{% endif %}>
+                                Cab Unit + Installation + CMC
+                            </option>
+
+                            <option value="Cab Unit + CMC" {% if proposal.product == 'Cab Unit + CMC' %}selected{% endif %}>
+                                Cab Unit + CMC
+                            </option>
+
+                            <option value="Cab Unit + Installation" {% if proposal.product == 'Cab Unit + Installation' %}selected{% endif %}>
+                                Cab Unit + Installation
+                            </option>
+
+                            <option value="Plant" {% if proposal.product == 'Plant' %}selected{% endif %}>
+                                Plant
+                            </option>
+
+                            <option value="Molecular Filters" {% if proposal.product == 'Molecular Filters' %}selected{% endif %}>
+                                Molecular Filters
+                            </option>
+
+                            <option value="Sampling Air Quality" {% if proposal.product == 'Sampling Air Quality' %}selected{% endif %}>
+                                Sampling Air Quality
+                            </option>
+
+                            <option value="Monitor" {% if proposal.product == 'Monitor' %}selected{% endif %}>
+                                Monitor
+                            </option>
+
+                            <option value="AMC" {% if proposal.product == 'AMC' %}selected{% endif %}>
+                                AMC
+                            </option>
+
+                            <option value="Cab Max Unit" {% if proposal.product == 'Cab Max Unit' %}selected{% endif %}>
+                                Cab Max Unit
+                            </option>
+
+                            <option value="TFA" {% if proposal.product == 'TFA' %}selected{% endif %}>
+                                TFA
+                            </option>
+
+                            <option value="Technical Services" {% if proposal.product == 'Technical Services' %}selected{% endif %}>
+                                Technical Services
+                            </option>
+
+                        </select>
 
                     </div>
 

@@ -208,6 +208,12 @@
 
                             </option>
 
+                            <option value="NOT SURE"{% if client.monitor_present == "NOT SURE" %} selected{% endif %}>
+
+                                NOT SURE
+
+                            </option>                            
+
                         </select>
 
                     </div>
@@ -382,11 +388,72 @@
 
                         </label>
 
-                        <input type="text"
-                               id="product"
-                               name="product"
-                               value="{{ client.product }}"
-                               class="form-control">
+                        <select
+                            id="product"
+                            name="product"
+                            class="form-select">
+
+                            <option value="">
+                                Select Product
+                            </option>
+
+                            <option value="Cab Unit" {% if client.product == 'Cab Unit' %}selected{% endif %}>
+                                Cab Unit
+                            </option>
+
+                            <option value="Cab Unit + Monitor" {% if client.product == 'Cab Unit + Monitor' %}selected{% endif %}>
+                                Cab Unit + Monitor
+                            </option>
+
+                            <option value="Cab Unit + Monitor + CMC" {% if client.product == 'Cab Unit + Monitor + CMC' %}selected{% endif %}>
+                                Cab Unit + Monitor + CMC
+                            </option>
+
+                            <option value="Cab Unit + Installation + CMC" {% if client.product == 'Cab Unit + Installation + CMC' %}selected{% endif %}>
+                                Cab Unit + Installation + CMC
+                            </option>
+
+                            <option value="Cab Unit + CMC" {% if client.product == 'Cab Unit + CMC' %}selected{% endif %}>
+                                Cab Unit + CMC
+                            </option>
+
+                            <option value="Cab Unit + Installation" {% if client.product == 'Cab Unit + Installation' %}selected{% endif %}>
+                                Cab Unit + Installation
+                            </option>
+
+                            <option value="Plant" {% if client.product == 'Plant' %}selected{% endif %}>
+                                Plant
+                            </option>
+
+                            <option value="Molecular Filters" {% if client.product == 'Molecular Filters' %}selected{% endif %}>
+                                Molecular Filters
+                            </option>
+
+                            <option value="Sampling Air Quality" {% if client.product == 'Sampling Air Quality' %}selected{% endif %}>
+                                Sampling Air Quality
+                            </option>
+
+                            <option value="Monitor" {% if client.product == 'Monitor' %}selected{% endif %}>
+                                Monitor
+                            </option>
+
+                            <option value="AMC" {% if client.product == 'AMC' %}selected{% endif %}>
+                                AMC
+                            </option>
+
+                            <option value="Cab Max Unit" {% if client.product == 'Cab Max Unit' %}selected{% endif %}>
+                                Cab Max Unit
+                            </option>
+
+                            <option value="TFA" {% if client.product == 'TFA' %}selected{% endif %}>
+                                TFA
+                            </option>
+
+                            <option value="Technical Services" {% if client.product == 'Technical Services' %}selected{% endif %}>
+                                Technical Services
+                            </option>
+
+                        </select>    
 
                     </div>
 
@@ -443,6 +510,10 @@
                                 MERV-16 (White)
                             </option>
 
+                            <option value="NOT SURE" {% if client.filter_colour == "NOT SURE" %} selected {% endif %}>
+                                NOT SURE
+                            </option>
+
                         </select>
 
                     </div>
@@ -474,15 +545,15 @@
                         <select name="solution_working"
                                 class="form-select">
 
-                            <option value="YES" {% if client.solution_working == "YES" %} selected {% endif %}>
+                            <option value="ACTIVE" {% if client.solution_working == "ACTIVE" %} selected {% endif %}>
 
-                                YES
+                                ACTIVE
 
                             </option>
 
-                            <option value="NO" {% if client.solution_working == "NO" %} selected {% endif %}>
+                            <option value="NOT ACTIVE" {% if client.solution_working == "NOT ACTIVE" %} selected {% endif %}>
 
-                                NO
+                                NOT ACTIVE
 
                             </option>
 

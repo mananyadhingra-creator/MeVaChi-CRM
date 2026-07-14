@@ -8228,7 +8228,47 @@ def add_proposal():
             url_for(
                 'add_proposal'
             )
-        ) 
+        )
+
+    search = request.args.get('search')
+
+    if session.get('role') == 'SALES':
+
+        base_query = Proposal.query.filter_by(
+
+            record_owner=session['username']
+
+        )
+
+    elif session.get('role') == 'COMMERCIALS':
+
+        commercial_users = User.query.filter_by(
+
+            role='COMMERCIALS'
+
+        ).all()
+
+        usernames = [
+
+            user.username
+
+            for user in commercial_users
+
+        ]
+
+        base_query = Proposal.query.filter(
+
+            Proposal.record_owner.in_(
+
+                usernames
+
+            )
+
+        )
+
+    else:
+
+        base_query = Proposal.query 
     base_query = apply_export_filters(
 
         query=base_query,

@@ -194,10 +194,71 @@
 
                         </label>
 
-                        <input type="text"
-                               name="product_sold"
-                               value="{{ invoice.product_sold }}"
-                               class="form-control">
+                        <select
+                            name="product_sold"
+                            class="form-select">
+
+                            <option value="">
+                                Select Product
+                            </option>
+
+                            <option value="Cab Unit" {% if invoice.product_sold == 'Cab Unit' %}selected{% endif %}>
+                                Cab Unit
+                            </option>
+
+                            <option value="Cab Unit + Monitor" {% if invoice.product_sold == 'Cab Unit + Monitor' %}selected{% endif %}>
+                                Cab Unit + Monitor
+                            </option>
+
+                            <option value="Cab Unit + Monitor + CMC" {% if invoice.product_sold == 'Cab Unit + Monitor + CMC' %}selected{% endif %}>
+                                Cab Unit + Monitor + CMC
+                            </option>
+
+                            <option value="Cab Unit + Installation + CMC" {% if invoice.product_sold == 'Cab Unit + Installation + CMC' %}selected{% endif %}>
+                                Cab Unit + Installation + CMC
+                            </option>
+
+                            <option value="Cab Unit + CMC" {% if invoice.product_sold == 'Cab Unit + CMC' %}selected{% endif %}>
+                                Cab Unit + CMC
+                            </option>
+
+                            <option value="Cab Unit + Installation" {% if invoice.product_sold == 'Cab Unit + Installation' %}selected{% endif %}>
+                                Cab Unit + Installation
+                            </option>
+
+                            <option value="Plant" {% if invoice.product_sold == 'Plant' %}selected{% endif %}>
+                                Plant
+                            </option>
+
+                            <option value="Molecular Filters" {% if invoice.product_sold == 'Molecular Filters' %}selected{% endif %}>
+                                Molecular Filters
+                            </option>
+
+                            <option value="Sampling Air Quality" {% if invoice.product_sold == 'Sampling Air Quality' %}selected{% endif %}>
+                                Sampling Air Quality
+                            </option>
+
+                            <option value="Monitor" {% if invoice.product_sold == 'Monitor' %}selected{% endif %}>
+                                Monitor
+                            </option>
+
+                            <option value="AMC" {% if invoice.product_sold == 'AMC' %}selected{% endif %}>
+                                AMC
+                            </option>
+
+                            <option value="Cab Max Unit" {% if invoice.product_sold == 'Cab Max Unit' %}selected{% endif %}>
+                                Cab Max Unit
+                            </option>
+
+                            <option value="TFA" {% if invoice.product_sold == 'TFA' %}selected{% endif %}>
+                                TFA
+                            </option>
+
+                            <option value="Technical Services" {% if invoice.product_sold == 'Technical Services' %}selected{% endif %}>
+                                Technical Services
+                            </option>
+
+                        </select>
 
                     </div>
 
