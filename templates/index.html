@@ -1030,118 +1030,7 @@
                 <!-- TEAM -->
                 <!-- ============================== -->
 
-                {% if session['role'] == 'ADMIN' %}
-
-                <div class="card">
-
-                    <div class="card-header bg-dark text-white">
-
-                        👥 Team Notifications
-
-                    </div>
-
-                    <div class="card-body">
-
-                        {% if team_notifications %}
-
-                            {% for employee in team_notifications %}
-
-                                <div class="border rounded p-3 mb-4">
-
-                                    <h5>
-
-                                        {{ employee.username }}
-
-                                        <span class="badge bg-primary">
-
-                                            {{ employee.count }}
-
-                                        </span>
-
-                                    </h5>
-
-                                    <hr>
-
-                                    {% for item in employee.notifications %}
-
-                                        <div class="border rounded p-3 mb-3">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <strong>{{ item.title }}</strong>
-                                                {% if item.status == 'OVERDUE' %}
-                                                <span class="badge bg-danger">Overdue</span>
-                                                {% elif item.status == 'TODAY' %}
-                                                <span class="badge bg-warning text-dark">Today</span>
-                                                {% else %}
-                                                <span class="badge bg-success">Upcoming</span>
-                                                {% endif %}
-                                            </div>
-                                            <div class="d-flex justify-content-between align-items-center mt-1">
-                                                <small class="text-muted">{{ item.subtitle }}</small>
-                                                {% if item.date %}
-                                                <small class="text-muted fw-semibold">{{ item.date.strftime('%d %b %Y') }}</small>
-                                                {% endif %}
-                                            </div>
-                                        </div>                                        
-
-                                    {% endfor %}
-
-                                </div>
-
-                            {% endfor %}
-
-                            {% if commercial_notifications %}
-
-                            <div class="card mt-4">
-
-                                <div class="card-header bg-success text-white">
-
-                                    🏢 Commercial Department
-
-                                </div>
-
-                                <div class="card-body">
-
-                                    {% for item in commercial_notifications %}
-
-                                    <div class="border rounded p-3 mb-3">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <strong>{{ item.title }}</strong>
-                                            {% if item.status == 'OVERDUE' %}
-                                            <span class="badge bg-danger">Overdue</span>
-                                            {% elif item.status == 'TODAY' %}
-                                            <span class="badge bg-warning text-dark">Today</span>
-                                            {% else %}
-                                            <span class="badge bg-success">Upcoming</span>
-                                            {% endif %}
-                                        </div>
-                                        <div class="d-flex justify-content-between align-items-center mt-1">
-                                            <small class="text-muted">{{ item.subtitle }}</small>
-                                            {% if item.date %}
-                                            <small class="text-muted fw-semibold">{{ item.date.strftime('%d %b %Y') }}</small>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        {% endif %}
-
-                        {% else %}
-
-                            <div class="alert alert-success mb-0">
-
-                                No pending team notifications.
-
-                            </div>
-
-                        {% endif %}
-
-                    </div>
-
-                </div>
-
-                {% endif %}
+                
 
             </div>
 
@@ -1526,11 +1415,33 @@ display:false
 
 </script>
 
-<a href="#" class="btn btn-primary mevachi-fab" data-bs-toggle="dropdown" aria-label="Quick actions">
-    <i class="bi bi-plus-lg"></i>
-</a>
+<div class="dropdown mevachi-fab-wrapper">
 
-<ul class="dropdown-menu dropdown-menu-end mevachi-fab-menu">
+    <a href="#"
+       class="btn btn-primary mevachi-fab"
+       data-bs-toggle="dropdown"
+       aria-label="Quick actions">
+
+        <i class="bi bi-plus-lg"></i>
+
+    </a>
+
+    <ul class="dropdown-menu mevachi-fab-menu">
+
+        <li>
+
+            <a class="dropdown-item"
+               href="{{ url_for('reminders') }}">
+
+                🔔 Reminder
+
+            </a>
+
+        </li>
+
+    </ul>
+
+</div>
 
     
 

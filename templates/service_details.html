@@ -124,13 +124,28 @@
 
                 <label class="form-label">
 
-                    No Of Filters
+                    No of Filters Replaced
 
                 </label>
 
                 <input type="text"
                        class="form-control"
                        value="{{ service.no_of_filters }}"
+                       readonly>
+
+            </div>
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label">
+
+                    No of Filters Cleaned
+
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       value="{{ service.no_of_filters_cleaned }}"
                        readonly>
 
             </div>

@@ -21,6 +21,8 @@ from helpers import (
     export_filtered_query
 )
 from decimal import Decimal
+import pytz
+from zoneinfo import ZoneInfo
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'static'
@@ -48,9 +50,13 @@ MONTH_NAMES = [
     'Sep','Oct','Nov','Dec'
 ]
 
+
+
 def get_greeting():
 
-    hour = datetime.now().hour
+    hour = datetime.now(
+        ZoneInfo("Asia/Kolkata")
+    ).hour
 
     if 5 <= hour < 12:
 
@@ -374,14 +380,48 @@ def get_dashboard_notifications(
     # SERVICE DUE
     # ========================================
 
-    if role in ['ADMIN', 'COMMERCIALS']:
+    if role == 'COMMERCIALS':
+
+        commercial_users = User.query.filter_by(
+            role='COMMERCIALS'
+        ).all()
+
+        usernames = [
+            user.username
+            for user in commercial_users
+        ]
 
         clients = Client.query.filter(
+
+            Client.record_owner.in_(
+                usernames
+            ),
+
             or_(
+
                 Client.last_service_date.isnot(None),
+
                 Client.activation_date.isnot(None)
+
             )
+
         ).all()
+
+    else:
+
+        clients = Client.query.filter(
+
+        Client.record_owner == username,
+
+        or_(
+
+            Client.last_service_date.isnot(None),
+
+            Client.activation_date.isnot(None)
+
+        )
+
+    ).all()
 
         for client in clients:
 
@@ -418,15 +458,22 @@ def get_dashboard_notifications(
     # CMC DUE
     # ========================================
 
-    if role in [
+    if role == 'COMMERCIALS':
 
-        'ADMIN',
+        commercial_users = User.query.filter_by(
+            role='COMMERCIALS'
+        ).all()
 
-        'COMMERCIALS'
-
-    ]:
+        usernames = [
+            user.username
+            for user in commercial_users
+        ]
 
         cmc_clients = Client.query.filter(
+
+            Client.record_owner.in_(
+                usernames
+            ),
 
             Client.cmc_applicable == 'YES',
 
@@ -439,6 +486,24 @@ def get_dashboard_notifications(
             )
 
         ).all()
+
+    else:
+
+        cmc_clients = Client.query.filter(
+
+        Client.record_owner == username,
+
+        Client.cmc_applicable == 'YES',
+
+        Client.next_cmc_renewal_date != None,
+
+        Client.next_cmc_renewal_date <= (
+
+            today + timedelta(days=20)
+
+        )
+
+    ).all()
 
         for client in cmc_clients:
 
@@ -1273,7 +1338,7 @@ class Lead(db.Model):
 
     location = db.Column(db.String(200))
 
-    phone = db.Column(db.String(20))
+    phone = db.Column(db.String(200))
 
     responses = db.Column(db.Text)
 
@@ -1314,7 +1379,7 @@ class Meeting(db.Model):
 
     state = db.Column(db.String(100))
 
-    contact_no = db.Column(db.String(20))
+    contact_no = db.Column(db.String(200))
 
     email = db.Column(db.String(100))
 
@@ -1400,7 +1465,7 @@ class MeetingHistory(db.Model):
     )
 
     contact_no = db.Column(
-        db.String(20)
+        db.String(200)
     )
 
     email = db.Column(
@@ -1515,7 +1580,7 @@ class Visit(db.Model):
     )
 
     contact_no = db.Column(
-        db.String(20)
+        db.String(200)
     )
 
     address = db.Column(
@@ -1630,7 +1695,7 @@ class VisitHistory(db.Model):
 
     contact_no = db.Column(
 
-        db.String(20)
+        db.String(200)
 
     )
 
@@ -1781,7 +1846,7 @@ class Proposal(db.Model):
 
     name = db.Column(db.String(100))
 
-    phone_no_client = db.Column(db.String(20))
+    phone_no_client = db.Column(db.String(200))
 
     source = db.Column(db.String(100))
 
@@ -1789,11 +1854,11 @@ class Proposal(db.Model):
 
     reference_source_details = db.Column(db.Text)
 
-    phone_no_source = db.Column(db.String(20))
+    phone_no_source = db.Column(db.String(200))
 
     contact_person = db.Column(db.String(100))
 
-    phone_no_contact_person = db.Column(db.String(20))
+    phone_no_contact_person = db.Column(db.String(200))
 
     email = db.Column(db.String(100))
 
@@ -1813,7 +1878,9 @@ class Proposal(db.Model):
 
     product = db.Column(db.String(200))
 
-    cost_total_per_unit = db.Column(db.Numeric(10,2))
+    cost_total_per_unit = db.Column(
+        db.String(100)
+    )
 
     no_of_monitors = db.Column(db.Integer)
 
@@ -1972,7 +2039,7 @@ class SalesPipeline(db.Model):
     )
 
     contact_no = db.Column(
-        db.String(20)
+        db.String(200)
     )
 
     project_type = db.Column(
@@ -2408,7 +2475,7 @@ class Client(db.Model):
 
     state = db.Column(db.String(100))
 
-    mobile_no = db.Column(db.String(20))
+    mobile_no = db.Column(db.String(200))
 
     product = db.Column(db.String(200))
 
@@ -2446,7 +2513,9 @@ class Client(db.Model):
 
     service_due = db.Column(db.String(10))
 
-    filter_clean = db.Column(db.String(20))
+    filter_clean = db.Column(
+        db.Date
+    )
 
     service_for = db.Column(db.String(200))
 
@@ -2496,6 +2565,10 @@ class CustomerCareCard(db.Model):
     service_of = db.Column(db.String(100))
 
     no_of_filters = db.Column(db.Integer)
+
+    no_of_filters_cleaned = db.Column(
+        db.Integer
+    )
 
     controller_changed = db.Column(db.String(10))
 
@@ -2827,57 +2900,7 @@ def dashboard():
 
     commercial_notifications = []
 
-    if session.get('role') == 'ADMIN':
 
-        sales_users = User.query.filter_by(
-
-            role='SALES'
-
-        ).order_by(
-
-            User.username
-
-        ).all()
-
-        commercial_user = User.query.filter_by(
-
-            role='COMMERCIALS'
-
-        ).first()
-
-        
-
-        for user in sales_users:
-
-            employee_notifications = get_dashboard_notifications(
-
-                user.username,
-
-                user.role
-
-            )
-
-            if employee_notifications:
-
-                team_notifications.append({
-
-                    'username': user.username,
-
-                    'count': len(employee_notifications),
-
-                    'notifications': employee_notifications
-
-                })
-
-        if commercial_user:
-
-            commercial_notifications = get_dashboard_notifications(
-
-                commercial_user.username,
-
-                'COMMERCIALS'
-
-            )
 
     overdue_notifications = [
 
@@ -3339,6 +3362,9 @@ def dashboard():
     print(f"Dashboard took {time.perf_counter() - start:.2f} sec")
     
     return response
+
+print("Greeting:", get_greeting())
+print("Hour:", datetime.now(pytz.timezone("Asia/Kolkata")))
 
 @app.route('/manage-users')
 def manage_users():
@@ -7996,11 +8022,7 @@ def add_proposal():
 
         product = request.form.get('product')
 
-        cost_total_per_unit = (
-            Decimal(request.form['cost_total_per_unit'])
-            if request.form.get('cost_total_per_unit')
-            else None
-        )
+        cost_total_per_unit = request.form.get('cost_total_per_unit')
 
         no_of_monitors = (
             int(request.form['no_of_monitors'])
@@ -8673,11 +8695,9 @@ def edit_proposal(proposal_id):
         proposal.product = request.form.get(
             'product'
         )
-        proposal.cost_total_per_unit = (
-            Decimal(request.form['cost_total_per_unit'])
-            if request.form.get('cost_total_per_unit')
-            else None
-        )
+        proposal.cost_total_per_unit = request.form.get(
+            'cost_total_per_unit'
+        ) 
 
         proposal.no_of_monitors = (
             int(request.form['no_of_monitors'])
@@ -11977,8 +11997,17 @@ def add_client():
             service_due=
             service_due,
 
-            filter_clean=request.form.get(
-                'filter_clean'
+            filter_clean=(
+                datetime.strptime(
+                    request.form.get(
+                        'filter_clean'
+                    ),
+                    '%Y-%m-%d'
+                ).date()
+                if request.form.get(
+                    'filter_clean'
+                )
+                else None
             ),
 
             service_for=request.form.get(
@@ -12421,8 +12450,17 @@ def edit_client(client_id):
 
         client.service_due=service_due
 
-        client.filter_clean=request.form.get(
-            'filter_clean'
+        client.filter_clean = (
+            datetime.strptime(
+                request.form.get(
+                    'filter_clean'
+                ),
+                '%Y-%m-%d'
+            ).date()
+            if request.form.get(
+                'filter_clean'
+            )
+            else None
         )
 
         client.service_for=request.form.get(
@@ -12762,6 +12800,12 @@ def add_service(client_id):
                 else None
             ),
 
+            no_of_filters_cleaned=(
+                int(request.form['no_of_filters_cleaned'])
+                if request.form.get('no_of_filters_cleaned')
+                else None
+            ),
+
             controller_changed=request.form.get(
                 'controller_changed'
             ),
@@ -12817,9 +12861,9 @@ def add_service(client_id):
 
         if service_date:
 
-            client.last_service_date = (
-                service_date
-            )
+            client.last_service_date = service_date
+
+            client.filter_clean = service_date
 
             client.last_service_days = 0
 
@@ -12938,6 +12982,12 @@ def edit_service(card_id):
             if request.form.get('no_of_filters')
             else None
         )
+        
+        service.no_of_filters_cleaned = (
+            int(request.form['no_of_filters_cleaned'])
+            if request.form.get('no_of_filters_cleaned')
+            else None
+        )
 
         service.controller_changed = request.form.get(
             'controller_changed'
@@ -12995,15 +13045,21 @@ def edit_service(card_id):
                 latest_service.service_date
             )
 
+            client.filter_clean = (
+                latest_service.service_date
+            )
+
             client.last_service_days = 0
 
             client.service_due = 'NO'
 
         else:
 
-            client.last_service_date=None
+            client.last_service_date = None
 
-            client.last_service_days=0
+            client.filter_clean = None
+
+            client.last_service_days = 0
         db.session.flush()
         log_activity(
 
@@ -16620,7 +16676,31 @@ def generate_proposal(
 
         float(
 
-            proposal.cost_total_per_unit
+            proposal.per_unit_cost
+
+        )
+
+    )
+
+    total_cmc_cost = (
+
+        proposal.total_no_of_units *
+
+        float(
+
+            proposal.cmc_cost or 0
+
+        )
+
+    )
+
+    total_installation_cost = (
+
+        proposal.total_no_of_units *
+
+        float(
+
+            proposal.installation_cost or 0
 
         )
 
@@ -16726,9 +16806,28 @@ def generate_proposal(
         'total_no_of_units':
         proposal.total_no_of_units,
 
-        'cost_total_per_unit':
+        'per_unit_cost':
+
         indian_format(
-            proposal.cost_total_per_unit
+
+            proposal.per_unit_cost
+
+        ),
+
+        'total_cmc_cost':
+
+        indian_format(
+
+            total_cmc_cost
+
+        ),
+
+        'total_installation_cost':
+
+        indian_format(
+
+            total_installation_cost
+
         ),
 
         'total_mvd_cost':
@@ -17167,6 +17266,9 @@ def generate_advance_receipt(
             sale.total_revenue
 
         ),
+
+        'total_units':
+        sale.total_units or '',
 
         'payment_date':
         payment.payment_date.strftime(

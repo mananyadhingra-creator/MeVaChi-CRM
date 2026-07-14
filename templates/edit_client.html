@@ -683,28 +683,23 @@
 
                     <div class="col-md-4 mb-3">
 
-                        <label class="form-label">
+                            <label class="form-label">
 
-                            Filter Clean
+                                Last Filter Cleaning Date
 
-                        </label>
+                            </label>
 
-                        <select name="filter_clean"
-                                class="form-select">
+                            <input
+                                type="date"
+                                name="filter_clean"
+                                class="form-control"
+                                value="{{
+                                    client.filter_clean.strftime('%Y-%m-%d')
+                                    if client.filter_clean
+                                    else ''
+                                }}">
 
-                            <option value="YES" {% if client.filter_clean == "YES" %} selected {% endif %}>
-
-                                YES
-
-                            </option>
-
-                            <option value="NO" {% if client.filter_clean == "NO" %} selected {% endif %}>
-
-                                NO
-
-                            </option>
-
-                        </select>
+                        
 
                     </div>
 
