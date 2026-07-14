@@ -18,6 +18,8 @@ openpyxl==3.1.5
 packaging==26.2
 PyMySQL==1.2.0
 python-docx==1.2.0
+pytz==2026.2
 SQLAlchemy==2.0.50
 typing_extensions==4.15.0
+tzdata==2026.3
 Werkzeug==3.1.8
