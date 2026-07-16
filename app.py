@@ -21,13 +21,50 @@ from helpers import (
     export_filtered_query
 )
 from decimal import Decimal
-import pytz
+
 from zoneinfo import ZoneInfo
 
 app = Flask(__name__)
-UPLOAD_FOLDER = 'static'
+UPLOAD_FOLDER = os.path.join(
+    app.root_path,
+    'static'
+)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+os.makedirs(
+    os.path.join(
+        app.config['UPLOAD_FOLDER'],
+        'drawings'
+    ),
+    exist_ok=True
+)
+
+os.makedirs(
+    os.path.join(
+        app.config['UPLOAD_FOLDER'],
+        'proposals'
+    ),
+    exist_ok=True
+)
+
+os.makedirs(
+    os.path.join(
+        app.config['UPLOAD_FOLDER'],
+        'invoices'
+    ),
+    exist_ok=True
+)
+
+os.makedirs(
+    os.path.join(
+        app.config['UPLOAD_FOLDER'],
+        'installations'
+    ),
+    exist_ok=True
+)
+
+
 
 app.config["SECRET_KEY"] = os.getenv(
     "SECRET_KEY",
@@ -1177,18 +1214,7 @@ def get_current_quarter():
 
 def get_air_quality(location):
 
-    print("FUNCTION CALLED")
-    print("LOCATION =", repr(location))
-
-    print(AIR_QUALITY)
-
-    if location in AIR_QUALITY:
-
-        print("MATCH FOUND")
-
-    else:
-
-        print("NO MATCH")
+    
 
     pm25, pm10 = AIR_QUALITY.get(
         location,
@@ -3004,12 +3030,19 @@ def dashboard():
             if client.last_service_date
             else client.activation_date
         )
+    
+        
 
         due_date = base_date + timedelta(
             days=client.service_interval_days
         )
 
         if due_date <= today:
+            
+            client.days_since_service = (
+                today - base_date
+            ).days
+
             service_due_clients.append(client)
 
     service_due_clients.sort(
@@ -3213,6 +3246,96 @@ def dashboard():
     ]
 
 # ==========================================
+# FILTER CLEANING TREND
+# ==========================================
+
+    filter_clean_data = []
+
+    if session.get('role') in ['ADMIN', 'COMMERCIALS']:
+
+        filter_clean_data = (
+
+            db.session.query(
+
+                extract(
+
+                    'month',
+
+                    CustomerCareCard.service_date
+
+                ),
+
+                func.sum(
+
+                    CustomerCareCard.no_of_filters_cleaned
+
+                )
+
+            )
+
+            .filter(
+
+                extract(
+
+                    'year',
+
+                    CustomerCareCard.service_date
+
+                ) == selected_year
+
+            )
+
+            .group_by(
+
+                extract(
+
+                    'month',
+
+                    CustomerCareCard.service_date
+
+                )
+
+            )
+
+            .order_by(
+
+                extract(
+
+                    'month',
+
+                    CustomerCareCard.service_date
+
+                )
+
+            )
+
+            .all()
+
+        )
+
+    filter_clean_dict = {
+
+        int(month): int(value or 0)
+
+        for month, value in filter_clean_data
+
+    }
+
+    filter_clean_months = MONTH_NAMES
+
+    filter_clean_values = [
+
+        int(
+
+            filter_clean_dict.get(i, 0)
+
+        )
+
+        for i in range(1, 13)
+
+    ]
+
+# ==========================================
 # MONTHLY REVENUE TREND
 # ==========================================
     
@@ -3316,6 +3439,9 @@ def dashboard():
         selected_year=selected_year,
         filter_months=filter_months,
         filter_values=filter_values,
+        filter_clean_months=filter_clean_months,
+
+        filter_clean_values=filter_clean_values,
         revenue_year=revenue_year,
         revenues=revenues,
         greeting=greeting,
@@ -3359,7 +3485,7 @@ def dashboard():
 
     session['show_morning_brief'] = False
 
-    print(f"Dashboard took {time.perf_counter() - start:.2f} sec")
+    
     
     return response
 
@@ -3672,8 +3798,31 @@ def add_lead():
         location = request.form['location']
         phone = request.form['phone']
         responses = request.form['responses']
-        date_of_1st_followup = datetime.strptime( request.form['date_of_1st_followup'], '%Y-%m-%d' ).date()
-        next_to_call = datetime.strptime( request.form['next_to_call'], '%Y-%m-%d' ).date()
+        date_of_1st_followup = (
+            datetime.strptime(
+                request.form.get(
+                    'date_of_1st_followup'
+                ),
+                '%Y-%m-%d'
+            ).date()
+            if request.form.get(
+                'date_of_1st_followup'
+            )
+            else None
+        )
+
+        next_to_call = (
+            datetime.strptime(
+                request.form.get(
+                    'next_to_call'
+                ),
+                '%Y-%m-%d'
+            ).date()
+            if request.form.get(
+                'next_to_call'
+            )
+            else None
+        )
         recent = request.form['recent']
 
         lead = Lead(
@@ -7407,41 +7556,54 @@ def add_drawing():
                     file.filename
                 )
 
-                relative_path = (
-                    'drawings/' +
+            drawing_folder = os.path.join(
+
+                app.config[
+                    'UPLOAD_FOLDER'
+                ],
+
+                'drawings'
+
+            )
+
+            os.makedirs(
+
+                drawing_folder,
+
+                exist_ok=True
+
+            )
+
+            relative_path = f"drawings/{filename}"
+
+            file.save(
+
+                os.path.join(
+
+                    drawing_folder,
+
                     filename
-                )
-
-                file.save(
-
-                    os.path.join(
-
-                        app.config[
-                            'UPLOAD_FOLDER'
-                        ],
-
-                        relative_path
-
-                    )
 
                 )
 
-                drawing_file = DrawingFile(
+            )
 
-                    drawing_id=
-                    drawing.drawing_id,
+            drawing_file = DrawingFile(
 
-                    file_name=filename,
+                drawing_id=
+                drawing.drawing_id,
 
-                    file_path=relative_path,
+                file_name=filename,
 
-                    file_type=file.content_type
+                file_path=relative_path,
 
-                )
+                file_type=file.content_type
 
-                db.session.add(
-                    drawing_file
-                )
+            )
+
+            db.session.add(
+                drawing_file
+            )
         log_activity(
 
             'DRAWING',
@@ -7731,10 +7893,7 @@ def edit_drawing(drawing_id):
                     file.filename
                 )
 
-                relative_path = (
-                    'drawings/' +
-                    filename
-                )
+                relative_path = f"drawings/{filename}"
 
                 file.save(
 
@@ -14452,7 +14611,7 @@ def organization():
     total_sales = SalesPipeline.query.count()
     total_invoices = Invoice.query.count()
     total_clients = Client.query.count()
-    print(f"Organisation took {time.perf_counter() - start:.2f} sec")
+    
     return render_template(
         'organization.html',
         total_leads=total_leads,
@@ -15831,37 +15990,34 @@ def service_due():
 
     today = date.today()
 
+
     service_due_clients = []
 
     for client in Client.query.all():
 
         if client.last_service_date:
 
-            due_date = (
-                client.last_service_date
-                + timedelta(
-                    days=client.service_interval_days
-                )
-            )
+            base_date = client.last_service_date
 
         elif client.activation_date:
 
-            due_date = (
-                client.activation_date
-                + timedelta(
-                    days=client.service_interval_days
-                )
-            )
+            base_date = client.activation_date
 
         else:
 
             continue
 
+        due_date = base_date + timedelta(
+            days=client.service_interval_days
+        )
+
         if due_date <= today:
 
-            service_due_clients.append(
-                client
-            )
+            client.days_since_service = (
+                today - base_date
+            ).days
+
+            service_due_clients.append(client)
 
     service_due_clients.sort(
 
@@ -16966,10 +17122,16 @@ def generate_proforma(
 
     )
 
-    hsn_code = request.args.get(
+    hsn_code1 = request.args.get(
+        'hsn_code1'
+    )
 
-        'hsn_code'
+    hsn_code2 = request.args.get(
+        'hsn_code2'
+    )
 
+    hsn_code3 = request.args.get(
+        'hsn_code3'
     )
 
     template_path = os.path.join(
@@ -16987,45 +17149,42 @@ def generate_proforma(
         template_path
 
     )
-    taxable_amount = float(
-
-        proposal.final_amount
-
-    ) / 1.18
-
-    gst = float(
-
-        proposal.final_amount
-
-    ) - taxable_amount
-
-    final_amount = float(
-
-        proposal.final_amount
-
+    total_mvd_cost = (
+        (proposal.no_of_mvd_units or 0) *
+        float(proposal.per_unit_cost or 0)
     )
 
-    total_amount_in_words = (
+    total_cmc_cost = (
+        (proposal.total_no_of_units or 0) *
+        float(proposal.cmc_cost or 0)
+    )
+
+    total_installation_cost = (
+        (proposal.total_no_of_units or 0) *
+        float(proposal.installation_cost or 0)
+    )
+
+    total_amount_after_discount = (
+        float(proposal.total_amount or 0)
+        -
+        float(proposal.discount or 0)
+    )
+
+    gst = total_amount_after_discount * 0.18
+
+    final_amount = total_amount_after_discount + gst
+
+    final_amount_in_words = (
 
         num2words(
 
-            int(
-
-                final_amount
-
-            ),
+            int(final_amount),
 
             lang='en_IN'
 
         )
 
-        .replace(
-
-            ',',
-
-            ''
-
-        )
+        .replace(',', '')
 
         .title()
 
@@ -17039,14 +17198,9 @@ def generate_proforma(
         proforma_no,
 
         'proforma_date':
-        proforma_date.strftime(
-            '%d-%m-%Y'
-        )
+        proforma_date.strftime('%d-%m-%Y')
         if proforma_date
         else '',
-
-        'hsn_code':
-        hsn_code,
 
         'name':
         proposal.name,
@@ -17054,20 +17208,49 @@ def generate_proforma(
         'site_address':
         proposal.site_address,
 
-        'product':
-        proposal.product,
+        'hsn_code1':
+        hsn_code1,
+
+        'hsn_code2':
+        hsn_code2,
+
+        'hsn_code3':
+        hsn_code3,
+
+        'no_of_mvd_units':
+        proposal.no_of_mvd_units,
 
         'total_no_of_units':
         proposal.total_no_of_units,
 
-        'cost_total_per_unit':
+        'per_unit_cost':
         indian_format(
-            proposal.cost_total_per_unit
+            proposal.per_unit_cost
         ),
 
-        'total_amount':
+        'total_mvd_cost':
         indian_format(
-            taxable_amount
+            total_mvd_cost
+        ),
+
+        'cmc_cost':
+        indian_format(
+            proposal.cmc_cost
+        ),
+
+        'installation_cost':
+        indian_format(
+            proposal.installation_cost
+        ),
+
+        'total_installation_cost':
+        indian_format(
+            total_installation_cost
+        ),
+
+        'total_amount_after_discount':
+        indian_format(
+             total_amount_after_discount
         ),
 
         'gst':
@@ -17081,7 +17264,7 @@ def generate_proforma(
         ),
 
         'final_amount_in_words':
-        total_amount_in_words
+        final_amount_in_words
 
     }
     doc.render(

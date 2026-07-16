@@ -96,6 +96,13 @@
 
                         </th>
 
+
+                        <th>
+
+                            Days Since Last Service
+
+                        </th>
+
                         <th>
 
                             Action
@@ -132,7 +139,13 @@
 
                         <td>
 
-                            {{ client.last_service_date }}
+                            {{ client.last_service_date or client.activation_date }}
+
+                        </td>
+
+                        <td>
+
+                            {{ client.days_since_service }} Days
 
                         </td>
 

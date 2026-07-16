@@ -1376,17 +1376,28 @@ body.mevachi-login::before {
 }
 
 .mevachi-login-box input[type="text"],
-.mevachi-login-box input[type="password"] {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    margin: 0.5rem 0 1rem;
-    border: 1px solid var(--mv-border-strong);
-    border-radius: var(--mv-radius-sm);
-    font-family: var(--mv-font);
-    font-size: 0.9375rem;
-    background: rgba(255, 255, 255, 0.9);
-    transition: var(--mv-transition);
-    box-sizing: border-box;
+.mevachi-login-box input[type="password"]{
+
+    width:100%;
+
+    padding:0.75rem 3rem 0.75rem 1rem;
+
+    margin:0.5rem 0 1rem;
+
+    border:1px solid var(--mv-border-strong);
+
+    border-radius:var(--mv-radius-sm);
+
+    font-family:var(--mv-font);
+
+    font-size:.9375rem;
+
+    background:rgba(255,255,255,.9);
+
+    transition:var(--mv-transition);
+
+    box-sizing:border-box;
+
 }
 
 .mevachi-login-box input:focus {
@@ -2390,3 +2401,63 @@ a.mevachi-fab.btn {
 
 }
 
+/* ===========================
+   Password Toggle
+=========================== */
+
+.password-wrapper{
+
+    position: relative;
+
+    width: 100%;
+
+}
+
+.password-wrapper input{
+
+    width: 100%;
+
+    padding-right: 50px !important;
+
+}
+
+.password-toggle{
+
+    position:absolute;
+
+    top:50%;
+
+    right:16px;
+
+    transform:translateY(-50%);
+
+    z-index:100;
+
+    font-size:16px;
+
+    color:#7f8c8d;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+}
+
+.password-toggle:hover{
+
+    color:#14b8a6;
+
+}
+
+input::-ms-reveal,
+input::-ms-clear{
+
+    display:none;
+
+}
+
+input[type="password"]::-webkit-credentials-auto-fill-button{
+
+    display:none !important;
+
+}
