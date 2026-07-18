@@ -48,55 +48,7 @@
 
         <form method="POST">
 
-            <!-- SELECT PROPOSAL -->
 
-            <div class="card shadow-sm p-4 mb-4">
-
-                <h4>
-
-                    Select Proposal
-
-                </h4>
-
-                <select name="proposal_id">
-
-                    <option value="">
-                        Select Proposal
-                    </option>
-
-                    {% for proposal in proposals %}
-
-                    <option
-
-                        value="{{ proposal.proposal_id }}"
-
-                        data-name="{{ proposal.name }}"
-
-                        data-reference="{{ proposal.reference_no }}"
-
-                        data-source="{{ proposal.source }}"
-
-                        data-address="{{ proposal.site_address }}"
-
-                        data-phone="{{ proposal.phone_no_client }}"
-
-                        data-email="{{ proposal.email }}"
-
-                        {% if proposal.proposal_id == sales.proposal_id %}
-                            selected
-                        {% endif %}>
-
-                        {{ proposal.reference_no }}
-                        -
-                        {{ proposal.name }}
-
-                    </option>
-
-                    {% endfor %}
-
-                </select>
-
-            </div>
 
             <!-- CLIENT DETAILS -->
 
@@ -209,6 +161,8 @@
                               class="form-control">{{ sales.address }}</textarea>
 
                 </div>
+
+
 
             </div>
 
@@ -597,7 +551,7 @@
                                id="revenue"
                                name="revenue"
                                value="{{ sales.revenue }}"
-                               readonly
+                               
                                class="form-control">
 
                     </div>
@@ -621,7 +575,7 @@
                                id="total_revenue"
                                name="total_revenue"
                                value="{{ sales.total_revenue }}"
-                               readonly
+                               
                                class="form-control">
 
                     </div>

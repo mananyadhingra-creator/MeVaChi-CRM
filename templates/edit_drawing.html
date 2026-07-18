@@ -49,45 +49,7 @@
         <form method="POST"
               enctype="multipart/form-data">
 
-            <!-- SELECT VISIT -->
 
-            <div class="card shadow-sm p-4 mb-4">
-
-                <h4>
-
-                    Select Visit
-
-                </h4>
-
-                <select name="visit_id">
-
-                    <option value="">
-                        Select Visit
-                    </option>
-
-                    {% for visit in visits %}
-
-                    <option
-
-                        value="{{ visit.visit_id }}"
-
-                        data-name="{{ visit.company_name }}"
-
-                        data-address="{{ visit.address }}"
-
-                        {% if visit.visit_id == drawing.visit_id %}
-                            selected
-                        {% endif %}>
-
-                        {{ visit.company_name }}
-
-                    </option>
-
-                    {% endfor %}
-
-                </select>
-
-            </div>
 
             <!-- DRAWING DETAILS -->
 

@@ -85,6 +85,35 @@
                 <div class="col-md-6 mb-3">
 
                     <label class="form-label">
+                        Name
+                    </label>
+
+                    <input
+                        type="text"
+                        name="name"
+                        class="form-control"
+                        value="{{ meeting.name }}">
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+
+                        Designation
+
+                    </label>
+
+                    <input type="text"
+                           name="designation"
+                           class="form-control"
+                           value="{{ editing_record.designation }}">
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
 
                         Source
 
@@ -145,6 +174,35 @@
                            value="{{ meeting.state }}">
 
                 </div>
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+
+                        Contact Number
+
+                    </label>
+
+                    <input type="text"
+                           name="contact_no"
+                           class="form-control"
+                           value="{{ editing_record.contact_no }}">
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Email
+
+                    </label>
+
+                    <input type="email"
+                           name="email"
+                           class="form-control"
+                           value="{{ editing_record.email }}">
+
+                </div>
 
             </div>
 
@@ -197,71 +255,11 @@
 
                 </div>
 
-                <div class="col-md-6 mb-3">
-
-                    <label class="form-label">
-
-                        Contact Person
-
-                    </label>
-
-                    <input type="text"
-                           name="name"
-                           class="form-control"
-                           value="{{ editing_record.name }}">
-
-                </div>
+                
 
             </div>
 
-            <div class="row">
-
-                <div class="col-md-6 mb-3">
-
-                    <label class="form-label">
-
-                        Designation
-
-                    </label>
-
-                    <input type="text"
-                           name="designation"
-                           class="form-control"
-                           value="{{ editing_record.designation }}">
-
-                </div>
-
-                <div class="col-md-6 mb-3">
-
-                    <label class="form-label">
-
-                        Contact Number
-
-                    </label>
-
-                    <input type="text"
-                           name="contact_no"
-                           class="form-control"
-                           value="{{ editing_record.contact_no }}">
-
-                </div>
-
-            </div>
-
-            <div class="mb-3">
-
-                <label class="form-label">
-
-                    Email
-
-                </label>
-
-                <input type="email"
-                       name="email"
-                       class="form-control"
-                       value="{{ editing_record.email }}">
-
-            </div>
+        
 
             <div class="row">
 
@@ -379,10 +377,29 @@
 
                     </label>
 
-                    <input type="text"
-                           name="meeting_status"
-                           class="form-control"
-                           value="{{ editing_record.meeting_status }}">
+                    <select name="meeting_status" class="form-select">
+
+                        <option value="Pending"
+                            {% if editing_record.meeting_status=="Pending" %}selected{% endif %}>
+                            Pending
+                        </option>
+
+                        <option value="Completed"
+                            {% if editing_record.meeting_status=="Completed" %}selected{% endif %}>
+                            Completed
+                        </option>
+
+                        <option value="Rescheduled"
+                            {% if editing_record.meeting_status=="Rescheduled" %}selected{% endif %}>
+                            Rescheduled
+                        </option>
+
+                        <option value="Cancelled"
+                            {% if editing_record.meeting_status=="Cancelled" %}selected{% endif %}>
+                            Cancelled
+                        </option>
+
+                    </select>
 
                 </div>
 
@@ -560,6 +577,20 @@
 
                 <label class="form-label">
 
+                    Next Action
+
+                </label>
+
+                <textarea name="next_action"
+                          rows="3"
+                          class="form-control">{{ editing_record.next_action }}</textarea>
+
+            </div>
+
+            <div class="mb-3">
+
+                <label class="form-label">
+
                     Final Remarks
 
                 </label>
@@ -657,65 +688,7 @@
 
                         </div>
 
-                        <div class="col-md-6 mb-3">
 
-                            <label class="form-label">
-
-                                Contact Person
-
-                            </label>
-
-                            <input type="text"
-                                   name="new_name[]"
-                                   class="form-control">
-
-                        </div>
-
-                    </div>
-
-                    <div class="row">
-
-                        <div class="col-md-6 mb-3">
-
-                            <label class="form-label">
-
-                                Designation
-
-                            </label>
-
-                            <input type="text"
-                                   name="new_designation[]"
-                                   class="form-control">
-
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-
-                            <label class="form-label">
-
-                                Contact Number
-
-                            </label>
-
-                            <input type="text"
-                                   name="new_contact_no[]"
-                                   class="form-control">
-
-                        </div>
-
-                    </div>
-
-                    <div class="mb-3">
-
-                        <label class="form-label">
-
-                            Email
-
-                        </label>
-
-                        <input type="email"
-                               name="new_email[]"
-                               class="form-control">
 
                     </div>
 
@@ -828,9 +801,46 @@
 
                             </label>
 
-                            <input type="text"
-                                   name="new_meeting_status[]"
-                                   class="form-control">
+                            <select
+                                name="new_meeting_status[]"
+                                class="form-select">
+
+                                <option value=""
+                                    {% if not history.meeting_status %}
+                                    selected
+                                    {% endif %}>
+                                    Select Status
+                                </option>
+
+                                <option value="Completed"
+                                    {% if history.meeting_status == 'Completed' %}
+                                    selected
+                                    {% endif %}>
+                                    Completed
+                                </option>
+
+                                <option value="Pending"
+                                    {% if history.meeting_status == 'Pending' %}
+                                    selected
+                                    {% endif %}>
+                                    Pending
+                                </option>
+
+                                <option value="Rescheduled"
+                                    {% if history.meeting_status == 'Rescheduled' %}
+                                    selected
+                                    {% endif %}>
+                                    Rescheduled
+                                </option>
+
+                                <option value="Cancelled"
+                                    {% if history.meeting_status == 'Cancelled' %}
+                                    selected
+                                    {% endif %}>
+                                    Cancelled
+                                </option>
+
+                            </select>
 
                         </div>
 
@@ -980,6 +990,8 @@
 
                     </div>
 
+
+
                     <div class="mb-3">
 
                         <label class="form-label">
@@ -989,6 +1001,20 @@
                         </label>
 
                         <textarea name="new_reason_for_reschedule[]"
+                                  rows="3"
+                                  class="form-control"></textarea>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            Next Action
+
+                        </label>
+
+                        <textarea name="new_next_action[]"
                                   rows="3"
                                   class="form-control"></textarea>
 
@@ -1072,7 +1098,7 @@
 
                             <th>
 
-                                Contact Person
+                                Name
 
                             </th>
 
@@ -1367,6 +1393,14 @@
                                                         <strong>Reason for Reschedule</strong><br>
 
                                                         {{ item.reason_for_reschedule or "-" }}
+
+                                                    </div>
+
+                                                    <div class="col-md-6 mb-3">
+
+                                                        <strong>Next Action</strong><br>
+
+                                                        {{ item.next_action or "-" }}
 
                                                     </div>
 

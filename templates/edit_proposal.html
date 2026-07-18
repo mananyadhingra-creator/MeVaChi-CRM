@@ -49,77 +49,6 @@
         <form method="POST"
               enctype="multipart/form-data">
 
-        <div class="card shadow-sm p-4 mb-4">
-
-            <h4>
-
-                Select Meeting
-
-            </h4>
-
-            <select name="meeting_id">
-
-                <option value="">
-
-                    Select Meeting
-
-                </option>
-
-                {% for meeting in meetings %}
-
-                    <option value="{{ meeting.meeting_id }}"
-                            data-name="{{ meeting.name }}"
-                            data-phone="{{ meeting.contact_no }}"
-                            data-email="{{ meeting.email }}"
-                            data-address="{{ meeting.address }}"
-                            data-source="{{ meeting.source }}"
-                            data-state="{{ meeting.state }}"
-                            {% if meeting.meeting_id == proposal.meeting_id %}
-                                selected
-                            {% endif %}>
-
-                        {{ meeting.name }}
-
-                </option>
-
-                {% endfor %}
-
-            </select>
-
-        </div>
-
-        <div class="card shadow-sm p-4 mb-4">
-            
-            <h4>
-                Select Drawing
-
-            </h4>
-
-            <select name="drawing_id">
-
-
-                <option value="">
-
-                    Select Drawing
-
-                </option>
-
-                {% for drawing in drawings %}
-
-                <option value="{{ drawing.drawing_id }}"
-                        {% if drawing.drawing_id == proposal.drawing_id %}
-                            selected
-                        {% endif %}>
-
-                    {{ drawing.name }}
-
-                </option>
-
-                {% endfor %}
-
-            </select>
-
-        </div>
 
             <!-- CLIENT DETAILS -->
 
@@ -617,6 +546,33 @@
 
                 </div>
 
+                <div class="mb-3">
+                    <label class="form-label">
+
+                        Area Covered
+
+                    </label>                    
+                    <textarea
+                        name="area_covered"
+                        maxlength="400"
+                        rows="4"
+                        class="form-control">{{ proposal.area_covered }}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">
+
+                        Area Not Covered
+
+                    </label>                    
+                    <textarea
+                        name="area_not_covered"
+                        maxlength="400"
+                        rows="4"
+                        class="form-control">{{ proposal.area_not_covered }}</textarea>
+                </div>                
+
+                
             </div>
                         <!-- COSTING DETAILS -->
 
@@ -816,8 +772,7 @@
                                name="final_amount"
                                class="form-control"
                                id="final_amount"
-                               value="{{ proposal.final_amount }}"
-                               readonly>
+                               value="{{ proposal.final_amount }}">
 
 
                     </div>
@@ -899,7 +854,19 @@
                     </div>
 
                 </div>
+                <div class="mb-3">
 
+                    <label class="form-label">
+
+                        Next Action
+
+                    </label>
+
+                    <textarea name="next_action"
+                              rows="3"
+                              class="form-control">{{ proposal.next_action }}</textarea>
+
+                </div>
                 <div class="row">
 
                     <div class="col-md-6 mb-3">

@@ -109,19 +109,12 @@
                     {% for lead in leads %}
 
                     <option
-
                         value="{{ lead.lead_id }}"
-
                         data-name="{{ lead.name }}"
-
                         data-reference="{{ lead.reference }}"
-
                         data-phone="{{ lead.phone }}"
-
                         data-location="{{ lead.location }}">
-
                         {{ lead.name }}
-
                     </option>
 
                     {% endfor %}
@@ -131,6 +124,35 @@
             </div>
 
             <div class="row">
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+
+                        Name
+
+                    </label>
+
+                    <input type="text"
+                           name="name"
+                           id="name"
+                           class="form-control contact-name">
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+
+                        Designation
+
+                    </label>
+
+                    <input type="text"
+                           name="designation"
+                           class="form-control">
+
+                </div>
 
                 <div class="col-md-6 mb-3">
 
@@ -171,8 +193,8 @@
                     </label>
 
                     <input type="text"
-                           id="reference"
                            name="reference"
+                           id="reference"
                            class="form-control">
 
                 </div>
@@ -201,15 +223,10 @@
 
                 </label>
 
-                <textarea
-
-                    id="address"
-
-                    name="address"
-
-                    rows="3"
-
-                    class="form-control"></textarea>
+                <input type="text"
+                       name="address"
+                       id="address"
+                       class="form-control">
 
             </div>
 
@@ -226,7 +243,33 @@
                        class="form-control">
 
             </div>
+            <div class="mb-3">
 
+                <label class="form-label">
+
+                    Contact Number
+
+                </label>
+
+                <input type="text"
+                       name="contact_no"
+                       id="contact_no"
+                       class="form-control contact-phone">
+
+            </div>
+            <div class="mb-3">
+
+                <label class="form-label">
+
+                    Email
+
+                </label>
+
+                <input type="email"
+                       name="email"
+                       class="form-control">
+
+            </div>
         </div>
 
         <!-- ===================================== -->
@@ -262,69 +305,13 @@
 
                     </div>
 
-                    <div class="col-md-6 mb-3">
 
-                        <label class="form-label">
-
-                            Contact Person
-
-                        </label>
-
-                        <input type="text"
-                               
-                               name="name[]"
-                               class="form-control contact-name">
-
-                    </div>
 
                 </div>
 
-                <div class="row">
 
-                    <div class="col-md-6 mb-3">
 
-                        <label class="form-label">
 
-                            Designation
-
-                        </label>
-
-                        <input type="text"
-                               name="designation[]"
-                               class="form-control">
-
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-
-                            Contact Number
-
-                        </label>
-
-                        <input type="text"
-                               
-                               name="contact_no[]"
-                               class="form-control contact-phone">
-
-                    </div>
-
-                </div>
-
-                <div class="mb-3">
-
-                    <label class="form-label">
-
-                        Email
-
-                    </label>
-
-                    <input type="email"
-                           name="email[]"
-                           class="form-control">
-
-                </div>
 
                 <div class="row">
 
@@ -434,9 +421,31 @@
 
                         </label>
 
-                        <input type="text"
-                               name="meeting_status[]"
-                               class="form-control">
+                        <select
+                            name="meeting_status[]"
+                            class="form-select">
+
+                            <option value="">
+                                Select Status
+                            </option>
+
+                            <option value="Completed">
+                                Completed
+                            </option>
+
+                            <option value="Pending">
+                                Pending
+                            </option>
+
+                            <option value="Rescheduled">
+                                Rescheduled
+                            </option>
+
+                            <option value="Cancelled">
+                                Cancelled
+                            </option>
+
+                        </select>
 
                     </div>
 
@@ -586,6 +595,19 @@
                     </div>
 
                 </div>
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Next Action
+
+                    </label>
+
+                    <textarea name="next_action[]"
+                              rows="3"
+                              class="form-control"></textarea>
+
+                </div>                
                 <div class="mb-3">
 
                     <label class="form-label">
@@ -794,13 +816,17 @@
 
                     <th>ID</th>
 
-                    <th>Contact Person</th>
+                    <th>Name</th>
+
+                    <th>Designation</th>
 
                     <th>Firm Name</th>
 
                     <th>Meeting Date</th>
 
                     <th>Status</th>
+
+                    <th>No. of Meetings</th>
 
                     <th>Action</th>
 
@@ -828,6 +854,12 @@
 
                     <td>
 
+                        {{ meeting.designation }}
+
+                    </td> 
+
+                    <td>
+
                         {{ meeting.firm_name }}
 
                     </td>
@@ -842,6 +874,10 @@
 
                         {{ meeting.meeting_status }}
 
+                    </td>
+
+                    <td>
+                        {{ meeting.history|length + 1 }}
                     </td>
 
                     <td>
@@ -923,50 +959,26 @@ function addMeetingCard() {
     );
 
 }
+</script>
 
-document.getElementById(
-    'lead_id'
-).addEventListener(
-    'change',
-    function(){
+<script>
+document.getElementById("lead_id").addEventListener("change", function () {
 
-        let selected =
+    const selected = this.options[this.selectedIndex];
 
-            this.options[
-                this.selectedIndex
-            ];
+    document.getElementById("name").value =
+        selected.dataset.name || "";
 
-        let firstCard = document.querySelector(
-            '.meeting-card'
-        );
+    document.getElementById("contact_no").value =
+        selected.dataset.phone || "";
 
-        firstCard.querySelector(
-            '.contact-name'
-        ).value =
+    document.getElementById("reference").value =
+        selected.dataset.reference || "";
 
-            selected.dataset.name || '';
+    document.getElementById("address").value =
+        selected.dataset.location || "";
 
-        firstCard.querySelector(
-            '.contact-phone'
-        ).value =
-
-            selected.dataset.phone || '';
-
-        document.getElementById(
-            'reference'
-        ).value =
-
-            selected.dataset.reference || '';
-
-        document.getElementById(
-            'address'
-        ).value =
-
-            selected.dataset.location || '';
-
-    }
-);
-
+});
 </script>
 
 <script>

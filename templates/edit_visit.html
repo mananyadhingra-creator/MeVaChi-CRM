@@ -103,8 +103,7 @@
                         type="text"
                         name="company_name"
                         value="{{ visit.company_name }}"
-                        class="form-control"
-                        readonly>
+                        class="form-control">
 
                 </div>
 
@@ -120,8 +119,7 @@
                         type="text"
                         name="state"
                         value="{{ visit.state }}"
-                        class="form-control"
-                        readonly>
+                        class="form-control">
 
                 </div>
 
@@ -138,8 +136,7 @@
                 <textarea
                     name="address"
                     rows="2"
-                    class="form-control"
-                    readonly>{{ visit.address }}</textarea>
+                    class="form-control">{{ visit.address }}</textarea>
 
             </div>
 
@@ -169,11 +166,39 @@
 
                     </label>
 
-                    <input
-                        type="text"
+                    <select
                         name="abc"
-                        value="{{ visit.abc }}"
-                        class="form-control">
+                        class="form-select">
+
+                        <option value=""
+                            {% if visit.abc is none or visit.abc == '' %}
+                            selected
+                            {% endif %}>
+                            Select
+                        </option>
+
+                        <option value="Architect / Interior Designer"
+                            {% if visit.abc == 'Architect / Interior Designer' %}
+                            selected
+                            {% endif %}>
+                            Architect / Interior Designer
+                        </option>
+
+                        <option value="Builder"
+                            {% if visit.abc == 'Builder' %}
+                            selected
+                            {% endif %}>
+                            Builder
+                        </option>
+
+                        <option value="Contractor"
+                            {% if visit.abc == 'Contractor' %}
+                            selected
+                            {% endif %}>
+                            Contractor
+                        </option>
+
+                    </select>
 
                 </div>
 

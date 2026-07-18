@@ -184,6 +184,10 @@ def get_dashboard_notifications(
             Proposal.record_owner == username
         )
 
+        pipeline_base = SalesPipeline.query.filter(
+            SalesPipeline.record_owner == username
+        )
+
     elif role == 'COMMERCIALS':
 
         commercial_users = User.query.filter_by(
@@ -210,27 +214,21 @@ def get_dashboard_notifications(
             Proposal.record_owner.in_(usernames)
         )
 
+        pipeline_base = SalesPipeline.query.filter(
+            SalesPipeline.record_owner.in_(usernames)
+        )
+
     
 
     else:
 
-        lead_base = Lead.query.filter(
+        lead_base = Lead.query
 
-            Lead.record_owner == username
+        meeting_base = Meeting.query
 
-        )
+        proposal_base = Proposal.query
 
-        meeting_base = Meeting.query.filter(
-
-            Meeting.record_owner == username
-
-        )
-
-        proposal_base = Proposal.query.filter(
-
-            Proposal.record_owner == username
-
-        )
+        pipeline_base = SalesPipeline.query
 
     # ========================================
     # PERSONAL REMINDERS
@@ -293,6 +291,8 @@ def get_dashboard_notifications(
 
     leads = lead_base.filter(
 
+        Lead.next_to_call != None,
+
         Lead.next_to_call <= today + timedelta(days=30)
 
     ).all()
@@ -317,7 +317,7 @@ def get_dashboard_notifications(
 
             'title': lead.name,
 
-            'subtitle': 'Lead Follow-up',
+            'subtitle': lead.next_action or 'Lead Follow-up',
 
             'date': lead.next_to_call,
 
@@ -334,6 +334,8 @@ def get_dashboard_notifications(
     # ========================================
 
     meetings = meeting_base.filter(
+
+        Meeting.date_to_call_next != None,
 
         Meeting.date_to_call_next <= today + timedelta(days=30)
 
@@ -359,7 +361,7 @@ def get_dashboard_notifications(
 
             'title': meeting.name,
 
-            'subtitle': 'Meeting Follow-up',
+            'subtitle': meeting.next_action or 'Meeting Follow-up',
 
             'date': meeting.date_to_call_next,
 
@@ -376,6 +378,8 @@ def get_dashboard_notifications(
     # ========================================
 
     proposals = proposal_base.filter(
+
+        Proposal.next_to_call != None,
 
         Proposal.next_to_call <= today + timedelta(days=30)
 
@@ -401,7 +405,7 @@ def get_dashboard_notifications(
 
             'title': proposal.name,
 
-            'subtitle': 'Proposal Follow-up',
+            'subtitle': proposal.next_action or 'Proposal Follow-up',
 
             'date': proposal.next_to_call,
 
@@ -410,6 +414,46 @@ def get_dashboard_notifications(
             'status': status,
 
             'record_id': proposal.proposal_id
+
+        })
+
+    pipelines = pipeline_base.filter(
+
+        SalesPipeline.followup_date != None,
+
+        SalesPipeline.followup_date <= today + timedelta(days=30)
+
+    ).all()
+
+    for pipeline in pipelines:
+
+        if pipeline.followup_date < today:
+
+            status = 'OVERDUE'
+
+        elif pipeline.followup_date == today:
+
+            status = 'TODAY'
+
+        else:
+
+            status = 'UPCOMING'
+
+        notifications.append({
+
+            'module': 'PIPELINE',
+
+            'title': f'{pipeline.reference_no} - {pipeline.name}',
+
+            'subtitle': pipeline.next_action or 'Pipeline Follow-up',
+
+            'date': pipeline.followup_date,
+
+            'priority': 'HIGH',
+
+            'status': status,
+
+            'record_id': pipeline.sales_id
 
         })
 
@@ -460,36 +504,36 @@ def get_dashboard_notifications(
 
     ).all()
 
-        for client in clients:
+    for client in clients:
 
-            base_date = (
-                client.last_service_date
-                or client.activation_date
-            )
+        base_date = (
+            client.last_service_date
+            or client.activation_date
+        )
 
-            due_date = base_date + timedelta(
-                days=client.service_interval_days
-            )
+        due_date = base_date + timedelta(
+            days=client.service_interval_days
+        )
 
-            if due_date <= today:
+        if due_date <= today:
 
-                notifications.append({
+            notifications.append({
 
-                    'module': 'SERVICE',
+                'module': 'SERVICE',
 
-                    'title': client.client_name,
+                'title': client.client_name,
 
-                    'subtitle': 'Service Due',
+                'subtitle': 'Service Due',
 
-                    'date': due_date,
+                'date': due_date,
 
-                    'priority': 'HIGH',
+                'priority': 'HIGH',
 
-                    'status': 'TODAY',
+                'status': 'TODAY',
 
-                    'record_id': client.client_id
+                'record_id': client.client_id
 
-                })
+            })
 
     # ========================================
     # CMC DUE
@@ -542,25 +586,25 @@ def get_dashboard_notifications(
 
     ).all()
 
-        for client in cmc_clients:
+    for client in cmc_clients:
 
-            notifications.append({
+        notifications.append({
 
-                'module': 'CMC',
+            'module': 'CMC',
 
-                'title': client.client_name,
+            'title': client.client_name,
 
-                'subtitle': 'CMC Renewal Due',
+            'subtitle': 'CMC Renewal Due',
 
-                'date': client.next_cmc_renewal_date,
+            'date': client.next_cmc_renewal_date,
 
-                'priority': 'MEDIUM',
+            'priority': 'MEDIUM',
 
-                'status': 'UPCOMING',
+            'status': 'UPCOMING',
 
-                'record_id': client.client_id
+            'record_id': client.client_id
 
-            })
+        })
 
     notifications.sort(
 
@@ -584,8 +628,12 @@ def get_role_queries(username, role):
             Lead.query.filter_by(record_owner=username),
             Meeting.query.filter_by(record_owner=username),
             Proposal.query.filter_by(record_owner=username),
+            SalesPipeline.query.filter_by(
+                record_owner=username
+            ),            
             Client.query.filter_by(record_owner=username),
             Invoice.query.filter_by(record_owner=username)
+
         )
 
     elif role == "COMMERCIALS":
@@ -600,17 +648,28 @@ def get_role_queries(username, role):
             Lead.query.filter(Lead.record_owner.in_(usernames)),
             Meeting.query.filter(Meeting.record_owner.in_(usernames)),
             Proposal.query.filter(Proposal.record_owner.in_(usernames)),
+            SalesPipeline.query.filter(
+                SalesPipeline.record_owner.in_(usernames)
+            ),            
             Client.query.filter(Client.record_owner.in_(usernames)),
             Invoice.query.filter(Invoice.record_owner.in_(usernames))
+
         )
 
-    return (
-        Lead.query,
-        Meeting.query,
-        Proposal.query,
-        Client.query,
-        Invoice.query
-    )
+    else:
+        return (
+            Lead.query,
+            Meeting.query,
+            Proposal.query,
+            SalesPipeline.query,
+            Client.query,
+            Invoice.query
+            
+
+        )
+        
+
+
 
 def categorize_followups(query, column, today):
 
@@ -1221,7 +1280,7 @@ def get_air_quality(location):
         AIR_QUALITY["Others"]
     )
 
-    print(pm25, pm10)
+    
 
     quarter = get_current_quarter()
 
@@ -1313,6 +1372,47 @@ def indian_format(number):
         parts + [last3]
     )
 
+def update_client_status(client):
+
+    today = date.today()
+
+    # ---------- CMC ----------
+    if client.installation_date:
+        client.cmc_due_days = (
+            today - client.installation_date
+        ).days
+    else:
+        client.cmc_due_days = 0
+
+    client.cmc_due = (
+        "YES"
+        if client.cmc_due_days >= 345
+        else "NO"
+    )
+
+    # ---------- Service ----------
+    if client.last_service_date:
+        base_date = client.last_service_date
+
+    elif client.activation_date:
+        base_date = client.activation_date
+
+    else:
+        client.last_service_days = 0
+        client.service_due = "NO"
+        return
+
+    client.last_service_days = (
+        today - base_date
+    ).days
+
+    client.service_due = (
+        "YES"
+        if client.last_service_days >= client.service_interval_days
+        else "NO"
+    )
+
+
 class User(db.Model):
 
     __tablename__ = 'users'
@@ -1368,6 +1468,10 @@ class Lead(db.Model):
 
     responses = db.Column(db.Text)
 
+    next_action = db.Column(
+        db.Text
+    )
+
     date_of_1st_followup = db.Column(db.Date)
 
     record_owner = db.Column(
@@ -1381,6 +1485,8 @@ class Lead(db.Model):
     )
 
     recent = db.Column(db.Text)
+
+    
 
     
 class Meeting(db.Model):
@@ -1445,6 +1551,10 @@ class Meeting(db.Model):
 
     remarks = db.Column(db.Text)
 
+    next_action = db.Column(
+        db.Text
+    )
+
     lead_id = db.Column(
         db.Integer,
         db.ForeignKey('leads.lead_id'),
@@ -1464,7 +1574,9 @@ class Meeting(db.Model):
     record_owner = db.Column(
         db.String(100),
         index=True
-    )  
+    )
+
+      
 
 class MeetingHistory(db.Model):
 
@@ -1551,6 +1663,9 @@ class MeetingHistory(db.Model):
     )
 
     reason_for_reschedule = db.Column(
+        db.Text
+    )
+    next_action = db.Column(
         db.Text
     )
 
@@ -1950,6 +2065,13 @@ class Proposal(db.Model):
 
     remarks = db.Column(db.Text)
 
+    next_action = db.Column(
+        db.Text
+    )
+    area_covered = db.Column(db.String(400))
+
+    area_not_covered = db.Column(db.String(400))
+
     meeting_id = db.Column(
         db.Integer,
         db.ForeignKey('meetings.meeting_id'),
@@ -1975,7 +2097,7 @@ class Proposal(db.Model):
         db.String(100),
         index=True
     )
-
+    
 
 class ProposalFile(db.Model):
 
@@ -2172,6 +2294,10 @@ class SalesPipeline(db.Model):
         db.String(100)
     )
 
+    
+
+    
+
 class PaymentHistory(db.Model):
 
     __tablename__ = 'payment_history'
@@ -2358,6 +2484,13 @@ class Installation(db.Model):
             'sales_pipeline.sales_id'
         ),
         nullable=True
+    )
+    client_name = db.Column(
+        db.String(200)
+    )
+
+    address = db.Column(
+        db.Text
     )
 
     installation_for = db.Column(
@@ -2958,7 +3091,7 @@ def dashboard():
 
     ]
 
-    lead_query, meeting_query, proposal_query, client_query, invoice_query = get_role_queries(
+    lead_query, meeting_query, proposal_query, pipeline_query, client_query, invoice_query = get_role_queries(
         session['username'],
         session['role']
     )
@@ -2966,6 +3099,7 @@ def dashboard():
     lead_base = lead_query
     meeting_base = meeting_query
     proposal_base = proposal_query
+    pipeline_base = pipeline_query
 
     commercial_count = (
 
@@ -2978,6 +3112,10 @@ def dashboard():
         +
 
         proposal_base.count()
+
+        +
+
+        pipeline_base.count()
 
     )
 
@@ -3011,6 +3149,17 @@ def dashboard():
     ) = categorize_followups(
         proposal_base,
         Proposal.next_to_call,
+        today
+    )
+
+    (
+        overdue_pipeline,
+        today_pipeline,
+        tomorrow_pipeline,
+        week_pipeline
+    ) = categorize_followups(
+        pipeline_query,
+        SalesPipeline.followup_date,
         today
     )
 
@@ -3064,24 +3213,28 @@ def dashboard():
         len(overdue_leads)
         + len(overdue_meetings)
         + len(overdue_proposals)
+        + len(overdue_pipeline)
     )
 
     today_count = (
         len(today_leads)
         + len(today_meetings)
         + len(today_proposals)
+        + len(today_pipeline)
     )
 
     tomorrow_count = (
         len(tomorrow_leads)
         + len(tomorrow_meetings)
         + len(tomorrow_proposals)
+        + len(tomorrow_pipeline)
     )
 
     week_count = (
         len(week_leads)
         + len(week_meetings)
         + len(week_proposals)
+        + len(week_pipeline)
     )
 
     services_due = len(service_due_clients)
@@ -3459,18 +3612,22 @@ def dashboard():
         overdue_leads=overdue_leads,
         overdue_meetings=overdue_meetings,
         overdue_proposals=overdue_proposals,
+        overdue_pipeline=overdue_pipeline,
 
         today_leads=today_leads,
         today_meetings=today_meetings,
         today_proposals=today_proposals,
+        today_pipeline=today_pipeline,
 
         tomorrow_leads=tomorrow_leads,
         tomorrow_meetings=tomorrow_meetings,
         tomorrow_proposals=tomorrow_proposals,
+        tomorrow_pipeline=tomorrow_pipeline,
 
         week_leads=week_leads,
         week_meetings=week_meetings,
         week_proposals=week_proposals,
+        week_pipeline=week_pipeline,
 
         overdue_count=overdue_count,
         today_count=today_count,
@@ -3823,6 +3980,10 @@ def add_lead():
             )
             else None
         )
+
+        next_action = request.form.get(
+            'next_action'
+        )        
         recent = request.form['recent']
 
         lead = Lead(
@@ -3833,6 +3994,7 @@ def add_lead():
             responses=responses,
             date_of_1st_followup=date_of_1st_followup,
             next_to_call=next_to_call,
+            next_action=next_action,
             recent=recent,
             record_owner=session[
                 'username'
@@ -4036,6 +4198,7 @@ def edit_lead(lead_id):
             'responses'
         )
 
+
         lead.recent = request.form.get(
             'recent'
         )
@@ -4065,6 +4228,11 @@ def edit_lead(lead_id):
             )
             else None
         )
+
+        lead.next_action = request.form.get(
+            'next_action'
+        )
+
         db.session.flush()
         log_activity(
 
@@ -4443,6 +4611,10 @@ def add_meeting():
 
         )
 
+        next_actions = request.form.getlist(
+            'next_action[]'
+        )        
+
         reasons = request.form.getlist(
 
             'reason_for_reschedule[]'
@@ -4558,6 +4730,8 @@ def add_meeting():
             date_of_last_followup=first_last_followup,
 
             date_to_call_next=first_next_call,
+
+            next_action=next_actions[0],
 
             reschedule_date=first_reschedule,
 
@@ -4679,6 +4853,8 @@ def add_meeting():
                 reschedule_date=history_reschedule,
 
                 reason_for_reschedule=reasons[i],
+
+                next_action=next_actions[i],
 
                 remarks=remarks_list[i],
 
@@ -5257,6 +5433,22 @@ def edit_meeting(
 
         company_details = {
 
+            'name': request.form.get(
+                'name'
+            ),
+
+            'designation': request.form.get(
+                'designation'
+            ),            
+
+            'contact_no': request.form.get(
+                'contact_no'
+            ),
+
+            'email': request.form.get(
+                'email'
+            ),
+
             'source': request.form.get(
 
                 'source'
@@ -5471,6 +5663,10 @@ def edit_meeting(
 
             ),
 
+            'next_action': request.form.get(
+                'next_action'
+            ),
+
             'final_remarks': request.form.get(
 
                 'final_remarks'
@@ -5531,6 +5727,8 @@ def edit_meeting(
                 'reschedule_date': meeting.reschedule_date,
 
                 'reason_for_reschedule': meeting.reason_for_reschedule,
+
+                'next_action': meeting.next_action,
 
                 'final_remarks': meeting.final_remarks,
 
@@ -5604,6 +5802,8 @@ def edit_meeting(
 
                     'reason_for_reschedule': item.reason_for_reschedule,
 
+                    'next_action': item.next_action,
+
                     'final_remarks': item.final_remarks,
 
                     'remarks': item.remarks
@@ -5612,29 +5812,7 @@ def edit_meeting(
 
             )
 
-        new_names = request.form.getlist(
-
-            'new_name[]'
-
-        )
-
-        new_designations = request.form.getlist(
-
-            'new_designation[]'
-
-        )
-
-        new_contacts = request.form.getlist(
-
-            'new_contact_no[]'
-
-        )
-
-        new_emails = request.form.getlist(
-
-            'new_email[]'
-
-        )
+        
 
         new_meeting_fixed_bys = request.form.getlist(
 
@@ -5720,6 +5898,10 @@ def edit_meeting(
 
         )
 
+        new_next_actions=request.form.getlist(
+            'new_next_action[]'
+        )
+
         new_final_remarks = request.form.getlist(
 
             'new_final_remarks[]'
@@ -5736,13 +5918,13 @@ def edit_meeting(
 
             len(
 
-                new_names
+                new_meeting_fixed_bys
 
             )
 
         ):
 
-            if not new_names[i].strip():
+            if not new_meeting_fixed_bys[i].strip():
 
                 continue
 
@@ -5750,13 +5932,7 @@ def edit_meeting(
 
                 {
 
-                    'name': new_names[i],
 
-                    'designation': new_designations[i],
-
-                    'contact_no': new_contacts[i],
-
-                    'email': new_emails[i],
 
                     'meeting_fixed_by': new_meeting_fixed_bys[i],
 
@@ -5842,6 +6018,8 @@ def edit_meeting(
 
                     'reason_for_reschedule': new_reason_for_reschedules[i],
 
+                    'next_action': new_next_actions[i],
+
                     'final_remarks': new_final_remarks[i],
 
                     'remarks': new_remarks[i]
@@ -5912,14 +6090,14 @@ def edit_meeting(
                 MeetingHistory(
 
                     meeting_id=meeting.meeting_id,
+                    
+                    name=meeting.name,
 
-                    name=item['name'],
+                    designation=meeting.designation,
 
-                    designation=item['designation'],
+                    contact_no=meeting.contact_no,
 
-                    contact_no=item['contact_no'],
-
-                    email=item['email'],
+                    email=meeting.email,  
 
                     meeting_fixed_by=item['meeting_fixed_by'],
 
@@ -5948,6 +6126,8 @@ def edit_meeting(
                     reschedule_date=item['reschedule_date'],
 
                     reason_for_reschedule=item['reason_for_reschedule'],
+
+                    next_action=item['next_action'],
 
                     final_remarks=item['final_remarks'],
 
@@ -8189,6 +8369,10 @@ def add_proposal():
 
         cmc = request.form.get('cmc')
 
+        area_covered=request.form.get('area_covered')
+
+        area_not_covered=request.form.get('area_not_covered')
+
         per_unit_cost = (
             Decimal(request.form['per_unit_cost'])
             if request.form.get('per_unit_cost')
@@ -8285,7 +8469,9 @@ def add_proposal():
 
             next_to_call = None
 
-        
+        next_action = request.form.get(
+            'next_action'
+        )        
 
         proposal = Proposal(
 
@@ -8346,6 +8532,10 @@ def add_proposal():
 
             cmc=cmc,
 
+            area_covered=area_covered,
+
+            area_not_covered=area_not_covered,
+
             per_unit_cost=
                 per_unit_cost,
 
@@ -8387,6 +8577,8 @@ def add_proposal():
 
             next_to_call=
                 next_to_call,
+
+            next_action=next_action,
 
             remarks=remarks,
 
@@ -8785,7 +8977,7 @@ def edit_proposal(proposal_id):
             else None
         )
 
-        proposal.drawinging_id = (
+        proposal.drawing_id = (
             int(request.form['drawing_id'])
             if request.form.get('drawing_id')
             else None
@@ -8864,6 +9056,11 @@ def edit_proposal(proposal_id):
         proposal.cmc = request.form.get(
             'cmc'
         )
+
+        proposal.area_covered = request.form.get('area_covered')
+
+        proposal.area_not_covered = request.form.get('area_not_covered')
+
         proposal.per_unit_cost = (
             Decimal(request.form['per_unit_cost'])
             if request.form.get('per_unit_cost')
@@ -8953,6 +9150,10 @@ def edit_proposal(proposal_id):
             ).date()
         else:
             proposal.next_to_call = None
+
+        proposal.next_action = request.form.get(
+            'next_action'
+        )
 
         proposal_files = request.files.getlist(
             'proposal_files'
@@ -9235,7 +9436,7 @@ def add_sales():
         address = request.form.get(
             'address'
         )
-
+        
         contact_no = request.form.get(
             'contact_no'
         )
@@ -11170,10 +11371,13 @@ def add_installation():
 
         installation = Installation(
 
-            sales_id = (
-                int(request.form['sales_id'])
-                if request.form.get('sales_id')
-                else None
+            
+            client_name=request.form.get(
+                'client_name'
+            ),
+
+            address=request.form.get(
+                'address'
             ),
 
             installation_for=request.form.get(
@@ -11380,17 +11584,21 @@ def add_installation():
         'search'
     )
 
-    query = Installation.query.join(
-        SalesPipeline,
-        Installation.sales_id ==
-        SalesPipeline.sales_id
-    )
+    query = Installation.query
 
     if search:
 
         query = query.filter(
 
             or_(
+
+                Installation.client_name.ilike(
+                    f'%{search}%'
+                ),
+
+                Installation.address.ilike(
+                    f'%{search}%'
+                ),
 
                 Installation.installation_for.ilike(
                     f'%{search}%'
@@ -11406,13 +11614,6 @@ def add_installation():
 
                 Installation.installation_status.ilike(
                     f'%{search}%'
-                ),
-                SalesPipeline.name.ilike(
-                    f'%{search}%'
-                ),
-
-                SalesPipeline.reference_no.ilike(
-                    f'%{search}%'
                 )
 
             )
@@ -11425,7 +11626,7 @@ def add_installation():
 
     ).all()
 
-    sales_records = SalesPipeline.query.all()
+    
 
     return render_template(
 
@@ -11433,7 +11634,7 @@ def add_installation():
 
         installations=installations,
 
-        sales=sales_records,
+        
 
         search=search,
 
@@ -11524,7 +11725,7 @@ def edit_installation(
         installation_id
     )
 
-    sales_records = SalesPipeline.query.all()
+    
 
     cuttings = InstallationCutting.query.filter_by(
         installation_id=installation_id
@@ -11542,10 +11743,12 @@ def edit_installation(
 
     if request.method == 'POST':
 
-        installation.sales_id = (
-            int(request.form['sales_id'])
-            if request.form.get('sales_id')
-            else None
+        installation.client_name = request.form.get(
+            'client_name'
+        )
+
+        installation.address = request.form.get(
+            'address'
         )
 
         installation.installation_for = request.form.get(
@@ -11782,7 +11985,7 @@ def edit_installation(
 
         installation=installation,
 
-        sales=sales_records,
+        
 
         cuttings=cuttings,
 
@@ -12267,77 +12470,20 @@ def add_client():
 
         all_clients = Client.query.all()
 
+    
 
 
-    today = datetime.today().date()
+    today = date.today()
 
     for client in all_clients:
-        if client.installation_date:
+        update_client_status(client)
 
-            client.cmc_due_days = (
-
-                today -
-
-                client.installation_date
-
-            ).days
-
-        else:
-
-            client.cmc_due_days = 0
-
-
-        client.cmc_due = (
-
-            'YES'
-
-            if client.cmc_due_days >= 345
-
-            else 'NO'
-
-        )
-
-
-        if client.last_service_date:
-
-            client.last_service_days = (
-
-                today -
-
-                client.last_service_date
-
-            ).days
-
-        elif client.activation_date:
-
-            client.last_service_days = (
-
-                today -
-
-                client.activation_date
-
-            ).days
-
-        else:
-
-            client.last_service_days = 0
-
-
-        client.service_due = (
-
-            'YES'
-
-            if client.last_service_days >=
-
-            client.service_interval_days
-
-            else 'NO'
-
-        )
     db.session.commit()
     all_proposals = Proposal.query.all()
 
     all_invoices = Invoice.query.all()
+
+
 
     return render_template(
 
@@ -15358,41 +15504,26 @@ def organization_clients():
     query = Client.query
 
     if search:
-
         query = query.filter(
-
             or_(
-
-                Client.client_name.ilike(
-                    f'%{search}%'
-                ),
-
-                Client.mobile_no.ilike(
-                    f'%{search}%'
-                ),
-
-                Client.product.ilike(
-                    f'%{search}%'
-                ),
-
-                Client.record_owner.ilike(
-                    f'%{search}%'
-                )
-
+                Client.client_name.ilike(f'%{search}%'),
+                Client.mobile_no.ilike(f'%{search}%'),
+                Client.product.ilike(f'%{search}%'),
+                Client.record_owner.ilike(f'%{search}%')
             )
-
         )
 
     clients = query.all()
 
+    for client in clients:
+        update_client_status(client)
+
+    db.session.commit()
+
     return render_template(
-
-        'organization_clients.html',
-
-        clients=clients,
-
+        "organization_clients.html",
+        organization_clients=clients,
         search=search
-
     )
 
 @app.route(
@@ -15847,6 +15978,10 @@ def tasks():
             Proposal.record_owner == session['username']
         )
 
+        pipeline_base = SalesPipeline.query.filter(
+            SalesPipeline.record_owner == session['username']
+        )
+
     elif session.get('role') == 'COMMERCIALS':
 
         commercial_users = User.query.filter_by(
@@ -15870,6 +16005,10 @@ def tasks():
             Proposal.record_owner.in_(usernames)
         )
 
+        pipeline_base = SalesPipeline.query.filter(
+            SalesPipeline.record_owner.in_(usernames)
+        )
+
     else:
 
         lead_base = Lead.query
@@ -15877,6 +16016,8 @@ def tasks():
         meeting_base = Meeting.query
 
         proposal_base = Proposal.query
+
+        pipeline_base = SalesPipeline.query
 
 
     overdue_leads = lead_base.filter(
@@ -15931,6 +16072,23 @@ def tasks():
         Proposal.next_to_call <= week_end
     ).all()
 
+    overdue_pipeline = pipeline_base.filter(
+        SalesPipeline.followup_date < today
+    ).all()
+
+    today_pipeline = pipeline_base.filter(
+        SalesPipeline.followup_date == today
+    ).all()
+
+    tomorrow_pipeline = pipeline_base.filter(
+        SalesPipeline.followup_date == tomorrow
+    ).all()
+
+    week_pipeline = pipeline_base.filter(
+        SalesPipeline.followup_date > tomorrow,
+        SalesPipeline.followup_date <= week_end
+    ).all()
+
 
     return render_template(
 
@@ -15972,7 +16130,15 @@ def tasks():
             tomorrow_proposals,
 
         week_proposals=
-            week_proposals
+            week_proposals,
+
+        overdue_pipeline=overdue_pipeline,
+
+        today_pipeline=today_pipeline,
+
+        tomorrow_pipeline=tomorrow_pipeline,
+
+        week_pipeline=week_pipeline
 
     )
 
@@ -15988,36 +16154,20 @@ def service_due():
             url_for('dashboard')
         )
 
-    today = date.today()
+    
 
 
     service_due_clients = []
 
     for client in Client.query.all():
 
-        if client.last_service_date:
+        update_client_status(client)
 
-            base_date = client.last_service_date
-
-        elif client.activation_date:
-
-            base_date = client.activation_date
-
-        else:
-
-            continue
-
-        due_date = base_date + timedelta(
-            days=client.service_interval_days
-        )
-
-        if due_date <= today:
-
-            client.days_since_service = (
-                today - base_date
-            ).days
-
+        if client.service_due == "YES":
             service_due_clients.append(client)
+
+    db.session.commit()
+
 
     service_due_clients.sort(
 
@@ -16027,6 +16177,8 @@ def service_due():
         or date.min
 
     )
+
+
 
     return render_template(
         'service_due.html',
@@ -16212,6 +16364,64 @@ def complete_proposal_followup(
         'TASK',
 
         proposal_id,
+
+        'COMPLETED'
+
+    )
+
+    db.session.commit()
+
+    return redirect(
+        url_for('tasks')
+    )
+
+@app.route(
+    '/complete-pipeline-followup/<int:sales_id>'
+)
+def complete_pipeline_followup(sales_id):
+
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS',
+        'SALES'
+    ):
+
+        return redirect(
+            url_for('dashboard')
+        )
+
+    pipeline = SalesPipeline.query.get_or_404(
+        sales_id
+    )
+
+    completed_task = CompletedTask(
+
+        module_type='PIPELINE',
+
+        record_id=pipeline.sales_id,
+
+        task_name=pipeline.name,
+
+        completed_by=session.get(
+            'username',
+            'Unknown User'
+        )
+
+    )
+
+    db.session.add(
+        completed_task
+    )
+
+    pipeline.followup_date = None
+
+    db.session.flush()
+
+    log_activity(
+
+        'TASK',
+
+        sales_id,
 
         'COMPLETED'
 

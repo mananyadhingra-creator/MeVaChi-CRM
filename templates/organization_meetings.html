@@ -214,13 +214,17 @@
 
                             <th>Name</th>
 
+                            <th>Designation</th>
+
                             <th>Firm Name</th>
 
-                            <th>Contact</th>
+                            
 
                             <th>Meeting Date</th>
 
                             <th>Status</th>
+
+                            <th>No. of Meetings</th>
 
                             <th>Owner</th>
 
@@ -250,15 +254,17 @@
 
                             <td>
 
-                                {{ meeting.firm_name }}
+                                {{ meeting.designation }}
 
                             </td>
 
                             <td>
 
-                                {{ meeting.contact_no }}
+                                {{ meeting.firm_name }}
 
                             </td>
+
+                            
 
                             <td>
 
@@ -271,6 +277,8 @@
                                 {{ meeting.meeting_status }}
 
                             </td>
+
+                            <td>{{ meeting.history|length + 1 }}</td>
 
                             <td>
 

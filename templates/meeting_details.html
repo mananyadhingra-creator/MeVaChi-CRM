@@ -74,6 +74,37 @@
                 </td>
 
             </tr>
+            <tr>
+
+                <th>
+
+                    Name
+
+                </th>
+
+                <td>
+
+                    {{ meeting.name }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <th>
+
+                    Designation
+
+                </th>
+
+                <td>
+
+                    {{ meeting.designation }}
+
+                </td>
+
+            </tr>
 
             <tr>
 
@@ -139,67 +170,6 @@
 
             </tr>
 
-        </table>
-
-    </div>
-
-    <!-- ======================================== -->
-    <!-- CURRENT MEETING -->
-    <!-- ======================================== -->
-
-    <div class="card shadow p-4">
-
-        <div class="d-flex justify-content-between align-items-center mb-3">
-
-            <h3>
-
-                Current Meeting
-
-            </h3>
-
-            <a href="/edit-meeting/{{ meeting.meeting_id }}"
-               class="btn btn-warning">
-
-                Edit Current Meeting
-
-            </a>
-
-        </div>
-
-        <table class="table table-bordered">
-
-            <tr>
-
-                <th>
-
-                    Contact Person
-
-                </th>
-
-                <td>
-
-                    {{ meeting.name }}
-
-                </td>
-
-            </tr>
-
-            <tr>
-
-                <th>
-
-                    Designation
-
-                </th>
-
-                <td>
-
-                    {{ meeting.designation }}
-
-                </td>
-
-            </tr>
-
             <tr>
 
                 <th>
@@ -231,6 +201,32 @@
                 </td>
 
             </tr>
+
+        </table>
+
+    </div>
+
+    <!-- ======================================== -->
+    <!-- CURRENT MEETING -->
+    <!-- ======================================== -->
+
+    <div class="card shadow p-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+
+            <h3>
+
+                Current Meeting
+
+            </h3>
+
+
+
+        </div>
+
+        <table class="table table-bordered">
+
+
 
             <tr>
 
@@ -443,6 +439,22 @@
 
                 <th>
 
+                    Next Action
+
+                </th>
+
+                <td>
+
+                    {{ meeting.next_action }}
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <th>
+
                     Final Remarks
 
                 </th>
@@ -506,7 +518,7 @@
 
                         <th>
 
-                            Contact Person
+                            Name
 
                         </th>
 
@@ -625,55 +637,7 @@
 
                                     <!-- Contact Information -->
 
-                                    <div class="card mb-4">
-
-                                        <div class="card-header bg-primary text-white">
-
-                                            Contact Information
-
-                                        </div>
-
-                                        <div class="card-body">
-
-                                            <div class="row">
-
-                                                <div class="col-md-6 mb-3">
-
-                                                    <strong>Name</strong><br>
-
-                                                    {{ item.name }}
-
-                                                </div>
-
-                                                <div class="col-md-6 mb-3">
-
-                                                    <strong>Designation</strong><br>
-
-                                                    {{ item.designation }}
-
-                                                </div>
-
-                                                <div class="col-md-6 mb-3">
-
-                                                    <strong>Contact Number</strong><br>
-
-                                                    {{ item.contact_no }}
-
-                                                </div>
-
-                                                <div class="col-md-6 mb-3">
-
-                                                    <strong>Email</strong><br>
-
-                                                    {{ item.email }}
-
-                                                </div>
-
-                                            </div>
-
-                                        </div>
-
-                                    </div>
+                                    
 
                                     <!-- Meeting Information -->
 
@@ -798,6 +762,14 @@
                                                     <strong>Reason for Reschedule</strong><br>
 
                                                     {{ item.reason_for_reschedule or "-" }}
+
+                                                </div>
+
+                                                <div class="col-md-6 mb-3">
+
+                                                    <strong>Next Action</strong><br>
+
+                                                    {{ item.next_action or "-" }}
 
                                                 </div>
 

@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -65,7 +65,8 @@
             {{
                 overdue_leads|length +
                 overdue_meetings|length +
-                overdue_proposals|length
+                overdue_proposals|length +
+                overdue_pipeline|length
             }}
             )
 
@@ -86,6 +87,15 @@
                     </span>
 
                     {{ lead.name }}
+
+
+                    {% if lead.next_action %}
+                    <br>
+                    <small class="text-muted">
+                        <strong>Next Action:</strong>
+                        {{ lead.next_action }}
+                    </small>
+                    {% endif %}
 
                     {% if session['role'] == 'ADMIN' %}
 
@@ -139,6 +149,14 @@
                     -
                     {{ meeting.firm_name }}
 
+                    {% if meeting.next_action %}
+                    <br>
+                    <small class="text-muted">
+                        <strong>Next Action:</strong>
+                        {{ meeting.next_action }}
+                    </small>
+                    {% endif %}
+
                     {% if session['role'] == 'ADMIN' %}
 
                     <span class="badge bg-light text-dark border">
@@ -191,6 +209,14 @@
                     -
                     {{ proposal.name }}
 
+                    {% if proposal.next_action %}
+                    <br>
+                    <small class="text-muted">
+                        <strong>Next Action:</strong>
+                        {{ proposal.next_action }}
+                    </small>
+                    {% endif %}
+
                     {% if session['role'] == 'ADMIN' %}
 
                     <span class="badge bg-light text-dark border">
@@ -227,9 +253,72 @@
 
             {% endfor %}
 
+            {% for pipeline in overdue_pipeline %}
+
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+
+                <div>
+
+                    <span class="badge bg-secondary">
+
+                        Pipeline
+
+                    </span>
+
+                    {{ pipeline.name }}
+
+                    {% if pipeline.next_action %}
+                    <br>
+                    <small class="text-muted">
+                        <strong>Next Action:</strong>
+                        {{ pipeline.next_action }}
+                    </small>
+                    {% endif %}
+
+                    {% if session['role'] == 'ADMIN' %}
+
+                    <span class="badge bg-light text-dark border">
+
+                        {{ pipeline.record_owner }}
+
+                    </span>
+
+                    {% endif %}
+
+                </div>
+
+                <div>
+
+                    <a href="{{ url_for(
+                        'edit_sales',
+                        sales_id=pipeline.sales_id
+                    ) }}"
+                       class="btn btn-outline-primary btn-sm">
+
+                        Open
+
+                    </a>
+
+                    <a href="{{ url_for(
+                        'complete_pipeline_followup',
+                        sales_id=pipeline.sales_id
+                    ) }}"
+                       class="btn btn-success btn-sm">
+
+                        Complete
+
+                    </a>
+
+                </div>
+
+            </li>
+
+            {% endfor %}
+
             {% if not overdue_leads
                   and not overdue_meetings
-                  and not overdue_proposals %}
+                  and not overdue_proposals
+                  and not overdue_pipeline %}
 
             <li class="list-group-item text-center text-muted">
 
@@ -255,7 +344,8 @@
             {{
                 today_leads|length +
                 today_meetings|length +
-                today_proposals|length
+                today_proposals|length +
+                today_pipeline|length 
             }}
             )
 
@@ -276,6 +366,15 @@
                     </span>
 
                     {{ lead.name }}
+
+
+                    {% if lead.next_action %}
+                    <br>
+                    <small class="text-muted">
+                        <strong>Next Action:</strong>
+                        {{ lead.next_action }}
+                    </small>
+                    {% endif %}                    
 
                     {% if session['role'] == 'ADMIN' %}
 
@@ -329,6 +428,14 @@
                     -
                     {{ meeting.firm_name }}
 
+                    {% if meeting.next_action %}
+                    <br>
+                    <small class="text-muted">
+                        <strong>Next Action:</strong>
+                        {{ meeting.next_action }}
+                    </small>
+                    {% endif %}
+
                     {% if session['role'] == 'ADMIN' %}
 
                     <span class="badge bg-light text-dark border">
@@ -381,6 +488,14 @@
                     -
                     {{ proposal.name }}
 
+                    {% if proposal.next_action %}
+                    <br>
+                    <small class="text-muted">
+                        <strong>Next Action:</strong>
+                        {{ proposal.next_action }}
+                    </small>
+                    {% endif %}
+
                     {% if session['role'] == 'ADMIN' %}
 
                     <span class="badge bg-light text-dark border">
@@ -417,9 +532,72 @@
 
             {% endfor %}
 
+            {% for pipeline in today_pipeline %}
+
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+
+                <div>
+
+                    <span class="badge bg-secondary">
+
+                        Pipeline
+
+                    </span>
+
+                    {{ pipeline.name }}
+
+                    {% if pipeline.next_action %}
+                    <br>
+                    <small class="text-muted">
+                        <strong>Next Action:</strong>
+                        {{ pipeline.next_action }}
+                    </small>
+                    {% endif %}
+
+                    {% if session['role'] == 'ADMIN' %}
+
+                    <span class="badge bg-light text-dark border">
+
+                        {{ pipeline.record_owner }}
+
+                    </span>
+
+                    {% endif %}
+
+                </div>
+
+                <div>
+
+                    <a href="{{ url_for(
+                        'edit_sales',
+                        sales_id=pipeline.sales_id
+                    ) }}"
+                       class="btn btn-outline-primary btn-sm">
+
+                        Open
+
+                    </a>
+
+                    <a href="{{ url_for(
+                        'complete_pipeline_followup',
+                        sales_id=pipeline.sales_id
+                    ) }}"
+                       class="btn btn-success btn-sm">
+
+                        Complete
+
+                    </a>
+
+                </div>
+
+            </li>
+
+            {% endfor %}
+
             {% if not today_leads
                   and not today_meetings
-                  and not today_proposals %}
+                  and not today_proposals
+                  and not today_pipeline %}
 
             <li class="list-group-item text-center text-muted">
 
@@ -445,7 +623,8 @@
             {{
                 tomorrow_leads|length +
                 tomorrow_meetings|length +
-                tomorrow_proposals|length
+                tomorrow_proposals|length +
+                tomorrow_pipeline|length 
             }}
             )
 
@@ -466,6 +645,15 @@
                     </span>
 
                     {{ lead.name }}
+
+
+                    {% if lead.next_action %}
+                    <br>
+                    <small class="text-muted">
+                        <strong>Next Action:</strong>
+                        {{ lead.next_action }}
+                    </small>
+                    {% endif %}
 
                     {% if session['role'] == 'ADMIN' %}
 
@@ -519,6 +707,14 @@
                     -
                     {{ meeting.firm_name }}
 
+                    {% if meeting.next_action %}
+                    <br>
+                    <small class="text-muted">
+                        <strong>Next Action:</strong>
+                        {{ meeting.next_action }}
+                    </small>
+                    {% endif %}
+
                     {% if session['role'] == 'ADMIN' %}
 
                     <span class="badge bg-light text-dark border">
@@ -571,6 +767,14 @@
                     -
                     {{ proposal.name }}
 
+                    {% if proposal.next_action %}
+                    <br>
+                    <small class="text-muted">
+                        <strong>Next Action:</strong>
+                        {{ proposal.next_action }}
+                    </small>
+                    {% endif %}
+
                     {% if session['role'] == 'ADMIN' %}
 
                     <span class="badge bg-light text-dark border">
@@ -607,9 +811,72 @@
 
             {% endfor %}
 
+            {% for pipeline in tomorrow_pipeline %}
+
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+
+                <div>
+
+                    <span class="badge bg-secondary">
+
+                        Pipeline
+
+                    </span>
+
+                    {{ pipeline.name }}
+
+                    {% if pipeline.next_action %}
+                    <br>
+                    <small class="text-muted">
+                        <strong>Next Action:</strong>
+                        {{ pipeline.next_action }}
+                    </small>
+                    {% endif %}
+
+                    {% if session['role'] == 'ADMIN' %}
+
+                    <span class="badge bg-light text-dark border">
+
+                        {{ pipeline.record_owner }}
+
+                    </span>
+
+                    {% endif %}
+
+                </div>
+
+                <div>
+
+                    <a href="{{ url_for(
+                        'edit_sales',
+                        sales_id=pipeline.sales_id
+                    ) }}"
+                       class="btn btn-outline-primary btn-sm">
+
+                        Open
+
+                    </a>
+
+                    <a href="{{ url_for(
+                        'complete_pipeline_followup',
+                        sales_id=pipeline.sales_id
+                    ) }}"
+                       class="btn btn-success btn-sm">
+
+                        Complete
+
+                    </a>
+
+                </div>
+
+            </li>
+
+            {% endfor %}
+
             {% if not tomorrow_leads
                   and not tomorrow_meetings
-                  and not tomorrow_proposals %}
+                  and not tomorrow_proposals
+                  and not tomorrow_pipeline %}
 
             <li class="list-group-item text-center text-muted">
 
@@ -635,7 +902,8 @@
             {{
                 week_leads|length +
                 week_meetings|length +
-                week_proposals|length
+                week_proposals|length +
+                week_pipeline|length 
             }}
             )
 
@@ -656,6 +924,15 @@
                     </span>
 
                     {{ lead.name }}
+
+
+                    {% if lead.next_action %}
+                    <br>
+                    <small class="text-muted">
+                        <strong>Next Action:</strong>
+                        {{ lead.next_action }}
+                    </small>
+                    {% endif %}
 
                     {% if session['role'] == 'ADMIN' %}
 
@@ -709,6 +986,14 @@
                     -
                     {{ meeting.firm_name }}
 
+                    {% if meeting.next_action %}
+                    <br>
+                    <small class="text-muted">
+                        <strong>Next Action:</strong>
+                        {{ meeting.next_action }}
+                    </small>
+                    {% endif %}
+
                     {% if session['role'] == 'ADMIN' %}
 
                     <span class="badge bg-light text-dark border">
@@ -761,6 +1046,14 @@
                     -
                     {{ proposal.name }}
 
+                    {% if proposal.next_action %}
+                    <br>
+                    <small class="text-muted">
+                        <strong>Next Action:</strong>
+                        {{ proposal.next_action }}
+                    </small>
+                    {% endif %}
+
                     {% if session['role'] == 'ADMIN' %}
 
                     <span class="badge bg-light text-dark border">
@@ -797,9 +1090,72 @@
 
             {% endfor %}
 
+            {% for pipeline in week_pipeline %}
+
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+
+                <div>
+
+                    <span class="badge bg-secondary">
+
+                        Pipeline
+
+                    </span>
+
+                    {{ pipeline.name }}
+
+                    {% if pipeline.next_action %}
+                    <br>
+                    <small class="text-muted">
+                        <strong>Next Action:</strong>
+                        {{ pipeline.next_action }}
+                    </small>
+                    {% endif %}
+
+                    {% if session['role'] == 'ADMIN' %}
+
+                    <span class="badge bg-light text-dark border">
+
+                        {{ pipeline.record_owner }}
+
+                    </span>
+
+                    {% endif %}
+
+                </div>
+
+                <div>
+
+                    <a href="{{ url_for(
+                        'edit_sales',
+                        sales_id=pipeline.sales_id
+                    ) }}"
+                       class="btn btn-outline-primary btn-sm">
+
+                        Open
+
+                    </a>
+
+                    <a href="{{ url_for(
+                        'complete_pipeline_followup',
+                        sales_id=pipeline.sales_id
+                    ) }}"
+                       class="btn btn-success btn-sm">
+
+                        Complete
+
+                    </a>
+
+                </div>
+
+            </li>
+
+            {% endfor %}
+
             {% if not week_leads
                   and not week_meetings
-                  and not week_proposals %}
+                  and not week_proposals
+                  and not week_pipeline %}
 
             <li class="list-group-item text-center text-muted">
 

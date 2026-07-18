@@ -49,64 +49,7 @@
         <form method="POST"
               enctype="multipart/form-data">
 
-            <!-- SELECT SALES RECORD -->
 
-            <div class="card shadow-sm p-4 mb-4">
-
-                <h4>
-
-                    Select Sales Record
-
-                </h4>
-
-                <select name="sales_id">
-
-                    <option value="">
-
-                        Select Sales Record
-
-                    </option>
-
-                    {% for sale in sales %}
-
-                    <option
-
-                        value="{{ sale.sales_id }}"
-
-                        data-name="{{ sale.name }}"
-
-                        data-gst="{{ sale.gst_no }}"
-
-                        data-units="{{ sale.total_units }}"
-
-                        data-price="{{ sale.price_of_units }}"
-
-                        data-cmc="{{ sale.first_year_cmc }}"
-
-                        data-installation="{{ sale.installation }}"
-
-                        data-sensor="{{ sale.total_sensor }}"
-
-                        data-sensorcost="{{ sale.sensor_cost }}"
-
-                        data-revenue="{{ sale.revenue }}"
-
-                        data-totalrevenue="{{ sale.total_revenue }}"
-                        {% if sale.sales_id == invoice.sales_id %}
-                            selected
-                        {% endif %}>
-
-                        {{ sale.reference_no }}
-                        -
-                        {{ sale.name }}
-
-                    </option>
-
-                    {% endfor %}
-
-                </select>
-
-            </div>
 
             <!-- INVOICE DETAILS -->
 

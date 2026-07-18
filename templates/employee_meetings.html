@@ -191,10 +191,12 @@
 
                             <th>ID</th>
                             <th>Name</th>
+                            <th>Designation</th>
                             <th>Firm Name</th>
                             <th>Contact</th>
                             <th>Meeting Date</th>
                             <th>Status</th>
+                            <th>No. of Meetings</th>
                             <th>Action</th>
 
                         </tr>
@@ -211,6 +213,8 @@
 
                             <td>{{ meeting.name }}</td>
 
+                            <td>{{ meeting.designation }}</td>
+
                             <td>{{ meeting.firm_name }}</td>
 
                             <td>{{ meeting.contact_no }}</td>
@@ -218,6 +222,8 @@
                             <td>{{ meeting.date_of_meeting }}</td>
 
                             <td>{{ meeting.meeting_status }}</td>
+
+                            <td>{{ meeting.history|length + 1 }}</td>
 
                             <td>
 

@@ -226,6 +226,8 @@
 
                 </div>
 
+
+
             </div>
 
             <!-- PROJECT DETAILS -->
@@ -594,7 +596,7 @@
                                step="0.01"
                                id="revenue"
                                name="revenue"
-                               readonly
+                               
                                class="form-control">
 
                     </div>
@@ -617,7 +619,7 @@
                                step="0.01"
                                id="total_revenue"
                                name="total_revenue"
-                               readonly
+                               
                                class="form-control">
 
                     </div>
@@ -825,53 +827,22 @@ document.getElementById(
 function calculateRevenue() {
 
     let price =
-        parseFloat(
-            document.getElementById(
-                'price_of_units'
-            ).value
-        ) || 0;
+        parseFloat(document.getElementById('price_of_units').value) || 0;
 
     let cmc =
-        parseFloat(
-            document.getElementById(
-                'first_year_cmc'
-            ).value
-        ) || 0;
+        parseFloat(document.getElementById('first_year_cmc').value) || 0;
 
     let installation =
-        parseFloat(
-            document.getElementById(
-                'installation'
-            ).value
-        ) || 0;
+        parseFloat(document.getElementById('installation').value) || 0;
 
     let totalSensor =
-        parseFloat(
-            document.getElementById(
-                'total_sensor'
-            ).value
-        ) || 0;
+        parseFloat(document.getElementById('total_sensor').value) || 0;
 
     let sensorCost =
-        parseFloat(
-            document.getElementById(
-                'sensor_cost'
-            ).value
-        ) || 0;
+        parseFloat(document.getElementById('sensor_cost').value) || 0;
 
     let discount =
-        parseFloat(
-            document.getElementById(
-                'discount'
-            ).value
-        ) || 0;
-
-    let amountReceived =
-        parseFloat(
-            document.getElementById(
-                'amount_received'
-            ).value
-        ) || 0;
+        parseFloat(document.getElementById('discount').value) || 0;
 
     let revenue =
         price +
@@ -883,24 +854,11 @@ function calculateRevenue() {
     let totalRevenue =
         revenue * 1.18;
 
-    let amountDue =
-        totalRevenue -
-        amountReceived;
-
-    document.getElementById(
-        'revenue'
-    ).value =
+    document.getElementById('revenue').value =
         revenue.toFixed(2);
 
-    document.getElementById(
-        'total_revenue'
-    ).value =
+    document.getElementById('total_revenue').value =
         totalRevenue.toFixed(2);
-
-    document.getElementById(
-        'amount_due'
-    ).value =
-        amountDue.toFixed(2);
 
 }
 

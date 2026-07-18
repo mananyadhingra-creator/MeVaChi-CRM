@@ -47,7 +47,7 @@
         Edit Installation
 
     </h2>
-
+    {% if session['role'] != 'ADMIN' %}
     <form method="POST"
           enctype="multipart/form-data">
 
@@ -55,33 +55,30 @@
 
             <label>
 
-                Sales Record
+                Client Name
 
             </label>
 
-            <select name="sales_id"
-                    class="form-select">
+            <input
+                type="text"
+                name="client_name"
+                class="form-control"
+                value="{{ installation.client_name }}">
 
-                {% for sale in sales %}
+        </div>
 
-                <option value="{{ sale.sales_id }}"
+        <div class="mb-3">
 
-                    {% if sale.sales_id ==
-                    installation.sales_id %}
+            <label>
 
-                        selected
+                Address
 
-                    {% endif %}>
+            </label>
 
-                    {{ sale.reference_no }}
-                    -
-                    {{ sale.name }}
-
-                </option>
-
-                {% endfor %}
-
-            </select>
+            <textarea
+                name="address"
+                rows="3"
+                class="form-control">{{ installation.address }}</textarea>
 
         </div>
 
@@ -621,6 +618,7 @@
         </a>
 
     </form>
+    {% endif %}
 
 </div>
 

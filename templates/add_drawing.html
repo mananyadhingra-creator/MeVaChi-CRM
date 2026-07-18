@@ -69,7 +69,7 @@
               enctype="multipart/form-data">
 
             <!-- SELECT VISIT -->
-
+            {% if session['role'] != 'COMMERCIALS' %}
             <div class="card shadow-sm p-4 mb-4">
 
                 <h4>
@@ -107,7 +107,7 @@
                 </select>
 
             </div>
-
+            {% endif %}
             <!-- DRAWING DETAILS -->
 
             <div class="card shadow-sm p-4 mb-4">

@@ -66,24 +66,36 @@
 
                 <tr>
 
-                    <th width="30%">
+                    <th>
 
-                        Sales Reference
+                        Client Name
 
                     </th>
 
                     <td>
 
-                        {% if installation.sales %}
-
-                            {{ installation.sales.reference_no }}
-                            -
-                            {{ installation.sales.name }}
-                        {% endif %}
+                        {{ installation.client_name }}
 
                     </td>
 
                 </tr>
+
+                <tr>
+
+                    <th>
+
+                        Address
+
+                    </th>
+
+                    <td>
+
+                        {{ installation.address }}
+
+                    </td>
+
+                </tr>
+
 
                 <tr>
 

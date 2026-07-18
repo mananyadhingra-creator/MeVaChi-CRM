@@ -56,26 +56,29 @@
 
             <label>
 
-                Sales Record
+                Client Name
 
             </label>
 
-            <select name="sales_id"
-                    class="form-select">
+            <input
+                type="text"
+                name="client_name"
+                class="form-control">
 
-                {% for sale in sales %}
+        </div>
 
-                <option value="{{ sale.sales_id }}">
+        <div class="mb-3">
 
-                    {{ sale.reference_no }}
-                    -
-                    {{ sale.name }}
+            <label>
 
-                </option>
+                Address
 
-                {% endfor %}
+            </label>
 
-            </select>
+            <textarea
+                name="address"
+                rows="3"
+                class="form-control"></textarea>
 
         </div>
 

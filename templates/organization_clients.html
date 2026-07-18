@@ -119,6 +119,8 @@
 
                             <th>Service Due</th>
 
+                            <th>Service Days</th>
+
                             <th>Owner</th>
 
                             <th>Action</th>
@@ -129,7 +131,7 @@
 
                     <tbody>
 
-                        {% for client in clients %}
+                        {% for client in organization_clients %}
 
                         <tr>
 
@@ -173,6 +175,8 @@
 
                             </td>
 
+                            <td>{{ client.last_service_days }}</td>
+
                             <td>
 
                                 <span class="badge bg-dark">
@@ -198,7 +202,7 @@
 
                         {% endfor %}
 
-                        {% if not clients %}
+                        {% if not organization_clients %}
 
                         <tr>
 
