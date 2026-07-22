@@ -270,6 +270,32 @@
                        class="form-control">
 
             </div>
+
+            <div class="mb-3">
+
+                <label class="form-label">
+                    Co-Host
+                </label>
+
+                <select name="cohost" class="form-select">
+
+                    <option value="">None</option>
+
+                    {% for user in owners %}
+
+                        {% if user.username != session['username'] %}
+
+                        <option value="{{ user.username }}">
+                            {{ user.full_name }} ({{ user.role }})
+                        </option>
+
+                        {% endif %}
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
         </div>
 
         <!-- ===================================== -->
@@ -814,7 +840,7 @@
 
                 <tr>
 
-                    <th>ID</th>
+                    <th class="mv-col-id">ID</th>
 
                     <th>Name</th>
 
@@ -828,7 +854,7 @@
 
                     <th>No. of Meetings</th>
 
-                    <th>Action</th>
+                    <th class="mv-col-actions">Action</th>
 
                 </tr>
 

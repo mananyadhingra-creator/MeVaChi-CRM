@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -53,18 +53,24 @@
         </h2>
 
         <form method="GET"
-              action="{{ url_for('global_search') }}">
+              action="{{ url_for('global_search') }}"
+              class="mevachi-table-search">
 
-            <div class="input-group mb-4">
+            <div class="input-group flex-nowrap mb-4">
+
+                <span class="input-group-text bg-transparent border-end-0">
+                    <i class="bi bi-search text-muted"></i>
+                </span>
 
                 <input
                     type="text"
                     name="search"
-                    class="form-control"
+                    class="form-control border-start-0"
                     placeholder="Search anything..."
                     value="{{ search }}">
 
                 <button
+                    type="submit"
                     class="btn btn-dark">
 
                     Search
@@ -268,7 +274,7 @@ installations|length
 
                 <tr>
 
-                    <th>ID</th>
+                    <th class="mv-col-id">ID</th>
 
                     <th>Name</th>
 
@@ -391,7 +397,7 @@ installations|length
 
                 <tr>
 
-                    <th>ID</th>
+                    <th class="mv-col-id">ID</th>
 
                     <th>Name</th>
 
@@ -501,7 +507,7 @@ installations|length
 
                 <tr>
 
-                    <th>ID</th>
+                    <th class="mv-col-id">ID</th>
 
                     <th>Company</th>
 
@@ -608,7 +614,7 @@ installations|length
 
                 <tr>
 
-                    <th>ID</th>
+                    <th class="mv-col-id">ID</th>
 
                     <th>Name</th>
 
@@ -707,7 +713,7 @@ installations|length
 
                 <tr>
 
-                    <th>ID</th>
+                    <th class="mv-col-id">ID</th>
 
                     <th>Name</th>
 
@@ -807,7 +813,7 @@ installations|length
 
                 <tr>
 
-                    <th>ID</th>
+                    <th class="mv-col-id">ID</th>
 
                     <th>Name</th>
 
@@ -910,7 +916,7 @@ installations|length
 
                 <tr>
 
-                    <th>ID</th>
+                    <th class="mv-col-id">ID</th>
 
                     <th>Name</th>
 
@@ -1006,11 +1012,11 @@ installations|length
 
                 <tr>
 
-                    <th>ID</th>
+                    <th class="mv-col-id">ID</th>
 
                     <th>Client Name</th>
 
-                    <th>Mobile</th>
+                    <th class="mv-col-phone">Mobile</th>
 
                     <th>Product</th>
 
@@ -1109,7 +1115,7 @@ installations|length
 
                 <tr>
 
-                    <th>ID</th>
+                    <th class="mv-col-id">ID</th>
 
                     <th>Client</th>
 
@@ -1205,7 +1211,7 @@ installations|length
 
                 <tr>
 
-                    <th>ID</th>
+                    <th class="mv-col-id">ID</th>
 
                     <th>Project</th>
 

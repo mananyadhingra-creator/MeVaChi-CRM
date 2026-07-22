@@ -66,9 +66,11 @@
 
             {% if service_due_clients %}
 
-            <table class="table table-bordered table-hover">
+            <div class="table-responsive">
 
-                <thead>
+            <table class="table table-bordered table-hover align-middle">
+
+                <thead class="table-light">
 
                     <tr>
 
@@ -84,13 +86,13 @@
 
                         </th>
 
-                        <th>
+                        <th class="mv-col-phone">
 
                             Contact No
 
                         </th>
 
-                        <th>
+                        <th class="mv-col-date">
 
                             Last Service Date
 
@@ -103,7 +105,7 @@
 
                         </th>
 
-                        <th>
+                        <th class="mv-col-actions">
 
                             Action
 
@@ -166,6 +168,8 @@
                 </tbody>
 
             </table>
+
+            </div>
 
             {% else %}
 

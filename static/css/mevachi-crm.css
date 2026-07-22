@@ -160,11 +160,24 @@ small, .small {
 }
 
 .card-header.bg-primary,
-.card-header.bg-dark,
-.card-header.bg-success {
+.card-header.bg-dark {
     background: var(--mv-gradient-brand) !important;
     border-bottom: none !important;
     color: var(--mv-white) !important;
+}
+
+.card-header.bg-warning {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(254, 243, 199, 0.85) 100%) !important;
+    color: #92400e !important;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(245, 158, 11, 0.25) !important;
+}
+
+.card-header.bg-success {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(236, 253, 245, 0.9) 100%) !important;
+    color: #065f46 !important;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(16, 185, 129, 0.2) !important;
 }
 
 .card-body {
@@ -2461,3 +2474,618 @@ input[type="password"]::-webkit-credentials-auto-fill-button{
     display:none !important;
 
 }
+
+/* ============================================================
+   Smart Route Planner — Premium Logistics Dashboard
+   ============================================================ */
+
+.mevachi-route-planner {
+    overflow-x: hidden;
+}
+
+.mevachi-route-planner .planner-page-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-size: clamp(1.35rem, 3vw, 1.75rem);
+    margin-bottom: 0.35rem;
+}
+
+.mevachi-route-planner .planner-page-header h2 .bi {
+    color: var(--mv-primary);
+    font-size: 1.35em;
+    flex-shrink: 0;
+}
+
+.mevachi-route-planner .planner-card {
+    border-radius: var(--mv-radius-lg) !important;
+    overflow: hidden;
+    transition: transform var(--mv-transition), box-shadow var(--mv-transition), border-color var(--mv-transition);
+    border: 1px solid var(--mv-border) !important;
+    background: var(--mv-gradient-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.mevachi-route-planner .planner-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--mv-shadow-hover) !important;
+    border-color: var(--mv-border-strong) !important;
+}
+
+.mevachi-route-planner .sticky-lg-top {
+    top: 1.25rem;
+    z-index: 10;
+}
+
+.mevachi-route-planner .planner-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    color: var(--mv-text-secondary);
+    margin-bottom: 0;
+}
+
+.mevachi-route-planner .planner-section-title .bi {
+    color: var(--mv-primary);
+    font-size: 1.125rem;
+}
+
+.mevachi-route-planner .planner-filter-panel .form-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--mv-text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.mevachi-route-planner .planner-filter-panel .form-control,
+.mevachi-route-planner .planner-filter-panel .form-select {
+    min-height: 48px;
+    border-radius: var(--mv-radius-sm);
+    border-color: var(--mv-border-strong);
+    background: rgba(255, 255, 255, 0.95);
+    font-size: 0.9375rem;
+}
+
+.mevachi-route-planner .planner-filter-panel .form-control:focus,
+.mevachi-route-planner .planner-filter-panel .form-select:focus {
+    border-color: var(--mv-teal-light);
+    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
+}
+
+.mevachi-route-planner .planner-filter-panel .form-text {
+    font-size: 0.75rem;
+    color: var(--mv-text-muted);
+    margin-top: 0.5rem;
+}
+
+.mevachi-route-planner .planner-filter-actions .btn-success {
+    width: 100%;
+    min-height: 48px;
+    font-weight: 600;
+    border-radius: var(--mv-radius-sm);
+    box-shadow: var(--mv-shadow-sm);
+}
+
+.mevachi-route-planner .planner-filter-actions .btn-success:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--mv-shadow);
+}
+
+.mevachi-route-planner .planner-info-tip {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.875rem 1rem;
+    border-radius: var(--mv-radius-sm);
+    background: rgba(240, 253, 250, 0.85);
+    border: 1px solid var(--mv-border);
+    color: var(--mv-text-muted);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+}
+
+.mevachi-route-planner .planner-info-tip .bi {
+    color: var(--mv-primary);
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+}
+
+.mevachi-route-planner .planner-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.mevachi-route-planner .planner-toolbar-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.mevachi-route-planner .planner-toolbar-actions .btn {
+    min-height: 34px;
+    white-space: nowrap;
+}
+
+.mevachi-route-planner .planner-results {
+    min-height: 280px;
+    max-height: min(52vh, 480px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 0.375rem;
+}
+
+.mevachi-route-planner .planner-results::-webkit-scrollbar {
+    width: 7px;
+}
+
+.mevachi-route-planner .planner-results::-webkit-scrollbar-thumb {
+    background: var(--mv-primary);
+    border-radius: var(--mv-radius-pill);
+}
+
+.mevachi-route-planner .planner-results::-webkit-scrollbar-track {
+    background: rgba(240, 249, 255, 0.8);
+    border-radius: var(--mv-radius-pill);
+}
+
+.mevachi-route-planner .planner-empty {
+    min-height: 240px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem 1rem;
+}
+
+.mevachi-route-planner .planner-empty .bi {
+    color: var(--mv-sky-light);
+    opacity: 0.55;
+}
+
+.mevachi-route-planner .planner-empty h5 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: 1rem;
+    color: var(--mv-text-secondary);
+}
+
+.mevachi-route-planner .area-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.875rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--mv-border);
+    border-radius: var(--mv-radius-sm);
+    margin-bottom: 0.625rem;
+    cursor: pointer;
+    transition: background var(--mv-transition), border-color var(--mv-transition), box-shadow var(--mv-transition), transform var(--mv-transition);
+    background: rgba(255, 255, 255, 0.92);
+}
+
+.mevachi-route-planner .area-card:hover {
+    background: rgba(240, 253, 250, 0.9);
+    border-color: var(--mv-teal-light);
+    box-shadow: var(--mv-shadow-sm);
+    transform: translateX(2px);
+}
+
+.mevachi-route-planner .area-card.selected {
+    background: linear-gradient(135deg, rgba(236, 253, 245, 0.95) 0%, rgba(240, 253, 250, 0.9) 100%);
+    border-color: var(--mv-primary);
+    box-shadow: 0 0 0 1px rgba(13, 148, 136, 0.12);
+}
+
+.mevachi-route-planner .area-card input[type="checkbox"] {
+    transform: scale(1.15);
+    margin-top: 0.2rem;
+    accent-color: var(--mv-primary);
+    flex-shrink: 0;
+}
+
+.mevachi-route-planner .area-card .fw-semibold {
+    font-size: 0.9375rem;
+    color: var(--mv-text);
+    line-height: 1.35;
+}
+
+.mevachi-route-planner .area-card small {
+    font-size: 0.8125rem;
+    line-height: 1.45;
+}
+
+.mevachi-route-planner .planner-route-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+@media (min-width: 992px) {
+    .mevachi-route-planner .planner-route-header {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+}
+
+.mevachi-route-planner #optimizeBtn {
+    min-height: 44px;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    font-weight: 600;
+    border-radius: var(--mv-radius-sm);
+    white-space: nowrap;
+    flex-shrink: 0;
+    box-shadow: var(--mv-shadow-sm);
+}
+
+.mevachi-route-planner #optimizeBtn:disabled {
+    opacity: 0.55;
+    transform: none;
+    box-shadow: none;
+}
+
+.mevachi-route-planner #optimizeBtn:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: var(--mv-shadow);
+}
+
+.mevachi-route-planner .planner-map-wrap{
+    width:100%;
+    width:100% !important;
+    display:block !important;
+    flex:1 1 auto !important;
+    height:650px;
+}
+
+.mevachi-route-planner .planner-map{
+    width:100%;
+    height:100%;
+    display:block;
+}
+.mevachi-route-planner .planner-map > .text-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.mevachi-route-planner .planner-map .leaflet-container {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 420px;
+    border-radius: var(--mv-radius);
+    z-index: 1;
+}
+
+.mevachi-route-planner .planner-summary {
+    background: var(--mv-gradient-card);
+    border-radius: var(--mv-radius);
+    padding: 1.25rem;
+    height: 100%;
+    min-height: 420px;
+    border: 1px solid var(--mv-border);
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--mv-shadow-sm);
+}
+
+.mevachi-route-planner .planner-summary > h5 {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--mv-text-secondary);
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--mv-border);
+}
+
+.mevachi-route-planner #selectedStops {
+    flex: 1 1 auto;
+    min-height: 120px;
+    max-height: min(38vh, 320px);
+    overflow-y: auto;
+    padding-right: 0.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.mevachi-route-planner #selectedStops::-webkit-scrollbar {
+    width: 6px;
+}
+
+.mevachi-route-planner #selectedStops::-webkit-scrollbar-thumb {
+    background: rgba(13, 148, 136, 0.35);
+    border-radius: var(--mv-radius-pill);
+}
+
+.mevachi-route-planner .planner-stop-item {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid var(--mv-border);
+    border-radius: var(--mv-radius-sm);
+    padding: 0.75rem 0.875rem;
+    margin-bottom: 0.625rem;
+    cursor: grab;
+    transition: box-shadow var(--mv-transition), border-color var(--mv-transition);
+}
+
+.mevachi-route-planner .planner-stop-item:hover {
+    border-color: var(--mv-border-strong);
+    box-shadow: var(--mv-shadow-sm);
+}
+
+.mevachi-route-planner .planner-stop-item.sortable-ghost {
+    opacity: 0.45;
+    background: rgba(240, 253, 250, 0.9);
+}
+
+.mevachi-route-planner .planner-stop-item.sortable-chosen {
+    box-shadow: var(--mv-shadow);
+    border-color: var(--mv-primary);
+}
+
+.mevachi-route-planner .drag-handle {
+    cursor: grab;
+    color: var(--mv-text-muted) !important;
+}
+
+.mevachi-route-planner .drag-handle:active {
+    cursor: grabbing;
+}
+
+.mevachi-route-planner .planner-stop-item .lock-btn,
+.mevachi-route-planner .planner-stop-item .remove-btn {
+    min-width: 32px;
+    min-height: 32px;
+    padding: 0.25rem 0.5rem;
+    border-radius: 8px !important;
+}
+
+.mevachi-route-planner .planner-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: auto;
+}
+
+.mevachi-route-planner .planner-metric {
+    text-align: center;
+    padding: 1rem 0.75rem;
+    border-radius: var(--mv-radius-sm);
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid var(--mv-border);
+    transition: box-shadow var(--mv-transition);
+}
+
+.mevachi-route-planner .planner-metric:hover {
+    box-shadow: var(--mv-shadow-sm);
+}
+
+.mevachi-route-planner .planner-metric h4 {
+    font-size: 1.375rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    line-height: 1.2;
+}
+
+.mevachi-route-planner .planner-metric-distance h4 {
+    color: var(--mv-sky) !important;
+}
+
+.mevachi-route-planner .planner-metric-time h4 {
+    color: var(--mv-emerald) !important;
+}
+
+.mevachi-route-planner .planner-metric small {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--mv-text-muted);
+}
+
+.mevachi-route-planner .autocomplete-box {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--mv-white);
+    border-radius: var(--mv-radius-sm);
+    box-shadow: var(--mv-shadow-lg);
+    border: 1px solid var(--mv-border);
+    max-height: 260px;
+    overflow-y: auto;
+    z-index: 9999;
+    display: none;
+}
+
+.mevachi-route-planner .autocomplete-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid var(--mv-border);
+    font-size: 0.875rem;
+    color: var(--mv-text-secondary);
+    transition: background var(--mv-transition), color var(--mv-transition);
+}
+
+.mevachi-route-planner .autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.mevachi-route-planner .autocomplete-item:hover {
+    background: var(--mv-gradient-brand);
+    color: var(--mv-white);
+}
+
+.mevachi-route-planner .route-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.625rem 1.125rem;
+    border-radius: var(--mv-radius-pill);
+    border: 1px solid var(--mv-border-strong);
+    cursor: pointer;
+    margin: 0.25rem;
+    transition: var(--mv-transition);
+    background: var(--mv-white);
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.mevachi-route-planner .route-chip:hover,
+.mevachi-route-planner .route-chip.active {
+    background: var(--mv-gradient-brand);
+    color: var(--mv-white);
+    border-color: transparent;
+    box-shadow: var(--mv-shadow-sm);
+}
+
+.mevachi-route-planner .planner-divider {
+    border: none;
+    border-top: 1px solid var(--mv-border);
+    margin: 1.25rem 0;
+    opacity: 1;
+}
+
+/* Leaflet routing control hide overflow */
+.mevachi-route-planner .leaflet-routing-container {
+    display: none;
+}
+
+@media (max-width: 1199.98px) {
+    .mevachi-route-planner .planner-map-wrap,
+    .mevachi-route-planner .planner-map,
+    .mevachi-route-planner .planner-map .leaflet-container {
+        min-height: 380px;
+    }
+
+    .mevachi-route-planner .planner-summary {
+        min-height: auto;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .mevachi-route-planner .sticky-lg-top {
+        position: static !important;
+    }
+
+    .mevachi-route-planner .planner-map-wrap,
+    .mevachi-route-planner .planner-map,
+    .mevachi-route-planner .planner-map .leaflet-container {
+        min-height: 340px;
+    }
+
+    .mevachi-route-planner .planner-results {
+        max-height: 360px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .mevachi-route-planner .planner-map-wrap,
+    .mevachi-route-planner .planner-map,
+    .mevachi-route-planner .planner-map .leaflet-container {
+        min-height: 300px;
+    }
+
+    .mevachi-route-planner .planner-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .mevachi-route-planner .planner-toolbar-actions {
+        width: 100%;
+    }
+
+    .mevachi-route-planner .planner-toolbar-actions .btn {
+        flex: 1;
+    }
+
+    .mevachi-route-planner #optimizeBtn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .mevachi-route-planner .planner-filter-actions .btn-success {
+        width: 100%;
+    }
+
+    .mevachi-route-planner .planner-map-wrap,
+    .mevachi-route-planner .planner-map,
+    .mevachi-route-planner .planner-map .leaflet-container {
+        min-height: 260px;
+    }
+
+    .mevachi-route-planner .planner-metrics h4 {
+        font-size: 1.125rem;
+    }
+}
+
+/* ============================================================
+   Global Table Column Utilities
+   ============================================================ */
+
+.mevachi-app .table .mv-col-id,
+.mevachi-app .table .mv-col-sn,
+.mevachi-app .table .mv-col-status,
+.mevachi-app .table .mv-col-actions {
+    width: 1%;
+    white-space: nowrap;
+}
+
+.mevachi-app .table .mv-col-phone {
+    white-space: nowrap;
+    min-width: 7.5rem;
+}
+
+.mevachi-app .table .mv-col-date {
+    white-space: nowrap;
+    min-width: 6.5rem;
+}
+
+.mevachi-app .table thead th:first-child:not(.mv-col-wide),
+.mevachi-app .table tbody td:first-child:not(.mv-col-wide) {
+    width: 1%;
+    white-space: nowrap;
+}
+
+.mevachi-app .table thead th:last-child,
+.mevachi-app .table tbody td:last-child {
+    width: 1%;
+    white-space: nowrap;
+}
+
+.mevachi-app .table td a:not(.btn) {
+    color: var(--mv-primary-dark);
+    font-weight: 500;
+    text-decoration: none;
+    transition: color var(--mv-transition);
+}
+
+.mevachi-app .table td a:not(.btn):hover {
+    color: var(--mv-teal-light);
+    text-decoration: underline;
+}
+
+/* Compact table on small screens */
+@media (max-width: 767.98px) {
+    .mevachi-app .table {
+        font-size: 0.8125rem;
+    }
+
+    .mevachi-app .table thead th,
+    .mevachi-app .table tbody td {
+        padding: 0.625rem 0.75rem;
+    }
+}
+

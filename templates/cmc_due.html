@@ -65,9 +65,11 @@
 
             {% if cmc_due_clients %}
 
-            <table class="table table-bordered table-hover">
+            <div class="table-responsive">
 
-                <thead>
+            <table class="table table-bordered table-hover align-middle">
+
+                <thead class="table-light">
 
                     <tr>
 
@@ -83,13 +85,13 @@
 
                         </th>
 
-                        <th>
+                        <th class="mv-col-phone">
 
                             Contact No
 
                         </th>
 
-                        <th>
+                        <th class="mv-col-date">
 
                             Activation Date
 
@@ -97,11 +99,17 @@
 
                         <th>
 
+                            CMC Days
+
+                        </th>
+
+                        <th class="mv-col-date">
+
                             Renewal Due Date
 
                         </th>
 
-                        <th>
+                        <th class="mv-col-actions">
 
                             Action
 
@@ -143,6 +151,12 @@
 
                         <td>
 
+                            {{ client.cmc_due_days }}
+
+                        </td>
+
+                        <td>
+
                             {{ client.cmc_due_date }}
 
                         </td>
@@ -164,6 +178,8 @@
                 </tbody>
 
             </table>
+
+            </div>
 
             {% else %}
 

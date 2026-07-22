@@ -1,9 +1,9 @@
-from flask import Flask, flash, render_template, request, redirect, url_for, session, send_file
+from flask import Flask, flash, render_template, request, redirect, url_for, session, send_file, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta, date, UTC
 import os
 from werkzeug.utils import secure_filename
-from sqlalchemy import func, extract
+from sqlalchemy import func, extract, text
 from sqlalchemy import or_
 from werkzeug.security import (
     generate_password_hash,
@@ -23,6 +23,10 @@ from helpers import (
 from decimal import Decimal
 
 from zoneinfo import ZoneInfo
+
+import requests
+
+
 
 app = Flask(__name__)
 UPLOAD_FOLDER = os.path.join(
@@ -222,13 +226,21 @@ def get_dashboard_notifications(
 
     else:
 
-        lead_base = Lead.query
+        lead_base = Lead.query.filter(
+            Lead.record_owner == username
+        )
 
-        meeting_base = Meeting.query
+        meeting_base = Meeting.query.filter(
+            Meeting.record_owner == username
+        )
 
-        proposal_base = Proposal.query
+        proposal_base = Proposal.query.filter(
+            Proposal.record_owner == username
+        )
 
-        pipeline_base = SalesPipeline.query
+        pipeline_base = SalesPipeline.query.filter(
+            SalesPipeline.record_owner == username
+        )
 
     # ========================================
     # PERSONAL REMINDERS
@@ -657,14 +669,28 @@ def get_role_queries(username, role):
         )
 
     else:
+
         return (
-            Lead.query,
-            Meeting.query,
-            Proposal.query,
-            SalesPipeline.query,
+
+            Lead.query.filter_by(
+                record_owner=username
+            ),
+
+            Meeting.query.filter_by(
+                record_owner=username
+            ),
+
+            Proposal.query.filter_by(
+                record_owner=username
+            ),
+
+            SalesPipeline.query.filter_by(
+                record_owner=username
+            ),
+
             Client.query,
+
             Invoice.query
-            
 
         )
         
@@ -1412,6 +1438,150 @@ def update_client_status(client):
         else "NO"
     )
 
+from sqlalchemy import text
+import re
+
+AREA_CACHE = None
+
+
+def normalize(text):
+
+    if not text:
+        return ""
+
+    text = text.lower()
+
+    # Common abbreviations
+    replacements = {
+        " sec ": " sector ",
+        " sec. ": " sector ",
+        " sec-": " sector ",
+        "sector-": "sector ",
+        " ext ": " extension ",
+        " ext. ": " extension ",
+        ",": " ",
+        "-": " ",
+        "/": " ",
+        "(": " ",
+        ")": " "
+    }
+
+    text = " " + text + " "
+
+    for old, new in replacements.items():
+        text = text.replace(old, new)
+
+    text = re.sub(r'[^a-z0-9 ]', ' ', text)
+    text = re.sub(r'\s+', ' ', text).strip()
+
+    text = text.replace(" u p ", " uttar pradesh ")
+    text = text.replace(" up ", " uttar pradesh ")
+    text = text.replace(" ncr ", " delhi ncr ")
+
+    return text
+
+
+def load_area_cache():
+
+    global AREA_CACHE
+
+    if AREA_CACHE is None:
+
+        sql = text("""
+            SELECT
+                area_name,
+                city,
+                state,
+                latitude,
+                longitude
+            FROM area_master
+            ORDER BY CHAR_LENGTH(area_name) DESC
+        """)
+
+        AREA_CACHE = []
+
+        for row in db.session.execute(sql):
+
+            AREA_CACHE.append({
+
+                "area": normalize(row.area_name),
+
+                "city": normalize(row.city),
+
+                "state": normalize(row.state),
+
+                "lat": float(row.latitude),
+
+                "lon": float(row.longitude)
+
+            })
+
+    return AREA_CACHE
+
+
+def get_coordinates_from_address(address, state=None):
+
+    if not address:
+        return None, None
+
+    address = normalize(address)
+    state = normalize(state)
+
+    rows = load_area_cache()
+
+    matches = []
+
+    # ---------- Match by area + state ----------
+
+    for row in rows:
+
+        if row["area"] in address:
+
+            if not state or row["state"] == state:
+
+                score = len(row["area"])
+
+                matches.append({
+                    "score": score,
+                    "lat": row["lat"],
+                    "lon": row["lon"]
+                })
+
+    if matches:
+
+        matches.sort(
+            key=lambda x: x["score"],
+            reverse=True
+        )
+
+        return matches[0]["lat"], matches[0]["lon"]
+
+    # ---------- Match only by area ----------
+
+    matches = []
+
+    for row in rows:
+
+        if row["area"] in address:
+
+            score = len(row["area"])
+
+            matches.append({
+                "score": score,
+                "lat": row["lat"],
+                "lon": row["lon"]
+            })
+
+    if matches:
+
+        matches.sort(
+            key=lambda x: x["score"],
+            reverse=True
+        )
+
+        return matches[0]["lat"], matches[0]["lon"]
+
+    return None, None
 
 class User(db.Model):
 
@@ -2696,12 +2866,15 @@ class Client(db.Model):
         db.Integer,
         db.ForeignKey('invoices.invoice_id'),
         nullable=True
-   )
+    )
     
     record_owner = db.Column(
         db.String(100),
         index=True
     )
+
+    latitude = db.Column(db.Float)
+    longitude = db.Column(db.Float)
 
 class CustomerCareCard(db.Model):
 
@@ -2942,6 +3115,40 @@ class Reminder(db.Model):
         index=True
     )
 
+class RecordSharing(db.Model):
+
+    __tablename__ = "record_sharing"
+
+    share_id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    module_name = db.Column(
+        db.String(30),
+        nullable=False
+    )
+
+    record_id = db.Column(
+        db.Integer,
+        nullable=False
+    )
+
+    host_username = db.Column(
+        db.String(100),
+        nullable=False
+    )
+
+    cohost_username = db.Column(
+        db.String(100),
+        nullable=False
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow
+    )
+
 with app.app_context():
 
     db.create_all()
@@ -3044,6 +3251,7 @@ def dashboard():
         session['role']
 
     )
+
 
     notifications = my_notifications
 
@@ -4002,6 +4210,23 @@ def add_lead():
         )
         db.session.add(lead)
         db.session.flush()
+        cohost = request.form.get("cohost")
+
+        if cohost:
+
+            sharing = RecordSharing(
+
+                module_name="LEAD",
+
+                record_id=lead.lead_id,
+
+                host_username=session["username"],
+
+                cohost_username=cohost
+
+            )
+
+            db.session.add(sharing)
         log_activity(
 
             'LEAD',
@@ -4017,21 +4242,35 @@ def add_lead():
         'search'
     )
 
-    if session.get(
-        'role'
-    ) == 'SALES':
+    if session.get('role') == 'SALES':
 
-        base_query = Lead.query.filter_by(
+        shared_ids = [
 
-            record_owner=session[
-                'username'
-            ]
+            s.record_id
+
+            for s in RecordSharing.query.filter_by(
+
+                module_name="LEAD",
+
+                cohost_username=session["username"]
+
+            ).all()
+
+        ]
+
+        base_query = Lead.query.filter(
+
+            db.or_(
+
+                Lead.record_owner == session["username"],
+
+                Lead.lead_id.in_(shared_ids)
+
+            )
 
         )
 
-    elif session.get(
-        'role'
-    ) == 'COMMERCIALS':
+    elif session.get('role') == 'COMMERCIALS':
 
         commercial_users = User.query.filter_by(
 
@@ -4041,16 +4280,34 @@ def add_lead():
 
         usernames = [
 
-            user.username
+            u.username
 
-            for user in commercial_users
+            for u in commercial_users
+
+        ]
+
+        shared_ids = [
+
+            s.record_id
+
+            for s in RecordSharing.query.filter_by(
+
+                module_name="LEAD",
+
+                cohost_username=session["username"]
+
+            ).all()
 
         ]
 
         base_query = Lead.query.filter(
 
-            Lead.record_owner.in_(
-                usernames
+            db.or_(
+
+                Lead.record_owner.in_(usernames),
+
+                Lead.lead_id.in_(shared_ids)
+
             )
 
         )
@@ -4131,17 +4388,32 @@ def lead_details(lead_id):
         lead_id
     )
 
-    if not can_view_record(
+    shared = RecordSharing.query.filter_by(
 
-        lead.record_owner
+        module_name="LEAD",
+
+        record_id=lead.lead_id,
+
+        cohost_username=session["username"]
+
+    ).first()
+
+    if not (
+
+        can_view_record(lead.record_owner)
+
+        or
+
+        shared
 
     ):
 
         return redirect(
-            url_for(
-                'dashboard'
-            )
+
+            url_for("dashboard")
+
         )
+
 
     return render_template(
         'lead_details.html',
@@ -4165,17 +4437,33 @@ def edit_lead(lead_id):
     lead = Lead.query.get_or_404(
         lead_id
     )
-    if not can_access_record(
+    shared = RecordSharing.query.filter_by(
 
-        lead.record_owner
+        module_name="LEAD",
+
+        record_id=lead.lead_id,
+
+        cohost_username=session["username"]
+
+    ).first()
+
+    if not (
+
+        can_access_record(lead.record_owner)
+
+        or
+
+        shared
 
     ):
 
         return redirect(
-            url_for(
-                'dashboard'
-            )
+
+            url_for("dashboard")
+
         )
+
+        
     if request.method == 'POST':
 
         lead.name = request.form.get(
@@ -4243,6 +4531,23 @@ def edit_lead(lead_id):
             'UPDATED'
 
         )
+
+        cohost = request.form.get("cohost")
+
+        RecordSharing.query.filter_by(
+            module_name="LEAD",
+            record_id=lead.lead_id
+        ).delete()
+
+        if cohost:
+            db.session.add(
+                RecordSharing(
+                    module_name="LEAD",
+                    record_id=lead.lead_id,
+                    host_username=lead.record_owner,
+                    cohost_username=cohost
+                )
+            )
         db.session.commit()
 
         return redirect(
@@ -4250,11 +4555,18 @@ def edit_lead(lead_id):
                 'add_lead'
             )
         )
+    
+    shared_user = RecordSharing.query.filter_by(
+        module_name="LEAD",
+        record_id=lead.lead_id
+    ).first()
 
     return render_template(
         'edit_lead.html',
-        lead=lead
-    )
+        lead=lead,
+        owners=User.query.order_by(User.full_name).all(),
+        shared_user=shared_user
+        )
 
 @app.route(
     '/request-delete-lead/<int:lead_id>',
@@ -4754,6 +5066,26 @@ def add_meeting():
         )
 
         db.session.flush()
+
+        cohost = request.form.get("cohost")
+
+        if cohost:
+
+            db.session.add(
+
+                RecordSharing(
+
+                    module_name="MEETING",
+
+                    record_id=meeting.meeting_id,
+
+                    host_username=session["username"],
+
+                    cohost_username=cohost
+
+                )
+
+            )
         # ===========================
         # SAVE ADDITIONAL MEETINGS
         # ===========================
@@ -4899,11 +5231,29 @@ def add_meeting():
 
     ) == 'SALES':
 
-        base_query = Meeting.query.filter_by(
+        shared_ids = [
 
-            record_owner=session[
-                'username'
-            ]
+            s.record_id
+
+            for s in RecordSharing.query.filter_by(
+
+                module_name="MEETING",
+
+                cohost_username=session["username"]
+
+            ).all()
+
+        ]
+
+        base_query = Meeting.query.filter(
+
+            db.or_(
+
+                Meeting.record_owner == session["username"],
+
+                Meeting.meeting_id.in_(shared_ids)
+
+            )
 
         )
 
@@ -4927,11 +5277,27 @@ def add_meeting():
 
         ]
 
+        shared_ids = [
+
+            s.record_id
+
+            for s in RecordSharing.query.filter_by(
+
+                module_name="MEETING",
+
+                cohost_username=session["username"]
+
+            ).all()
+
+        ]
+
         base_query = Meeting.query.filter(
 
-            Meeting.record_owner.in_(
+            db.or_(
 
-                usernames
+                Meeting.record_owner.in_(usernames),
+
+                Meeting.meeting_id.in_(shared_ids)
 
             )
 
@@ -5032,10 +5398,12 @@ def add_meeting():
 
         leads=all_leads,
 
+        owners=User.query.order_by(
+            User.full_name
+        ).all(),
+
         admin_view=session.get(
-
             'role'
-
         ) == 'ADMIN',
 
         page_view='commercial',
@@ -5116,18 +5484,28 @@ def meeting_history_details(
 
     )
 
-    if not can_view_record(
+    shared = RecordSharing.query.filter_by(
 
-        meeting.record_owner
+        module_name="MEETING",
+
+        record_id=meeting.meeting_id,
+
+        cohost_username=session["username"]
+
+    ).first()
+
+    if not (
+
+        can_view_record(meeting.record_owner)
+
+        or
+
+        shared
 
     ):
 
         return redirect(
-
-            url_for(
-                'dashboard'
-            )
-
+            url_for("dashboard")
         )
 
     return render_template(
@@ -5169,16 +5547,28 @@ def meeting_details(meeting_id):
 
     ).all()
 
-    if not can_view_record(
+    shared = RecordSharing.query.filter_by(
 
-        meeting.record_owner
+        module_name="MEETING",
+
+        record_id=meeting.meeting_id,
+
+        cohost_username=session["username"]
+
+    ).first()
+
+    if not (
+
+        can_view_record(meeting.record_owner)
+
+        or
+
+        shared
 
     ):
 
         return redirect(
-            url_for(
-                'dashboard'
-            )
+            url_for("dashboard")
         )
 
     
@@ -5227,20 +5617,28 @@ def edit_meeting(
 
     )
 
-    if not can_access_record(
+    shared = RecordSharing.query.filter_by(
 
-        meeting.record_owner
+        module_name="MEETING",
+
+        record_id=meeting.meeting_id,
+
+        cohost_username=session["username"]
+
+    ).first()
+
+    if not (
+
+        can_access_record(meeting.record_owner)
+
+        or
+
+        shared
 
     ):
 
         return redirect(
-
-            url_for(
-
-                'dashboard'
-
-            )
-
+            url_for("dashboard")
         )
 
     history = MeetingHistory.query.filter_by(
@@ -5356,7 +5754,37 @@ def edit_meeting(
 
                 )
 
+                cohost = request.form.get("cohost")
+
+                RecordSharing.query.filter_by(
+
+                    module_name="MEETING",
+
+                    record_id=meeting.meeting_id
+
+                ).delete()
+
+                if cohost:
+
+                    db.session.add(
+
+                        RecordSharing(
+
+                            module_name="MEETING",
+
+                            record_id=meeting.meeting_id,
+
+                            host_username=meeting.record_owner,
+
+                            cohost_username=cohost
+
+                        )
+
+                    )
+
                 db.session.commit()
+
+
 
                 flash(
 
@@ -6151,6 +6579,8 @@ def edit_meeting(
 
         db.session.commit()
 
+
+
         return redirect(
 
             url_for(
@@ -6163,6 +6593,14 @@ def edit_meeting(
 
         )
 
+    shared_user = RecordSharing.query.filter_by(
+
+        module_name="MEETING",
+
+        record_id=meeting.meeting_id
+
+    ).first()
+
     return render_template(
 
         'edit_meeting.html',
@@ -6173,7 +6611,13 @@ def edit_meeting(
 
         history=history,
 
-        leads=all_leads
+        leads=all_leads,
+
+        owners=User.query.order_by(
+            User.full_name
+        ).all(),
+
+        shared_user=shared_user
 
     )
 
@@ -12259,6 +12703,16 @@ def add_client():
 
             service_due = 'NO'
 
+        address = request.form.get("address")
+        state = request.form.get("state")
+
+        lat, lon = get_coordinates_from_address(address, state)
+
+        print("="*50)
+        print("ADDRESS:", address)
+        print("STATE:", state)
+        print("MATCHED:", lat, lon)
+        print("="*50)
 
         client = Client(
 
@@ -12278,9 +12732,11 @@ def add_client():
                 'property_type'
             ),
 
-            address=request.form.get(
-                'address'
-            ),
+            address=address,
+
+            latitude=lat,
+
+            longitude=lon,
 
             location_link=request.form.get(
                 'location_link'
@@ -12683,9 +13139,14 @@ def edit_client(client_id):
             'property_type'
         )
 
-        client.address=request.form.get(
-            'address'
-        )
+        address = request.form.get("address")
+        state = request.form.get("state")
+
+        lat, lon = get_coordinates_from_address(address, state)
+
+        client.address = address
+        client.latitude = lat
+        client.longitude = lon
 
         client.location_link=request.form.get(
             'location_link'
@@ -19053,6 +19514,468 @@ def export_invoices():
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
     )
+
+@app.route('/route-planner')
+def route_planner():
+
+    if 'user_id' not in session:
+
+        return redirect(
+            url_for('login')
+        )
+
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS',
+        'SALES'
+    ):
+
+        return redirect(
+            url_for('dashboard')
+        )
+
+    return render_template(
+        'route_planner.html'
+    )
+
+@app.route("/autocomplete-location")
+def autocomplete_location():
+
+    query = request.args.get("q", "").strip()
+
+    if len(query) < 1:
+        return jsonify([])
+
+    sql = text("""
+        SELECT
+            area_name,
+            city,
+            latitude,
+            longitude
+        FROM area_master
+        WHERE area_name LIKE :query
+        ORDER BY area_name
+        LIMIT 10
+    """)
+
+    result = db.session.execute(
+        sql,
+        {
+            "query": f"{query}%"
+        }
+    )
+
+    locations = []
+
+    for row in result:
+        locations.append({
+            "display_name": f"{row.area_name}, {row.city}",
+            "lat": float(row.latitude),
+            "lon": float(row.longitude)
+        })
+
+    return jsonify(locations)
+
+@app.route("/nearby-areas")
+
+def nearby_areas():
+
+    lat = request.args.get("lat", type=float)
+    lng = request.args.get("lng", type=float)
+    radius = request.args.get("radius", type=float)
+
+    if lat is None or lng is None or radius is None:
+        return jsonify([])
+
+    sql = text("""
+        SELECT
+            area_id,
+            area_name,
+            city,
+            latitude,
+            longitude,
+            place_type,
+
+            (
+                6371 * ACOS(
+                    COS(RADIANS(:lat))
+                    * COS(RADIANS(latitude))
+                    * COS(RADIANS(longitude) - RADIANS(:lng))
+                    + SIN(RADIANS(:lat))
+                    * SIN(RADIANS(latitude))
+                )
+            ) AS distance
+
+        FROM area_master
+
+        HAVING distance <= :radius
+
+        ORDER BY distance
+    """)
+
+    result = db.session.execute(
+        sql,
+        {
+            "lat": lat,
+            "lng": lng,
+            "radius": radius
+        }
+    )
+
+    rows = []
+
+    for row in result:
+        rows.append({
+            "id": row.area_id,
+            "name": row.area_name,
+            "city": row.city,
+            "lat": float(row.latitude),
+            "lng": float(row.longitude),
+            "distance": round(row.distance, 2),
+            "type": row.place_type
+        })
+
+    return jsonify(rows)
+
+@app.route("/nearby-services")
+def nearby_services():
+
+    lat = request.args.get("lat", type=float)
+    lng = request.args.get("lng", type=float)
+    radius = request.args.get("radius", type=float)
+
+    if lat is None or lng is None or radius is None:
+        return jsonify([])
+
+    sql = text("""
+        SELECT
+            client_id,
+            client_name,
+            address,
+            latitude,
+            longitude,
+
+            (
+                6371 * ACOS(
+                    COS(RADIANS(:lat))
+                    * COS(RADIANS(latitude))
+                    * COS(RADIANS(longitude) - RADIANS(:lng))
+                    + SIN(RADIANS(:lat))
+                    * SIN(RADIANS(latitude))
+                )
+            ) AS distance
+
+        FROM client
+
+        WHERE
+            service_due='YES'
+            AND latitude IS NOT NULL
+            AND longitude IS NOT NULL
+
+        HAVING distance <= :radius
+
+        ORDER BY distance
+    """)
+
+    result = db.session.execute(sql, {
+        "lat": lat,
+        "lng": lng,
+        "radius": radius
+    })
+
+    services = []
+
+    for row in result:
+
+        services.append({
+
+            "id": row.client_id,
+
+            "name": row.client_name,
+
+            "address": row.address,
+
+            "city": row.address,
+
+            "lat": float(row.latitude),
+
+            "lng": float(row.longitude),
+
+            "distance": round(row.distance, 2),
+
+            "type": "SERVICE"
+
+        })
+
+    return jsonify(services)
+
+from math import radians, sin, cos, sqrt, atan2
+
+AVG_SPEED_KMPH = 30.0
+
+
+def haversine(a, b):
+
+    R = 6371.0
+
+    lat1 = radians(a["lat"])
+    lon1 = radians(a["lng"])
+
+    lat2 = radians(b["lat"])
+    lon2 = radians(b["lng"])
+
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+
+    x = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+
+    c = 2 * atan2(sqrt(x), sqrt(1-x))
+
+    return R * c
+
+
+def route_distance(route):
+
+    total = 0
+
+    for i in range(len(route)-1):
+
+        total += haversine(route[i], route[i+1])
+
+    return total
+
+
+def nearest_neighbour(points):
+
+    if len(points) <= 2:
+        return points
+
+    route = [points[0]]
+
+    remaining = points[1:]
+
+    while remaining:
+
+        current = route[-1]
+
+        nxt = min(
+
+            remaining,
+
+            key=lambda p: haversine(current, p)
+
+        )
+
+        route.append(nxt)
+
+        remaining.remove(nxt)
+
+    return route
+
+
+def two_opt(route):
+
+    improved = True
+
+    best = route[:]
+
+    while improved:
+
+        improved = False
+
+        best_distance = route_distance(best)
+
+        for i in range(1, len(best)-2):
+
+            for j in range(i+1, len(best)-1):
+
+                new_route = (
+
+                    best[:i]
+
+                    + best[i:j+1][::-1]
+
+                    + best[j+1:]
+
+                )
+
+                d = route_distance(new_route)
+
+                if d < best_distance:
+
+                    best = new_route
+
+                    best_distance = d
+
+                    improved = True
+
+    return best
+
+
+def optimize_segment(segment):
+
+    if len(segment) <= 2:
+
+        return segment
+
+    nn = nearest_neighbour(segment)
+
+    return two_opt(nn)
+
+
+def optimize_with_locks(stops):
+
+    if len(stops) <= 2:
+
+        return stops
+
+    result = [stops[0]]
+
+    i = 1
+
+    while i < len(stops):
+
+        if stops[i]["locked"]:
+
+            result.append(stops[i])
+
+            i += 1
+            continue
+
+        segment = []
+
+        while (
+
+            i < len(stops)
+
+            and not stops[i]["locked"]
+
+        ):
+
+            segment.append(stops[i])
+
+            i += 1
+
+        prev = result[-1]
+
+        temp = [prev] + segment
+
+        temp = optimize_segment(temp)
+
+        result.extend(temp[1:])
+
+    return result
+
+@app.route("/optimize-route", methods=["POST"])
+def optimize_route():
+
+    data = request.get_json()
+
+    stops = data.get("stops", [])
+
+    if len(stops) < 2:
+
+        return jsonify({
+
+            "success": False,
+
+            "message": "At least two stops are required."
+
+        }),400
+
+    coordinates=";".join(
+
+        f"{s['lng']},{s['lat']}"
+
+        for s in stops
+
+    )
+
+    url=(
+
+        "https://router.project-osrm.org/trip/v1/driving/"
+
+        f"{coordinates}"
+
+        "?source=first"
+
+        "&roundtrip=false"
+
+        "&overview=full"
+
+        "&steps=false"
+
+    )
+
+    response=requests.get(url)
+
+    if response.status_code!=200:
+
+        return jsonify({
+
+            "success":False,
+
+            "message":"Unable to contact routing server."
+
+        }),500
+
+    osrm=response.json()
+
+    if osrm.get("code")!="Ok":
+
+        return jsonify({
+
+            "success":False,
+
+            "message":"Route optimization failed."
+
+        }),500
+
+    trip=osrm["trips"][0]
+
+    optimized=[]
+
+    # Build optimized list using waypoint_index mapping
+
+    ordered=sorted(
+
+        osrm["waypoints"],
+
+        key=lambda w:w["trips_index"]
+
+    )
+
+    for wp in ordered:
+
+        optimized.append(
+
+            stops[wp["waypoint_index"]]
+
+        )
+
+    print("\n========== OPTIMIZED ROUTE ==========")
+
+    for i,s in enumerate(optimized,1):
+
+        print(i,s["name"])
+
+    print("Distance:",trip["distance"])
+
+    print("Duration:",trip["duration"])
+
+    print("====================================")
+
+    return jsonify({
+
+        "success":True,
+
+        "distance":trip["distance"],
+
+        "duration":trip["duration"],
+
+        "stops":optimized
+
+    })
 
 if __name__ == "__main__":
 

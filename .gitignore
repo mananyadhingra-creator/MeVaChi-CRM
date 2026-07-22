@@ -29,3 +29,5 @@ instance/
 
 # MySQL dumps (keep backups locally)
 *.sql
+
+*.osm.pbf

@@ -204,6 +204,35 @@
 
                 </div>
 
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Co-Host
+                    </label>
+
+                    <select name="cohost" class="form-select">
+
+                        <option value="">None</option>
+
+                        {% for user in owners %}
+
+                            {% if user.username != session['username'] %}
+
+                            <option
+                                value="{{ user.username }}"
+                               {% if shared_user and shared_user.cohost_username == user.username %}selected{% endif %}
+                            >
+                                    {{ user.full_name }} ({{ user.role }})
+                            </option>
+
+                            {% endif %}
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
             </div>
 
             <div class="mb-3">
