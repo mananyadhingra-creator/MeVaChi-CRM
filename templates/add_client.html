@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 
 <head>
@@ -804,13 +804,13 @@
     </h3>
 
     <form method="GET"
-          class="mb-3">
-        <div class="input-group">
+          class="mb-3 mevachi-table-search">
+        <div class="input-group flex-nowrap">
             <input type="text"
-                    name="search"
-                    value="{{request.args.get('search','')}}"
-                    class="form-control"
-                    placeholder="Search">
+                   name="search"
+                   value="{{request.args.get('search','')}}"
+                   class="form-control"
+                   placeholder="Search">
             <button type="submit"
                     class="btn btn-dark">
                 Search
@@ -821,6 +821,8 @@
             </a>
         </div>
     </form>
+
+    <div class="table-responsive">
 
     <table class="table table-bordered table-striped">
 
@@ -895,6 +897,8 @@
         </tbody>
 
     </table>
+
+    </div>
 
 </div>
 

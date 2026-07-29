@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 
 <head>
@@ -334,35 +334,24 @@
 
     </h4>
     <form method="GET"
-          class="mb-3">
-
-        <div class="input-group">
-
+          class="mb-3 mevachi-table-search">
+        <div class="input-group flex-nowrap">
             <input type="text"
                    name="search"
+                   value="{{request.args.get('search','')}}"
                    class="form-control"
-                   placeholder="Search Installations"
-                   value="{{ search or '' }}">
-
-            <button class="btn btn-dark"
-                    type="submit">
-
+                   placeholder="Search">
+            <button type="submit"
+                    class="btn btn-dark">
                 Search
-
             </button>
-
-            <a href="{{ url_for(
-                'add_installation'
-            ) }}"
-               class="btn btn-outline-secondary">
-
+            <a href="{{ url_for('add_installation') }}"
+               class="btn btn-secondary">
                 Clear
-
             </a>
-
         </div>
-
     </form>
+    <div class="table-responsive">
     <table class="table table-bordered table-striped">
 
         <thead>
@@ -471,6 +460,7 @@
         </tbody>
 
     </table>
+    </div>
 
 </div>
 <script>

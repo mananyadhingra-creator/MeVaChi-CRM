@@ -636,57 +636,171 @@ def get_role_queries(username, role):
 
     if role == "SALES":
 
+        shared_leads = [
+            s.record_id
+            for s in RecordSharing.query.filter_by(
+                module_name="LEAD",
+                cohost_username=username
+            ).all()
+        ]
+
+        shared_meetings = [
+            s.record_id
+            for s in RecordSharing.query.filter_by(
+                module_name="MEETING",
+                cohost_username=username
+            ).all()
+        ]
+
+        shared_proposals = [
+            s.record_id
+            for s in RecordSharing.query.filter_by(
+                module_name="PROPOSAL",
+                cohost_username=username
+            ).all()
+        ]
+
+        shared_pipeline = [
+            s.record_id
+            for s in RecordSharing.query.filter_by(
+                module_name="SALES",
+                cohost_username=username
+            ).all()
+        ]
+
         return (
-            Lead.query.filter_by(record_owner=username),
-            Meeting.query.filter_by(record_owner=username),
-            Proposal.query.filter_by(record_owner=username),
-            SalesPipeline.query.filter_by(
+
+            Lead.query.filter(
+                db.or_(
+                    Lead.record_owner == username,
+                    Lead.lead_id.in_(shared_leads)
+                )
+            ),
+
+            Meeting.query.filter(
+                db.or_(
+                    Meeting.record_owner == username,
+                    Meeting.meeting_id.in_(shared_meetings)
+                )
+            ),
+
+            Proposal.query.filter(
+                db.or_(
+                    Proposal.record_owner == username,
+                    Proposal.proposal_id.in_(shared_proposals)
+                )
+            ),
+
+            SalesPipeline.query.filter(
+                db.or_(
+                    SalesPipeline.record_owner == username,
+                    SalesPipeline.sales_id.in_(shared_pipeline)
+                )
+            ),
+
+            Client.query.filter_by(
                 record_owner=username
-            ),            
-            Client.query.filter_by(record_owner=username),
-            Invoice.query.filter_by(record_owner=username)
+            ),
+
+            Invoice.query.filter_by(
+                record_owner=username
+            )
 
         )
 
     elif role == "COMMERCIALS":
 
         usernames = [
+
             u for (u,) in db.session.query(User.username)
             .filter(User.role == "COMMERCIALS")
             .all()
+
+        ]
+
+        shared_leads = [
+            s.record_id
+            for s in RecordSharing.query.filter_by(
+                module_name="LEAD",
+                cohost_username=username
+            ).all()
+        ]
+
+        shared_meetings = [
+            s.record_id
+            for s in RecordSharing.query.filter_by(
+                module_name="MEETING",
+                cohost_username=username
+            ).all()
+        ]
+
+        shared_proposals = [
+            s.record_id
+            for s in RecordSharing.query.filter_by(
+                module_name="PROPOSAL",
+                cohost_username=username
+            ).all()
+        ]
+
+        shared_pipeline = [
+            s.record_id
+            for s in RecordSharing.query.filter_by(
+                module_name="SALES",
+                cohost_username=username
+            ).all()
         ]
 
         return (
-            Lead.query.filter(Lead.record_owner.in_(usernames)),
-            Meeting.query.filter(Meeting.record_owner.in_(usernames)),
-            Proposal.query.filter(Proposal.record_owner.in_(usernames)),
+
+            Lead.query.filter(
+                db.or_(
+                    Lead.record_owner.in_(usernames),
+                    Lead.lead_id.in_(shared_leads)
+                )
+            ),
+
+            Meeting.query.filter(
+                db.or_(
+                    Meeting.record_owner.in_(usernames),
+                    Meeting.meeting_id.in_(shared_meetings)
+                )
+            ),
+
+            Proposal.query.filter(
+                db.or_(
+                    Proposal.record_owner.in_(usernames),
+                    Proposal.proposal_id.in_(shared_proposals)
+                )
+            ),
+
             SalesPipeline.query.filter(
-                SalesPipeline.record_owner.in_(usernames)
-            ),            
-            Client.query.filter(Client.record_owner.in_(usernames)),
-            Invoice.query.filter(Invoice.record_owner.in_(usernames))
+                db.or_(
+                    SalesPipeline.record_owner.in_(usernames),
+                    SalesPipeline.sales_id.in_(shared_pipeline)
+                )
+            ),
+
+            Client.query.filter(
+                Client.record_owner.in_(usernames)
+            ),
+
+            Invoice.query.filter(
+                Invoice.record_owner.in_(usernames)
+            )
 
         )
 
-    else:
+    elif role == "ADMIN":
 
         return (
 
-            Lead.query.filter_by(
-                record_owner=username
-            ),
+            Lead.query,
 
-            Meeting.query.filter_by(
-                record_owner=username
-            ),
+            Meeting.query,
 
-            Proposal.query.filter_by(
-                record_owner=username
-            ),
+            Proposal.query,
 
-            SalesPipeline.query.filter_by(
-                record_owner=username
-            ),
+            SalesPipeline.query,
 
             Client.query,
 
@@ -694,8 +808,6 @@ def get_role_queries(username, role):
 
         )
         
-
-
 
 def categorize_followups(query, column, today):
 

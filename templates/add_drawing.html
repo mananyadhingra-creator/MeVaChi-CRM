@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 
 <head>
@@ -227,8 +227,8 @@
         </h3>
 
         <form method="GET"
-              class="mb-3">
-            <div class="input-group">
+              class="mb-3 mevachi-table-search">
+            <div class="input-group flex-nowrap">
                 <input type="text"
                        name="search"
                        value="{{request.args.get('search','')}}"
@@ -244,6 +244,8 @@
                 </a>
             </div>
         </form>
+
+        <div class="table-responsive">
 
         <table class="table table-bordered table-striped">
 
@@ -317,6 +319,8 @@
             </tbody>
 
         </table>
+
+        </div>
 
     </div>
 
