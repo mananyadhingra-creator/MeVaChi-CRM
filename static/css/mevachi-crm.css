@@ -1003,13 +1003,10 @@ textarea.form-control {
 
 /* ── Feature / Module Cards (Department dashboards) ── */
 
-.mevachi-feature-grid {
-    --bs-gutter-x: 1rem;
-    --bs-gutter-y: 1rem;
-}
-
-.mevachi-feature-grid > [class*="col-"] {
-    display: flex;
+.mevachi-feature-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:1rem;
 }
 
 .mevachi-feature-link {
@@ -1901,45 +1898,7 @@ a.mevachi-fab.btn {
     border-color: var(--mv-border-strong);
 }
 
-/* Organization & module grid cards */
-.mevachi-org-grid > [class*="col-"],
-.mevachi-app .row.g-4 > [class*="col-"] {
-    display: flex;
-}
 
-.mevachi-org-grid > [class*="col-"] > a.card,
-.mevachi-app .row.g-4 > [class*="col-"] > a.card {
-    flex: 1;
-    width: 100%;
-    min-height: 118px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none !important;
-    color: var(--mv-text);
-    font-weight: 600;
-    font-size: 0.9375rem;
-    transition: var(--mv-transition);
-    padding: 1.25rem 1rem !important;
-}
-
-.mevachi-org-grid > [class*="col-"] > a.card small,
-.mevachi-app .row.g-4 > [class*="col-"] > a.card small {
-    display: block;
-    margin-top: 0.35rem;
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: var(--mv-primary);
-}
-
-.mevachi-org-grid > [class*="col-"] > a.card:hover,
-.mevachi-app .row.g-4 > [class*="col-"] > a.card:hover {
-    transform: translateY(-2px);
-    border-color: var(--mv-border-strong) !important;
-    box-shadow: var(--mv-shadow-lg) !important;
-    color: var(--mv-primary-dark);
-}
 
 /* Forms — preserve layout, fix alignment */
 .mevachi-app .container .card.shadow.p-4,

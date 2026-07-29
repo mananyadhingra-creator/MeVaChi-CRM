@@ -11,8 +11,8 @@
 
     </title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-          rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet">
 <link rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
@@ -42,163 +42,137 @@
         </a>
 
     </div>
-    <div class="mevachi-page-header mb-3">
-
-        <h2>Organization View</h2>
-
-        <p class="page-desc mb-0">Company-wide records across all departments</p>
-
+    <div class="mevachi-page-header mb-4">
+        <div>
+            <h2 class="page-title">Organization View</h2>
+            <p class="page-subtitle">
+                Company-wide records across all departments
+            </p>
+        </div>
     </div>
 
-    <div class="row g-3 g-md-4 mevachi-org-grid">
+    <div class="mevachi-feature-grid">
 
-        <div class="col-xl-3 col-lg-4 col-md-6">
+        <a href="{{ url_for('organization_leads') }}" class="mevachi-feature-link">
+            <div class="card mevachi-feature-card h-100">
+                <div class="card-body">
+                    <div class="feature-icon"><i class="bi bi-person-plus-fill"></i></div>
+                    <h5 class="feature-title">Leads</h5>
+                    <p class="feature-desc">Organization-wide lead records</p>
+                </div>
+            </div>
+        </a>
 
-            <a href="{{ url_for(
-                'organization_leads'
-            ) }}"
-               class="card p-4 text-center text-decoration-none h-100">
+        <a href="{{ url_for('organization_meetings') }}" class="mevachi-feature-link">
+            <div class="card mevachi-feature-card h-100">
+                <div class="card-body">
+                    <div class="feature-icon"><i class="bi bi-calendar-event-fill"></i></div>
+                    <h5 class="feature-title">Meetings</h5>
+                    <p class="feature-desc">Meetings across all departments</p>
+                </div>
+            </div>
+        </a>
 
-                Leads
+        <a href="{{ url_for('organization_visits') }}" class="mevachi-feature-link">
+            <div class="card mevachi-feature-card h-100">
+                <div class="card-body">
+                    <div class="feature-icon"><i class="bi bi-geo-alt-fill"></i></div>
+                    <h5 class="feature-title">Visits</h5>
+                    <p class="feature-desc">Site visits and field activities</p>
+                </div>
+            </div>
+        </a>
 
-            </a>
+        <a href="{{ url_for('organization_drawings') }}" class="mevachi-feature-link">
+            <div class="card mevachi-feature-card h-100">
+                <div class="card-body">
+                    <div class="feature-icon"><i class="bi bi-pencil-square"></i></div>
+                    <h5 class="feature-title">Drawings</h5>
+                    <p class="feature-desc">Technical drawings and layouts</p>
+                </div>
+            </div>
+        </a>
 
-        </div>
+        <a href="{{ url_for('organization_proposals') }}" class="mevachi-feature-link">
+            <div class="card mevachi-feature-card h-100">
+                <div class="card-body">
+                    <div class="feature-icon"><i class="bi bi-file-earmark-text-fill"></i></div>
+                    <h5 class="feature-title">Proposals</h5>
+                    <p class="feature-desc">Company proposals and quotations</p>
+                </div>
+            </div>
+        </a>
 
-        <div class="col-xl-3 col-lg-4 col-md-6">
+        <a href="{{ url_for('organization_sales') }}" class="mevachi-feature-link">
+            <div class="card mevachi-feature-card h-100">
+                <div class="card-body">
+                    <div class="feature-icon"><i class="bi bi-graph-up-arrow"></i></div>
+                    <h5 class="feature-title">Sales</h5>
+                    <p class="feature-desc">Organization sales pipeline</p>
+                </div>
+            </div>
+        </a>
 
-            <a href="{{ url_for(
-                'organization_meetings'
-            ) }}"
-               class="card p-4 text-center text-decoration-none h-100">
+        <a href="{{ url_for('organization_invoices') }}" class="mevachi-feature-link">
+            <div class="card mevachi-feature-card h-100">
+                <div class="card-body">
+                    <div class="feature-icon"><i class="bi bi-receipt-cutoff"></i></div>
+                    <h5 class="feature-title">Invoices</h5>
+                    <p class="feature-desc">Invoices and payment records</p>
+                </div>
+            </div>
+        </a>
 
-                Meetings
+        <a href="{{ url_for('organization_clients') }}" class="mevachi-feature-link">
+            <div class="card mevachi-feature-card h-100">
+                <div class="card-body">
+                    <div class="feature-icon"><i class="bi bi-buildings-fill"></i></div>
+                    <h5 class="feature-title">Clients</h5>
+                    <p class="feature-desc">Active customer database</p>
+                </div>
+            </div>
+        </a>
 
-            </a>
+        <a href="{{ url_for('activity_logs') }}" class="mevachi-feature-link">
+            <div class="card mevachi-feature-card h-100">
+                <div class="card-body">
+                    <div class="feature-icon"><i class="bi bi-clock-history"></i></div>
+                    <h5 class="feature-title">Activity Logs</h5>
+                    <p class="feature-desc">Track user activities</p>
+                </div>
+            </div>
+        </a>
 
-        </div>
+        <a href="{{ url_for('productivity') }}" class="mevachi-feature-link">
+            <div class="card mevachi-feature-card h-100">
+                <div class="card-body">
+                    <div class="feature-icon"><i class="bi bi-bar-chart-fill"></i></div>
+                    <h5 class="feature-title">Productivity</h5>
+                    <p class="feature-desc">Employee performance insights</p>
+                </div>
+            </div>
+        </a>
 
-        <div class="col-xl-3 col-lg-4 col-md-6">
+        <a href="{{ url_for('completed_tasks') }}" class="mevachi-feature-link">
+            <div class="card mevachi-feature-card h-100">
+                <div class="card-body">
+                    <div class="feature-icon"><i class="bi bi-check2-circle"></i></div>
+                    <h5 class="feature-title">Completed Tasks</h5>
+                    <p class="feature-desc">Completed work across teams</p>
+                </div>
+            </div>
+        </a>
 
-            <a href="{{ url_for(
-                'organization_visits'
-            ) }}"
-               class="card p-4 text-center text-decoration-none h-100">
+        <a href="{{ url_for('add_installation') }}" class="mevachi-feature-link">
+            <div class="card mevachi-feature-card h-100">
+                <div class="card-body">
+                    <div class="feature-icon"><i class="bi bi-tools"></i></div>
+                    <h5 class="feature-title">Installation</h5>
+                    <p class="feature-desc">Installation records and tracking</p>
+                </div>
+            </div>
+        </a>
 
-                Visits
-
-            </a>
-
-        </div>
-
-        <div class="col-xl-3 col-lg-4 col-md-6">
-
-            <a href="{{ url_for(
-                'organization_drawings'
-            ) }}"
-               class="card p-4 text-center text-decoration-none h-100">
-
-                Drawings
-
-            </a>
-
-        </div>
-
-        <div class="col-xl-3 col-lg-4 col-md-6">
-
-            <a href="{{ url_for(
-                'organization_proposals'
-            ) }}"
-               class="card p-4 text-center text-decoration-none h-100">
-
-                Proposals
-
-            </a>
-
-        </div>
-
-        <div class="col-xl-3 col-lg-4 col-md-6">
-
-            <a href="{{ url_for(
-                'organization_sales'
-            ) }}"
-               class="card p-4 text-center text-decoration-none h-100">
-
-                Sales
-
-            </a>
-
-        </div>
-
-        <div class="col-xl-3 col-lg-4 col-md-6">
-
-            <a href="{{ url_for(
-                'organization_invoices'
-            ) }}"
-               class="card p-4 text-center text-decoration-none h-100">
-
-                Invoices
-
-            </a>
-
-        </div>
-
-        <div class="col-xl-3 col-lg-4 col-md-6">
-
-            <a href="{{ url_for(
-                'organization_clients'
-            ) }}"
-               class="card p-4 text-center text-decoration-none h-100">
-
-                Clients
-
-            </a>
-
-        </div>
-
-        <div class="col-xl-3 col-lg-4 col-md-6">
-
-            <a href="{{ url_for('activity_logs') }}"
-               class="card p-4 text-center text-decoration-none h-100">
-
-                Activity Logs
-
-            </a>
-
-        </div>
-                <div class="col-xl-3 col-lg-4 col-md-6">
-
-            <a href="{{ url_for('productivity') }}"
-               class="card p-4 text-center text-decoration-none h-100">
-
-                Productivity
-
-            </a>
-
-        </div>
-
-        <div class="col-xl-3 col-lg-4 col-md-6">
-
-            <a href="{{ url_for('completed_tasks') }}"
-               class="card p-4 text-center text-decoration-none h-100">
-
-                Completed Tasks
-
-            </a>
-
-        </div>
-        <div class="col-xl-3 col-lg-4 col-md-6">
-
-            <a href="{{ url_for(
-                'add_installation'
-            ) }}"
-               class="card p-4 text-center text-decoration-none h-100">
-
-                Installation
-
-            </a>
-
-        </div>
     </div>
 
 </div>
