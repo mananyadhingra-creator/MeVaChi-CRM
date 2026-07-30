@@ -78,7 +78,7 @@ app.config["SECRET_KEY"] = os.getenv(
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
     "DATABASE_URL",
-    "mysql+pymysql://root:IWIWgslswszNUtcNMEZIESpVhLqLSIYg@hayabusa.proxy.rlwy.net:37924/railway"
+    "mysql+pymysql://mevachiadmin:MananyaCRM%23123@mevachi-crm-db.mysql.database.azure.com:3306/mevachi_crm?ssl_ca=/etc/ssl/certs/ca-certificates.crt"
 )
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
