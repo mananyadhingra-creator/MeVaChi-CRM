@@ -26,6 +26,8 @@ from zoneinfo import ZoneInfo
 
 import requests
 
+import platform
+
 
 
 app = Flask(__name__)
@@ -75,15 +77,32 @@ app.config["SECRET_KEY"] = os.getenv(
     "vdoer7$3_48=md3lr7*n02d3v189m4$hhy%^lu&ufe2h2-2qvl"
 )
 
+if platform.system() == "Windows":
+    DATABASE_URL = (
+        "mysql+pymysql://mevachiadmin:MananyaCRM%23123@127.0.0.1:3307/mevachi_crm"
+    )
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
-    "DATABASE_URL",
-    "mysql+pymysql://mevachiadmin:MananyaCRM%23123@mevachi-crm-db.mysql.database.azure.com:3306/mevachi_crm?ssl_ca=/etc/ssl/certs/ca-certificates.crt"
-)
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "connect_args": {
+            "ssl": {"check_hostname": False}
+        }
+    }
 
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+else:
+    DATABASE_URL = (
+        "mysql+pymysql://mevachiadmin:MananyaCRM%23123@"
+        "mevachi-crm-db.mysql.database.azure.com:3306/mevachi_crm"
+        "?ssl_ca=/etc/ssl/certs/ca-certificates.crt"
+    )
+
+app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
+
+print("Platform:", platform.system())
+print("DATABASE_URL:", app.config["SQLALCHEMY_DATABASE_URI"])
+print("ENGINE_OPTIONS:", app.config.get("SQLALCHEMY_ENGINE_OPTIONS"))
 
 MONTH_NAMES = [
     'Jan','Feb','Mar','Apr',
@@ -3261,9 +3280,7 @@ class RecordSharing(db.Model):
         default=datetime.utcnow
     )
 
-with app.app_context():
 
-    db.create_all()
 
 @app.route('/')
 def root():
@@ -20098,5 +20115,4 @@ if __name__ == "__main__":
         port=5000,
         debug=debug_mode
     )
-
     

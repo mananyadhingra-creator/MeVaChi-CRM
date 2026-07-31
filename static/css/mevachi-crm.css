@@ -1004,9 +1004,12 @@ textarea.form-control {
 /* ── Feature / Module Cards (Department dashboards) ── */
 
 .mevachi-feature-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-    gap:1rem;
+    --bs-gutter-x:1rem;
+    --bs-gutter-y:1rem;
+}
+
+.mevachi-feature-grid > [class*="col-"]{
+    display:flex;
 }
 
 .mevachi-feature-link {
