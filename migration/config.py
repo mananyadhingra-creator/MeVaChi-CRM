@@ -6,7 +6,7 @@ Migration Configuration
 
 EXCEL_FOLDER = "excel"
 
-WORKBOOK_NAME = "Service Update.xlsx"
+WORKBOOK_NAME = "Itat.xlsx"
 
 LOG_FOLDER = "migration/logs"
 
