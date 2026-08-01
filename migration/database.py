@@ -26,14 +26,18 @@ if PROJECT_ROOT not in sys.path:
 # ---------------------------------------------------------
 
 from app import (
+
     app,
     db,
 
     Lead,
     Visit,
+    Meeting,
+    Proposal,
     Drawing,
     SalesPipeline,
     Invoice
+
 )
 
 # ---------------------------------------------------------
@@ -45,6 +49,10 @@ MODEL_MAP = {
     "Lead": Lead,
 
     "Visit": Visit,
+
+    "Meeting": Meeting,
+
+    "Proposal": Proposal,
 
     "Drawing": Drawing,
 

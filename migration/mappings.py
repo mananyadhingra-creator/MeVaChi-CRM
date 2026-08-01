@@ -1,6 +1,6 @@
 """
 =========================================================
-Aman Workbook Mapping
+Workbook Mapping
 =========================================================
 """
 
@@ -8,17 +8,13 @@ Aman Workbook Mapping
 # SHEETS TO SKIP
 # --------------------------------------------------------
 
-SKIP_SHEETS = {
-    "Sites",
-    "Rajat",
-    "Sheet9"
-}
+SKIP_SHEETS = set()
 
 # --------------------------------------------------------
 # RECORD OWNER
 # --------------------------------------------------------
 
-RECORD_OWNER = "Aman"
+RECORD_OWNER = "Sushmita"
 
 # --------------------------------------------------------
 # IMPORT RULES
@@ -26,53 +22,62 @@ RECORD_OWNER = "Aman"
 
 IMPORT_RULES = {
 
+    # ----------------------------------------------------
+    # LEADS
+    # ----------------------------------------------------
+
     "Leads": {
 
         "table": "Lead",
 
-        # Import only rows having Name
-        "required_column": "Name"
-
-    },
-
-    "Visits": {
-
-        "table": "Visit",
-
-        # Import only rows having ABC
-        "required_column": "ABC"
-
-    },
-
-    "Drawings": {
-
-        "table": "Drawing",
-
-        # Import if Name OR Address exists
+        # Import if Name OR Reference exists
         "required_columns_any": [
 
             "Name",
-            "Address"
+
+            "Reference"
 
         ]
 
     },
 
-    "Sale Acheiveds Revenue": {
+    # ----------------------------------------------------
+    # MEETINGS
+    # ----------------------------------------------------
 
-        "table": "SalesPipeline",
+    "Meetings": {
 
-        # Import only if Project Type exists
-        "required_column": "Project Type"
+        "table": "Meeting",
+
+        # Import if any one exists
+        "required_columns_any": [
+
+            "Meeting Fixed By",
+
+            "Name",
+
+            "Firm Name"
+
+        ]
 
     },
 
-    "Invoice": {
+    # ----------------------------------------------------
+    # PROPOSALS
+    # ----------------------------------------------------
 
-        "table": "Invoice",
+    "Proposals": {
 
-        # Import only if Name exists
-        "required_column": "Name"
+        "table": "Proposal",
+
+        # Import if Name OR Reference No. exists
+        "required_columns_any": [
+
+            "Name",
+
+            "Reference No."
+
+        ]
 
     }
 
