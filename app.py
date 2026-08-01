@@ -2278,7 +2278,128 @@ class DrawingFile(db.Model):
 
     )
 
-    
+class Proposal(db.Model):
+
+    __tablename__ = 'proposals'
+
+    proposal_id = db.Column(db.Integer, primary_key=True)
+
+    reference_no = db.Column(db.String(50))
+
+    name = db.Column(db.String(100))
+
+    phone_no_client = db.Column(db.String(200))
+
+    source = db.Column(db.String(100))
+
+    type = db.Column(db.String(100))
+
+    reference_source_details = db.Column(db.Text)
+
+    phone_no_source = db.Column(db.String(200))
+
+    contact_person = db.Column(db.String(100))
+
+    phone_no_contact_person = db.Column(db.String(200))
+
+    email = db.Column(db.String(100))
+
+    site_address = db.Column(db.Text)
+
+    state = db.Column(db.String(100))
+
+    total_area_sqft = db.Column(db.Numeric(10,2))
+
+    type_of_units = db.Column(db.String(100))
+
+    no_of_mvd_units = db.Column(db.Integer)
+
+    no_of_mvd_max_units = db.Column(db.Integer)
+
+    total_no_of_units = db.Column(db.Integer)
+
+    product = db.Column(db.String(200))
+
+    cost_total_per_unit = db.Column(
+        db.String(100)
+    )
+
+    no_of_monitors = db.Column(db.Integer)
+
+    cmc = db.Column(db.String(10))
+
+    per_unit_cost = db.Column(db.Numeric(10,2))
+
+    per_unit_cost_max_unit = db.Column(db.Numeric(10,2))
+
+    cmc_cost = db.Column(db.Numeric(10,2))
+
+    monitor_cost = db.Column(db.Numeric(10,2))
+
+    installation_cost = db.Column(db.Numeric(10,2))
+
+    total_amount = db.Column(db.Numeric(12,2))
+
+    cmc_starting_period = db.Column(db.String(100))
+
+    discount = db.Column(db.Numeric(10,2))
+
+    final_amount = db.Column(db.Numeric(12,2))
+
+    date_of_proposal_sent = db.Column(db.Date)
+
+    proposal_prepared_by = db.Column(db.String(100))
+
+    proposal_shared_by = db.Column(db.String(100))
+
+    status = db.Column(
+        db.String(50),
+        index=True
+    )
+
+    date_of_last_followup = db.Column(db.Date)
+
+    next_to_call = db.Column(
+        db.Date,
+        index=True
+    )
+
+    remarks = db.Column(db.Text)
+
+    next_action = db.Column(
+        db.Text
+    )
+
+    area_covered = db.Column(db.String(400))
+
+    area_not_covered = db.Column(db.String(400))
+
+    meeting_id = db.Column(
+        db.Integer,
+        db.ForeignKey('meetings.meeting_id'),
+        nullable=True
+    )
+
+    drawing_id = db.Column(
+        db.Integer,
+        db.ForeignKey('drawings.drawing_id'),
+        nullable=True
+    )
+
+    files = db.relationship(
+
+        'ProposalFile',
+
+        backref='proposal',
+
+        cascade='all, delete-orphan'
+
+    )
+
+    record_owner = db.Column(
+        db.String(100),
+        index=True
+    )   
 
 class ProposalFile(db.Model):
 
