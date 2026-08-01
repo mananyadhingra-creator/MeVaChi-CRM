@@ -6,7 +6,7 @@ Migration Configuration
 
 EXCEL_FOLDER = "excel"
 
-WORKBOOK_NAME = "Leads_Meetings_Proposals.xlsx"
+WORKBOOK_NAME = "Service Update.xlsx"
 
 LOG_FOLDER = "migration/logs"
 

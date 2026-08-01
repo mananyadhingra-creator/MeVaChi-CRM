@@ -8,13 +8,19 @@ Workbook Mapping
 # SHEETS TO SKIP
 # --------------------------------------------------------
 
-SKIP_SHEETS = set()
+SKIP_SHEETS = {
+
+    "Table",
+
+    "Base"
+
+}
 
 # --------------------------------------------------------
 # RECORD OWNER
 # --------------------------------------------------------
 
-RECORD_OWNER = "Sushmita"
+RECORD_OWNER = "Gungun"
 
 # --------------------------------------------------------
 # IMPORT RULES
@@ -23,61 +29,16 @@ RECORD_OWNER = "Sushmita"
 IMPORT_RULES = {
 
     # ----------------------------------------------------
-    # LEADS
+    # CLIENTS
     # ----------------------------------------------------
 
-    "Leads": {
+    "Main Sheet": {
 
-        "table": "Lead",
+        "table": "Client",
 
-        # Import if Name OR Reference exists
-        "required_columns_any": [
+        # Import only if Client Name exists
 
-            "Name",
-
-            "Reference"
-
-        ]
-
-    },
-
-    # ----------------------------------------------------
-    # MEETINGS
-    # ----------------------------------------------------
-
-    "Meetings": {
-
-        "table": "Meeting",
-
-        # Import if any one exists
-        "required_columns_any": [
-
-            "Meeting Fixed By",
-
-            "Name",
-
-            "Firm Name"
-
-        ]
-
-    },
-
-    # ----------------------------------------------------
-    # PROPOSALS
-    # ----------------------------------------------------
-
-    "Proposals": {
-
-        "table": "Proposal",
-
-        # Import if Name OR Reference No. exists
-        "required_columns_any": [
-
-            "Name",
-
-            "Reference No."
-
-        ]
+        "required_column": "Client Name"
 
     }
 

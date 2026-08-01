@@ -36,7 +36,11 @@ from app import (
     Proposal,
     Drawing,
     SalesPipeline,
-    Invoice
+    Invoice,
+    Client,
+    CustomerCareCard,
+
+    get_coordinates_from_address
 
 )
 
@@ -58,7 +62,11 @@ MODEL_MAP = {
 
     "SalesPipeline": SalesPipeline,
 
-    "Invoice": Invoice
+    "Invoice": Invoice,
+
+    "Client": Client,
+
+    "CustomerCareCard": CustomerCareCard
 
 }
 
