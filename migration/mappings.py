@@ -19,7 +19,7 @@ SKIP_SHEETS = {
 # RECORD OWNER
 # --------------------------------------------------------
 
-RECORD_OWNER = "Itat"
+RECORD_OWNER = "Sushmita"
 
 # --------------------------------------------------------
 # IMPORT RULES
@@ -28,16 +28,56 @@ RECORD_OWNER = "Itat"
 IMPORT_RULES = {
 
     # ----------------------------------------------------
-    # CLIENTS
+    # LEADS
     # ----------------------------------------------------
 
-    "Main Sheet": {
+    "Leads": {
 
-        "table": "Client",
+        "table": "Lead",
 
-        # Import only if Client Name exists
+        # Import only if Name OR Reference exists
 
-        "required_column": "Client Name"
+        "required_columns": [
+            "Name",
+            "Reference"
+        ]
+
+    },
+
+    # ----------------------------------------------------
+    # MEETINGS
+    # ----------------------------------------------------
+
+    "Meetings": {
+
+        "table": "Meeting",
+
+        # Import only if Meeting Fixed By
+        # OR Name
+        # OR Firm Name exists
+
+        "required_columns": [
+            "Meeting Fixed By",
+            "Name",
+            "Firm Name"
+        ]
+
+    },
+
+    # ----------------------------------------------------
+    # PROPOSALS
+    # ----------------------------------------------------
+
+    "Proposals": {
+
+        "table": "Proposal",
+
+        # Import only if Name OR Reference No. exists
+
+        "required_columns": [
+            "Name",
+            "Reference no."
+        ]
 
     }
 
