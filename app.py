@@ -100,9 +100,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 
-print("Platform:", platform.system())
-print("DATABASE_URL:", app.config["SQLALCHEMY_DATABASE_URI"])
-print("ENGINE_OPTIONS:", app.config.get("SQLALCHEMY_ENGINE_OPTIONS"))
+
 
 MONTH_NAMES = [
     'Jan','Feb','Mar','Apr',
@@ -138,22 +136,26 @@ def update_client_status(client):
 
     today = datetime.today().date()
 
-    if client.installation_date:
+# ---------- CMC ----------
 
-        client.cmc_due_days = (
-            today -
-            client.installation_date
+    if client.next_cmc_renewal_date:
+
+        days_remaining = (
+            client.next_cmc_renewal_date - today
         ).days
+
+        client.cmc_due_days = max(0, 365 - days_remaining)
+
+        client.cmc_due = (
+            "YES"
+            if client.cmc_due_days >= 345
+            else "NO"
+        )
 
     else:
 
-        client.cmc_due_days = 0
-
-    client.cmc_due = (
-        'YES'
-        if client.cmc_due_days >= 345
-        else 'NO'
-    )
+        client.cmc_due_days = None
+        client.cmc_due = "NO"
 
     if client.last_service_date:
 
@@ -1529,45 +1531,7 @@ def indian_format(number):
         parts + [last3]
     )
 
-def update_client_status(client):
 
-    today = date.today()
-
-    # ---------- CMC ----------
-    if client.installation_date:
-        client.cmc_due_days = (
-            today - client.installation_date
-        ).days
-    else:
-        client.cmc_due_days = 0
-
-    client.cmc_due = (
-        "YES"
-        if client.cmc_due_days >= 345
-        else "NO"
-    )
-
-    # ---------- Service ----------
-    if client.last_service_date:
-        base_date = client.last_service_date
-
-    elif client.activation_date:
-        base_date = client.activation_date
-
-    else:
-        client.last_service_days = 0
-        client.service_due = "NO"
-        return
-
-    client.last_service_days = (
-        today - base_date
-    ).days
-
-    client.service_due = (
-        "YES"
-        if client.last_service_days >= client.service_interval_days
-        else "NO"
-    )
 
 from sqlalchemy import text
 import re
@@ -2399,7 +2363,9 @@ class Proposal(db.Model):
     record_owner = db.Column(
         db.String(100),
         index=True
-    )   
+    )
+
+   
 
 class ProposalFile(db.Model):
 
@@ -13197,24 +13163,7 @@ def edit_client(client_id):
 
         # CMC CALCULATIONS
 
-        if installation_date:
 
-            cmc_due_days = (
-                today -
-                installation_date
-            ).days
-
-        else:
-
-            cmc_due_days = 0
-
-        if cmc_due_days >= 345:
-
-            cmc_due = 'YES'
-
-        else:
-
-            cmc_due = 'NO'
 
         # SERVICE CALCULATIONS
 
@@ -13324,9 +13273,7 @@ def edit_client(client_id):
             'cmc_applicable'
         )
 
-        client.cmc_due_days=cmc_due_days
-
-        client.cmc_due=cmc_due
+        
 
         client.next_cmc_renewal_date=next_cmc_renewal_date
 
@@ -13378,6 +13325,9 @@ def edit_client(client_id):
         client.remark=request.form.get(
             'remark'
         )
+
+        update_client_status(client)
+
         db.session.flush()
         log_activity(
 
