@@ -248,7 +248,7 @@ The application is prepared for deployment using:
 
 ## Screenshots
 
-> Screenshots will be added after the production-ready UI is finalized.
+![image alt](https://github.com/mananyadhingra-creator/MeVaChi-CRM/blob/4ef017aaea14e6e5534be794c50ecfb1c4e2aa52/Screenshot%202026-08-12%20230456.png)
 
 ---
 
