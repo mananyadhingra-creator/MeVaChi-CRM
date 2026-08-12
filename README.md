@@ -250,6 +250,7 @@ The application is prepared for deployment using:
 
 ![image alt](https://github.com/mananyadhingra-creator/MeVaChi-CRM/blob/4ef017aaea14e6e5534be794c50ecfb1c4e2aa52/Screenshot%202026-08-12%20230456.png)
 ![image alt](https://github.com/mananyadhingra-creator/MeVaChi-CRM/blob/85b54a153b09487299d9059192bd89737360d4ce/Screenshot%202026-08-12%20230525.png)
+![image alt](https://github.com/mananyadhingra-creator/MeVaChi-CRM/blob/07e6d1639ad9d3d1af7e315032b35b78fab6f740/Screenshot%202026-08-12%20230608.png)
 ---
 
 ## Future Enhancements
