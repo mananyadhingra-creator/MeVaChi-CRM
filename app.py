@@ -12969,58 +12969,29 @@ def add_client():
             )
         )
 
-    search=request.args.get(
-        'search'
-    )
+    search = request.args.get(
+        'search',
+        ''
+    ).strip()
+
+    query = Client.query
+
     if search:
-
-        all_clients = Client.query.filter(
-
+        query = query.filter(
             or_(
-
-                Client.client_name.ilike(
-                    f'%{search}%'
-                ),
-
-                Client.property_type.ilike(
-                    f'%{search}%'
-                ),
-
-                Client.nearest_metrostation.ilike(
-                    f'%{search}%'
-                ),
-
-                Client.mail_id.ilike(
-                    f'%{search}%'
-                ),
-
-                Client.state.ilike(
-                    f'%{search}%'
-                ),
-
-                Client.mobile_no.ilike(
-                    f'%{search}%'
-                ),
-
-                Client.product.ilike(
-                    f'%{search}%'
-                ),
-
-                Client.filter_colour.ilike(
-                    f'%{search}%'
-                ),
-
-                Client.remark.ilike(
-                    f'%{search}%'
-                )
-
+                Client.client_name.ilike(f'%{search}%'),
+                Client.property_type.ilike(f'%{search}%'),
+                Client.nearest_metrostation.ilike(f'%{search}%'),
+                Client.mail_id.ilike(f'%{search}%'),
+                Client.state.ilike(f'%{search}%'),
+                Client.mobile_no.ilike(f'%{search}%'),
+                Client.product.ilike(f'%{search}%'),
+                Client.filter_colour.ilike(f'%{search}%'),
+                Client.remark.ilike(f'%{search}%')
             )
+        )
 
-        ).all()
-
-    else:
-
-        all_clients = Client.query.all()
+    all_clients = query.all()
 
     
 
