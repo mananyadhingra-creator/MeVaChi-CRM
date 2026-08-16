@@ -12993,6 +12993,7 @@ def add_client():
 
     all_clients = query.all()
 
+
     
 
 
@@ -15224,7 +15225,38 @@ def commercial_clients():
             url_for('dashboard')
         )
 
-    clients = Client.query.all()
+    search = request.args.get(
+        'search',
+        ''
+    ).strip()
+
+    query = Client.query
+
+    if search:
+
+        search_pattern = f'%{search}%'
+
+        query = query.filter(
+            or_(
+                Client.client_name.ilike(
+                    search_pattern
+                ),
+
+                Client.mobile_no.ilike(
+                    search_pattern
+                ),
+
+                Client.product.ilike(
+                    search_pattern
+                ),
+
+                Client.record_owner.ilike(
+                    search_pattern
+                )
+            )
+        )
+
+    clients = query.all()
 
     proposals = Proposal.query.all()
 
