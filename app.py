@@ -15233,26 +15233,17 @@ def commercial_clients():
     query = Client.query
 
     if search:
-
-        search_pattern = f'%{search}%'
-
         query = query.filter(
             or_(
-                Client.client_name.ilike(
-                    search_pattern
-                ),
-
-                Client.mobile_no.ilike(
-                    search_pattern
-                ),
-
-                Client.product.ilike(
-                    search_pattern
-                ),
-
-                Client.record_owner.ilike(
-                    search_pattern
-                )
+                Client.client_name.ilike(f'%{search}%'),
+                Client.property_type.ilike(f'%{search}%'),
+                Client.nearest_metrostation.ilike(f'%{search}%'),
+                Client.mail_id.ilike(f'%{search}%'),
+                Client.state.ilike(f'%{search}%'),
+                Client.mobile_no.ilike(f'%{search}%'),
+                Client.product.ilike(f'%{search}%'),
+                Client.filter_colour.ilike(f'%{search}%'),
+                Client.remark.ilike(f'%{search}%')
             )
         )
 
