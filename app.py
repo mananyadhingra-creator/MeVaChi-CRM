@@ -2677,8 +2677,10 @@ class Invoice(db.Model):
         db.Numeric(12,2)
     )
 
-    total_sensor = db.Column(
-        db.Integer
+    total_sensor = (
+        int(request.form['total_sensor'])
+        if request.form.get('total_sensor')
+        else None
     )
 
     sensor_cost = db.Column(
@@ -4918,28 +4920,34 @@ def add_meeting():
         # ===========================
 
         names = request.form.getlist(
-
             'name[]'
-
         )
 
         designations = request.form.getlist(
-
             'designation[]'
-
         )
 
         contact_numbers = request.form.getlist(
-
             'contact_no[]'
-
         )
 
         emails = request.form.getlist(
-
             'email[]'
-
         )
+
+# For manually entered meetings (no Lead selected),
+# use the company-detail fields as the first meeting record.
+        if not names:
+            manual_name = request.form.get('name')
+
+            if manual_name:
+                names = [manual_name]
+                designations = [request.form.get('designation', '')]
+                contact_numbers = [request.form.get('contact_no', '')]
+                emails = [request.form.get('email', '')]
+            else:
+                flash('Please enter a meeting participant name.')
+                return redirect(url_for('add_meeting'))
 
         meeting_fixed_bys = request.form.getlist(
 
@@ -9559,8 +9567,10 @@ def edit_proposal(proposal_id):
         proposal.state = request.form.get(
             'state'
         )
-        proposal.total_area_sqft = request.form.get(
-            'total_area_sqft'
+        proposal.total_area_sqft = (
+            float(request.form.get('total_area_sqft'))
+            if request.form.get('total_area_sqft')
+            else None
         )
         proposal.type_of_units = request.form.get(
             'type_of_units'

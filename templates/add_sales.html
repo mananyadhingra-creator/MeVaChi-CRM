@@ -827,43 +827,51 @@ document.getElementById(
     }
 );
 
-function calculateRevenue() {
+function calculateRevenue() { 
+ 
+    let totalUnits = 
+        parseFloat(document.getElementById('total_units').value) || 0;
 
-    let price =
-        parseFloat(document.getElementById('price_of_units').value) || 0;
-
-    let cmc =
-        parseFloat(document.getElementById('first_year_cmc').value) || 0;
-
-    let installation =
-        parseFloat(document.getElementById('installation').value) || 0;
-
-    let totalSensor =
-        parseFloat(document.getElementById('total_sensor').value) || 0;
-
-    let sensorCost =
-        parseFloat(document.getElementById('sensor_cost').value) || 0;
-
-    let discount =
-        parseFloat(document.getElementById('discount').value) || 0;
-
-    let revenue =
-        price +
-        cmc +
-        installation +
+    let price = 
+        parseFloat(document.getElementById('price_of_units').value) || 0; 
+ 
+    let cmc = 
+        parseFloat(document.getElementById('first_year_cmc').value) || 0; 
+ 
+    let installation = 
+        parseFloat(document.getElementById('installation').value) || 0; 
+ 
+    let totalSensor = 
+        parseFloat(document.getElementById('total_sensor').value) || 0; 
+ 
+    let sensorCost = 
+        parseFloat(document.getElementById('sensor_cost').value) || 0; 
+ 
+    let discount = 
+        parseFloat(document.getElementById('discount').value) || 0; 
+ 
+    let revenue = 
+        totalUnits * (price + cmc + installation) +
         (totalSensor * sensorCost) -
-        discount;
-
-    let totalRevenue =
-        revenue * 1.18;
-
-    document.getElementById('revenue').value =
-        revenue.toFixed(2);
-
-    document.getElementById('total_revenue').value =
-        totalRevenue.toFixed(2);
-
+        discount; 
+ 
+    let totalRevenue = 
+        revenue * 1.18; 
+ 
+    document.getElementById('revenue').value = 
+        revenue.toFixed(2); 
+ 
+    document.getElementById('total_revenue').value = 
+        totalRevenue.toFixed(2); 
+ 
 }
+
+document.getElementById(
+    'total_units'
+).addEventListener(
+    'input',
+    calculateRevenue
+);
 
 document.getElementById(
     'price_of_units'
@@ -902,6 +910,13 @@ document.getElementById(
 
 document.getElementById(
     'discount'
+).addEventListener(
+    'input',
+    calculateRevenue
+);
+
+document.getElementById(
+    'amount_received'
 ).addEventListener(
     'input',
     calculateRevenue
