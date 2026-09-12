@@ -2677,10 +2677,8 @@ class Invoice(db.Model):
         db.Numeric(12,2)
     )
 
-    total_sensor = (
-        int(request.form['total_sensor'])
-        if request.form.get('total_sensor')
-        else None
+    total_sensor = db.Column(
+        db.Integer
     )
 
     sensor_cost = db.Column(
@@ -11195,8 +11193,10 @@ def add_invoice():
             else None
         )
 
-        total_sensor = request.form.get(
-            'total_sensor'
+        total_sensor = (
+            int(request.form['total_sensor'])
+            if request.form.get('total_sensor')
+            else None
         )
 
         sensor_cost = (
@@ -11637,8 +11637,10 @@ def edit_invoice(invoice_id):
             if request.form.get('installation')
             else None
         )
-        invoice.total_sensor = request.form.get(
-            'total_sensor'
+        invoice.total_sensor = (
+            int(request.form['total_sensor'])
+            if request.form.get('total_sensor')
+            else None
         )
         invoice.sensor_cost = (
             Decimal(request.form['sensor_cost'])
