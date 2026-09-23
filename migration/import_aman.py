@@ -1,33 +1,46 @@
 """
 =========================================================
 MeVaChi CRM
-Aman Workbook Importer
+Aman Singh Workbook Importer
 =========================================================
+
+Workbook:
+    excel/Aman.xlsx
+
+Imports:
+    Visits
+    Sale Acheiveds Revenue
+    Invoice
+    Drawings
+    Leads
+    Sheet9 -> Meetings
+
+Ignored:
+    Sites
+    Rajat
+    bbd
+
+IMPORTANT:
+- This script is intentionally self-contained.
+- Do NOT change migration/config.py or migration/mappings.py for this import.
+- Blank Excel cells do NOT erase existing database values during updates.
+- Existing records are matched and updated when a reliable key exists.
+- Unmatched rows are reported for manual review.
+- Start with PREVIEW_ONLY = True.
 """
 
 import os
 import traceback
+from datetime import datetime
+from decimal import Decimal
+
 import pandas as pd
-
-from migration.config import (
-    EXCEL_FOLDER,
-    WORKBOOK_NAME,
-    DRY_RUN
-)
-
-from migration.mappings import (
-    SKIP_SHEETS,
-    IMPORT_RULES,
-    RECORD_OWNER
-)
 
 from migration.database import (
     app,
     db,
-    get_model
+    get_model,
 )
-
-from migration.report import MigrationReport
 
 from migration.utils import (
     clean_text,
@@ -35,1113 +48,1043 @@ from migration.utils import (
     clean_int,
     clean_decimal,
     clean_date,
-    combine_fields,
-    is_empty
+    is_empty,
 )
 
-report = MigrationReport()
+
+# =========================================================
+# AMAN SETTINGS
+# =========================================================
+
+EXCEL_FOLDER = "excel"
+WORKBOOK_NAME = "Aman.xlsx"
+
+RECORD_OWNER = "Aman Singh"
+
+# Safe first run:
+# True  = only analyse/report, no DB changes
+# False = actually insert/update DB
+PREVIEW_ONLY = True
+
+# Existing DB rows are updated when matched and Excel has a
+# non-empty changed value.
+APPLY_UPDATES = True
+
+LOG_FOLDER = "migration/logs"
+
+# Sheets that must NOT be imported.
+SKIP_SHEETS = {
+    "Sites",
+    "Rajat",
+    "bbd",
+}
+
+SHEET_VISITS = "Visits"
+SHEET_SALES = "Sale Acheiveds Revenue"
+SHEET_INVOICE = "Invoice"
+SHEET_DRAWINGS = "Drawings"
+SHEET_LEADS = "Leads"
+SHEET_MEETINGS = "Sheet9"
 
 
-# ==========================================================
-# FIND WORKBOOK
-# ==========================================================
+# =========================================================
+# REPORT
+# =========================================================
 
-def find_workbook():
+stats = {}
+errors = []
+review_rows = []
+changes = []
 
-    workbook = os.path.join(
-        EXCEL_FOLDER,
-        WORKBOOK_NAME
-    )
 
-    if not os.path.exists(workbook):
-        raise FileNotFoundError(
-            f"{WORKBOOK_NAME} not found."
+def init_sheet(sheet):
+    if sheet not in stats:
+        stats[sheet] = {
+            "new": 0,
+            "updated": 0,
+            "unchanged": 0,
+            "skipped": 0,
+        }
+
+
+def stat(sheet, key):
+    init_sheet(sheet)
+    stats[sheet][key] += 1
+
+
+def add_error(sheet, row_no, message):
+    errors.append({
+        "sheet": sheet,
+        "row": row_no,
+        "message": str(message),
+    })
+
+
+def add_review(sheet, row_no, reason, identity=None):
+    review_rows.append({
+        "sheet": sheet,
+        "row": row_no,
+        "reason": reason,
+        "identity": identity or "",
+    })
+
+
+def save_report():
+    os.makedirs(LOG_FOLDER, exist_ok=True)
+
+    started = datetime.now()
+
+    lines = []
+    lines.append("=" * 75)
+    lines.append("MeVaChi CRM - Aman Singh Migration Report")
+    lines.append("=" * 75)
+    lines.append(f"Generated : {started}")
+    lines.append(f"Workbook  : {WORKBOOK_NAME}")
+    lines.append(f"Owner     : {RECORD_OWNER}")
+    lines.append(f"Preview   : {PREVIEW_ONLY}")
+    lines.append("")
+
+    lines.append("SUMMARY")
+    lines.append("-" * 75)
+
+    total_new = 0
+    total_updated = 0
+    total_unchanged = 0
+    total_skipped = 0
+
+    for sheet, data in stats.items():
+        total_new += data["new"]
+        total_updated += data["updated"]
+        total_unchanged += data["unchanged"]
+        total_skipped += data["skipped"]
+
+        lines.append(
+            f"{sheet:<28} "
+            f"New: {data['new']:<5} "
+            f"Updated: {data['updated']:<5} "
+            f"Unchanged: {data['unchanged']:<5} "
+            f"Skipped: {data['skipped']:<5}"
         )
 
-    return workbook
+    lines.append("")
+    lines.append(f"TOTAL NEW       : {total_new}")
+    lines.append(f"TOTAL UPDATED   : {total_updated}")
+    lines.append(f"TOTAL UNCHANGED : {total_unchanged}")
+    lines.append(f"TOTAL SKIPPED   : {total_skipped}")
+
+    if changes:
+        lines.append("")
+        lines.append("=" * 75)
+        lines.append("UPDATED RECORDS")
+        lines.append("=" * 75)
+
+        for item in changes:
+            lines.append(
+                f"[{item['sheet']}] Row {item['row']} | "
+                f"{item['identity']} | "
+                f"Changed: {', '.join(item['fields'])}"
+            )
+
+    if review_rows:
+        lines.append("")
+        lines.append("=" * 75)
+        lines.append("ROWS REQUIRING MANUAL REVIEW")
+        lines.append("=" * 75)
+
+        for item in review_rows:
+            lines.append(
+                f"[{item['sheet']}] Row {item['row']} | "
+                f"{item['reason']} | {item['identity']}"
+            )
+
+    if errors:
+        lines.append("")
+        lines.append("=" * 75)
+        lines.append("ERRORS")
+        lines.append("=" * 75)
+
+        for item in errors:
+            lines.append(
+                f"[{item['sheet']}] Row {item['row']} : "
+                f"{item['message']}"
+            )
+    else:
+        lines.append("")
+        lines.append("No errors found.")
+
+    report = "\n".join(lines)
+
+    print("\n" + report + "\n")
+
+    filename = datetime.now().strftime(
+        "migration_aman_%Y%m%d_%H%M%S.log"
+    )
+
+    filepath = os.path.join(LOG_FOLDER, filename)
+
+    with open(filepath, "w", encoding="utf-8") as f:
+        f.write(report)
+
+    print(f"Report saved to: {filepath}")
+
+    return report
 
 
-# ==========================================================
-# LOAD WORKBOOK
-# ==========================================================
+# =========================================================
+# HELPERS
+# =========================================================
 
-workbook_path = find_workbook()
+def find_workbook():
+    path = os.path.join(
+        EXCEL_FOLDER,
+        WORKBOOK_NAME,
+    )
 
-excel = pd.ExcelFile(workbook_path)
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Workbook not found: {path}"
+        )
 
-print("=" * 70)
-print("Workbook :", workbook_path)
-print("=" * 70)
-
-print("\nSheets Found\n")
-
-for sheet in excel.sheet_names:
-    print("-", sheet)
-
-print()
+    return path
 
 
-# ==========================================================
-# REMOVE USELESS COLUMNS
-# ==========================================================
+def read_sheet(excel, sheet_name):
+    df = pd.read_excel(
+        excel,
+        sheet_name=sheet_name,
+    )
 
-def clean_dataframe(df):
-
-    df = df.loc[:, ~df.columns.astype(str).str.startswith("Unnamed")]
-
-    df = df.loc[
-        :,
-        df.columns.astype(str).str.strip() != ""
+    # Preserve Unnamed columns because Aman Leads uses
+    # Unnamed: 5 as the remarks/responses column.
+    df.columns = [
+        str(col).strip()
+        for col in df.columns
     ]
 
     return df
 
 
-# ==========================================================
-# PREVIEW
-# ==========================================================
+def row_is_completely_empty(row):
+    for value in row.values:
+        if not is_empty(value):
+            return False
+    return True
 
-def preview_visits(visits):
 
-    print("\n")
-    print("=" * 70)
-    print("FIRST 3 VISITS")
-    print("=" * 70)
+def set_if_changed(existing, field, new_value, changed_fields):
+    """
+    Update only when Excel contains a value and that value differs.
+    Blank Excel cells do not erase existing DB values.
+    """
+    if is_empty(new_value):
+        return
 
-    for i, visit in enumerate(visits[:3], start=1):
+    old_value = getattr(existing, field, None)
 
-        print()
+    if old_value != new_value:
+        setattr(existing, field, new_value)
+        changed_fields.append(field)
 
-        print(f"Visit {i}")
 
-        print("-" * 70)
+def apply_update(existing, incoming):
+    changed_fields = []
 
-        print("State           :", visit.state)
-        print("Region          :", visit.region)
-        print("ABC             :", visit.abc)
-        print("Company         :", visit.company_name)
-        print("Person          :", visit.person_name)
-        print("Designation     :", visit.designation)
-        print("Contact         :", visit.contact_no)
-        print("Address         :", visit.address)
-        print("Brief           :", visit.brief)
-        print("Visit Date      :", visit.visit_date)
-        print("Leads Generated :", visit.leads_generated)
-        print("M2              :", visit.m2)
-        print("M3              :", visit.m3)
-        print("Record Owner    :", visit.record_owner)
+    for field, value in incoming.items():
+        if field == "record_owner":
+            continue
 
-    print()
-    print("=" * 70)
-    print(f"TOTAL VISITS READY : {len(visits)}")
-    print("=" * 70)
-    print()
+        set_if_changed(
+            existing,
+            field,
+            value,
+            changed_fields,
+        )
 
-# ==========================================================
-# PREVIEW SALES
-# ==========================================================
+    return changed_fields
 
-def preview_sales(sales):
 
-    print("\n")
-    print("=" * 70)
-    print("FIRST 3 SALES")
-    print("=" * 70)
+def add_new(model, incoming):
+    return model(**incoming)
 
-    for i, sale in enumerate(sales[:3], start=1):
 
-        print()
+def safe_identity(*values):
+    values = [
+        clean_text(v)
+        for v in values
+        if not is_empty(v)
+    ]
 
-        print(f"Sale {i}")
+    return " | ".join(values)
 
-        print("-" * 70)
 
-        print("Name             :", sale.name)
-        print("Reference No     :", sale.reference_no)
-        print("Project Stage    :", sale.project_stage)
-        print("MOC              :", sale.moc)
-        print("Source           :", sale.source)
-        print("Address          :", sale.address)
-        print("Project Type     :", sale.project_type)
-        print("Category         :", sale.category)
-        print("Contact          :", sale.contact_no)
-        print("Revenue          :", sale.revenue)
-        print("Total Revenue    :", sale.total_revenue)
-        print("Record Owner     :", sale.record_owner)
+def finish_row(
+    sheet,
+    row_no,
+    incoming,
+    existing,
+    model,
+    identity,
+):
+    """
+    Handle INSERT / UPDATE / UNCHANGED.
+    """
+    if existing:
+        if APPLY_UPDATES:
+            changed_fields = apply_update(
+                existing,
+                incoming,
+            )
 
-    print()
+            if changed_fields:
+                stat(sheet, "updated")
 
-    print("=" * 70)
+                changes.append({
+                    "sheet": sheet,
+                    "row": row_no,
+                    "identity": identity,
+                    "fields": changed_fields,
+                })
 
-    print(f"TOTAL SALES READY : {len(sales)}")
+            else:
+                stat(sheet, "unchanged")
 
-    print("=" * 70)
+        else:
+            stat(sheet, "unchanged")
 
-    print()
+        return
 
-# ==========================================================
-# PREVIEW INVOICES
-# ==========================================================
+    new_record = add_new(model, incoming)
+    db.session.add(new_record)
+    stat(sheet, "new")
 
-def preview_invoices(invoices):
 
-    print("\n")
-
-    print("=" * 70)
-    print("FIRST 3 INVOICES")
-    print("=" * 70)
-
-    for i, invoice in enumerate(invoices[:3], start=1):
-
-        print()
-
-        print(f"Invoice {i}")
-
-        print("-" * 70)
-
-        print("Name             :", invoice.name)
-        print("DOI              :", invoice.doi)
-        print("Invoice No       :", invoice.invoice_no)
-        print("GST No           :", invoice.gst_no)
-        print("Product Sold     :", invoice.product_sold)
-        print("Total Units      :", invoice.total_units)
-        print("Price of Units   :", invoice.price_of_units)
-        print("1st Yr CMC       :", invoice.first_year_cmc)
-        print("Installation     :", invoice.installation)
-        print("Total Sensor     :", invoice.total_sensor)
-        print("Sensor Cost      :", invoice.sensor_cost)
-        print("Revenue          :", invoice.revenue)
-        print("Total Revenue    :", invoice.total_revenue)
-        print("Record Owner     :", invoice.record_owner)
-
-    print()
-
-    print("=" * 70)
-    print(f"TOTAL INVOICES READY : {len(invoices)}")
-    print("=" * 70)
-
-    print()
-
-# ==========================================================
-# PREVIEW DRAWINGS
-# ==========================================================
-
-def preview_drawings(drawings):
-
-    print("\n")
-
-    print("=" * 70)
-    print("FIRST 3 DRAWINGS")
-    print("=" * 70)
-
-    for i, drawing in enumerate(drawings[:3], start=1):
-
-        print()
-
-        print(f"Drawing {i}")
-
-        print("-" * 70)
-
-        print("Name          :", drawing.name)
-        print("Address       :", drawing.address)
-        print("Iterations    :", drawing.iterations)
-        print("MOCA          :", drawing.moca)
-        print("Record Owner  :", drawing.record_owner)
-
-    print()
-
-    print("=" * 70)
-    print(f"TOTAL DRAWINGS READY : {len(drawings)}")
-    print("=" * 70)
-
-    print()
-
-# ==========================================================
-# PREVIEW LEADS
-# ==========================================================
-
-def preview_leads(leads):
-
-    print("\n")
-
-    print("=" * 70)
-    print("FIRST 3 LEADS")
-    print("=" * 70)
-
-    for i, lead in enumerate(leads[:3], start=1):
-
-        print()
-
-        print(f"Lead {i}")
-
-        print("-" * 70)
-
-        print("Name           :", lead.name)
-        print("Reference      :", lead.reference)
-        print("Location       :", lead.location)
-        print("Phone          :", lead.phone)
-        print("Responses      :", lead.responses)
-        print("Next Action    :", lead.next_action)
-        print("Record Owner   :", lead.record_owner)
-
-    print()
-
-    print("=" * 70)
-    print(f"TOTAL LEADS READY : {len(leads)}")
-    print("=" * 70)
-
-    print()
-
-# ==========================================================
-# IMPORT VISITS
-# ==========================================================
+# =========================================================
+# VISITS
+# =========================================================
 
 def import_visits(df):
+    model = get_model("Visit")
 
-    Visit = get_model("Visit")
+    for index, row in df.iterrows():
+        row_no = index + 2
 
-    df = clean_dataframe(df)
-
-    visits = []
-
-    for _, row in df.iterrows():
-
-        # Import only rows where ABC exists
-
-        if is_empty(row.get("ABC")):
-            report.skipped("Visits")
+        if row_is_completely_empty(row):
+            stat(SHEET_VISITS, "skipped")
             continue
 
-        visit = Visit(
+        # Same business rule as the earlier importer:
+        # ABC is required for a valid Visit row.
+        if is_empty(row.get("ABC")):
+            stat(SHEET_VISITS, "skipped")
+            continue
 
-            meeting_id=None,
+        incoming = {
+            "meeting_id": None,
+            "state": clean_text(row.get("State")),
+            "region": clean_text(row.get("Region")),
+            "abc": clean_text(row.get("ABC")),
+            "company_name": clean_text(row.get("Company")),
+            "person_name": clean_text(row.get("Name")),
+            "designation": clean_text(row.get("Designation")),
+            "contact_no": clean_phone(row.get("Contact")),
+            "address": clean_text(row.get("Address")),
+            "brief": clean_text(row.get("Breif")),
+            "visit_date": clean_date(row.get("Date")),
+            "leads_generated": clean_int(row.get("Leads Generated")),
+            "m2": clean_text(row.get("M2")),
+            "m3": clean_text(row.get("M3")),
+            "record_owner": RECORD_OWNER,
+        }
 
-            state=clean_text(row.get("State")),
-            region=clean_text(row.get("Region")),
-            abc=clean_text(row.get("ABC")),
-            company_name=clean_text(row.get("Company")),
-            person_name=clean_text(row.get("Name")),
-            designation=clean_text(row.get("Designation")),
-            contact_no=clean_phone(row.get("Contact")),
-            address=clean_text(row.get("Address")),
-            brief=clean_text(row.get("Breif")),
-            visit_date=clean_date(row.get("Date")),
-            leads_generated=clean_int(row.get("Leads Generated")),
-            m2=clean_text(row.get("M2")),
-            m3=clean_text(row.get("M3")),
-            record_owner=RECORD_OWNER
-
+        identity = safe_identity(
+            incoming["company_name"],
+            incoming["person_name"],
+            incoming["contact_no"],
         )
 
-# -----------------------------------------
-# DUPLICATE CHECK
-# -----------------------------------------
+        query = model.query.filter(
+            model.record_owner == RECORD_OWNER,
+            model.company_name == incoming["company_name"],
+            model.person_name == incoming["person_name"],
+            model.visit_date == incoming["visit_date"],
+        )
 
-        existing = Visit.query.filter(
-            Visit.company_name == visit.company_name,
-            Visit.person_name == visit.person_name,
-            Visit.visit_date == visit.visit_date,
-            Visit.record_owner == visit.record_owner
-        ).first()
+        # If date is missing, include contact in the fallback
+        # to reduce accidental matching of unrelated records.
+        if incoming["visit_date"] is None:
+            query = model.query.filter(
+                model.record_owner == RECORD_OWNER,
+                model.company_name == incoming["company_name"],
+                model.person_name == incoming["person_name"],
+                model.contact_no == incoming["contact_no"],
+            )
 
-        if existing:
+        existing = query.first()
 
-            report.skipped("Visits")
-            continue
+        finish_row(
+            SHEET_VISITS,
+            row_no,
+            incoming,
+            existing,
+            model,
+            identity,
+        )
 
-        visits.append(visit)
 
-        report.imported("Visits")
-
-    preview_visits(visits)
-
-    return visits
-
-# ==========================================================
-# IMPORT SALES
-# ==========================================================
+# =========================================================
+# SALES
+# =========================================================
 
 def import_sales(df):
+    model = get_model("SalesPipeline")
 
-    
+    for index, row in df.iterrows():
+        row_no = index + 2
 
-    SalesPipeline = get_model("SalesPipeline")
-
-    df = clean_dataframe(df)
-
-    sales = []
-
-    
-
-    for _, row in df.iterrows():
-
-        # --------------------------------------------
-        # Import only rows having Project Type
-        # --------------------------------------------
+        if row_is_completely_empty(row):
+            stat(SHEET_SALES, "skipped")
+            continue
 
         if is_empty(row.get("Project Type")):
-
-            report.skipped("Sales")
-
+            stat(SHEET_SALES, "skipped")
             continue
 
-        
-
-        sale = SalesPipeline(
-
-            
-
-            proposal_id=None,
-
-            name=clean_text(
-                row.get("Name")
-            ),
-
-            reference_no=clean_text(
-                row.get("Refrence No.")
-            ),
-
-            project_stage=clean_text(
-                row.get("Project Stage")
-            ),
-
-            moc=clean_text(
-                row.get("MOC")
-            ),
-
-            source=clean_text(
-                row.get("Source")
-            ),
-
-            next_action=clean_text(
-                row.get("Next Action")
-            ),
-
-            address=clean_text(
-                row.get("Address")
-            ),
-
-            contact_no=clean_phone(
-                row.get("Contact")
-            ),
-
-            project_type=clean_text(
-                row.get("Project Type")
-            ),
-
-            category=clean_text(
-                row.get("Category")
-            ),
-
-            email_id=clean_text(
-                row.get("Email ID")
-            ),
-
-            site_incharge=clean_text(
-                row.get("Site Incharge")
-            ),
-
-            site_incharge_contact=clean_phone(
+        incoming = {
+            "proposal_id": None,
+            "name": clean_text(row.get("Name")),
+            "reference_no": clean_text(row.get("Refrence No.")),
+            "project_stage": clean_text(row.get("Project Stage")),
+            "moc": clean_text(row.get("MOC")),
+            "source": clean_text(row.get("Source")),
+            "next_action": clean_text(row.get("Next Action")),
+            "address": clean_text(row.get("Address")),
+            "contact_no": clean_phone(row.get("Contact")),
+            "project_type": clean_text(row.get("Project Type")),
+            "category": clean_text(row.get("Category")),
+            "email_id": clean_text(row.get("Email ID")),
+            "site_incharge": clean_text(row.get("Site Incharge")),
+            "site_incharge_contact": clean_phone(
                 row.get("Contact.1")
             ),
-
-            first_contact=clean_date(
+            "first_contact": clean_date(
                 row.get("First Contact")
             ),
-
-            last_contact=clean_date(
+            "last_contact": clean_date(
                 row.get("Last Contact")
             ),
-
-            followup_date=clean_date(
+            "followup_date": clean_date(
                 row.get("Followup Date")
             ),
-
-            no_of_site_visits=clean_int(
+            "no_of_site_visits": clean_int(
                 row.get("No. of Site Visit")
             ),
-
-            area_covered=clean_decimal(
+            "area_covered": clean_decimal(
                 row.get("Area Covered")
             ),
-
-            total_units=clean_int(
+            "total_units": clean_int(
                 row.get("Total Units")
             ),
-
-            price_of_units=clean_decimal(
+            "price_of_units": clean_decimal(
                 row.get("Price of Units")
             ),
-
-            first_year_cmc=clean_decimal(
+            "first_year_cmc": clean_decimal(
                 row.get("1st Yr. CMC")
             ),
-
-            installation=clean_decimal(
+            "installation": clean_decimal(
                 row.get("Installation")
             ),
-
-            total_sensor=clean_int(
+            "total_sensor": clean_int(
                 row.get("Total Sensor")
             ),
-
-            sensor_cost=clean_decimal(
+            "sensor_cost": clean_decimal(
                 row.get("Sensor Cost")
             ),
-
-            discount=clean_decimal(
+            "discount": clean_decimal(
                 row.get("Discount")
             ),
-
-            revenue=clean_decimal(
+            "revenue": clean_decimal(
                 row.get("Revenue (₹)")
             ),
-
-            amount_received=clean_decimal(
+            "amount_received": clean_decimal(
                 row.get("Received(₹)")
             ),
-
-            amount_due=clean_decimal(
+            "amount_due": clean_decimal(
                 row.get("Due(₹)")
             ),
-
-            total_revenue=clean_decimal(
+            "total_revenue": clean_decimal(
                 row.get("Total Revenue")
             ),
-
-            gst_no=clean_text(
-                row.get("GST No.")
-            ),
-
-            cmc_onwards=clean_decimal(
+            "gst_no": clean_text(row.get("GST No.")),
+            "cmc_onwards": clean_decimal(
                 row.get("CMC Onwards")
             ),
-
-            total_cmc=clean_decimal(
+            "total_cmc": clean_decimal(
                 row.get("Total CMC")
             ),
+            "sales_person": None,
+            "record_owner": RECORD_OWNER,
+        }
 
-            sales_person=None,
-
-            record_owner=RECORD_OWNER
-
+        identity = safe_identity(
+            incoming["name"],
+            incoming["reference_no"],
         )
 
-        # --------------------------------------------
-        # DUPLICATE CHECK
-        # --------------------------------------------
-
-        if sale.reference_no and sale.reference_no.strip():
-
-            existing = SalesPipeline.query.filter_by(
-                reference_no=sale.reference_no.strip(),
-                record_owner=sale.record_owner
+        if incoming["reference_no"]:
+            existing = model.query.filter(
+                model.reference_no ==
+                incoming["reference_no"],
+                model.record_owner ==
+                RECORD_OWNER,
             ).first()
 
         else:
-
-            existing = SalesPipeline.query.filter_by(
-
-                name=sale.name,
-
-                project_type=sale.project_type,
-
-                address=sale.address,
-
-                record_owner=sale.record_owner
-
+            existing = model.query.filter(
+                model.name == incoming["name"],
+                model.contact_no == incoming["contact_no"],
+                model.project_type ==
+                incoming["project_type"],
+                model.record_owner ==
+                RECORD_OWNER,
             ).first()
-
-        if existing:
-
-            report.skipped("Sales")
-
-            continue
-
-        sales.append(sale)
-
-        
-
-        report.imported("Sales")
-
-    
-
-    preview_sales(sales)
-
-    return sales
-
-# ==========================================================
-# IMPORT INVOICES
-# ==========================================================
-
-def import_invoices(df):
-
-    Invoice = get_model("Invoice")
-
-    df = clean_dataframe(df)
-
-    invoices = []
-
-    for _, row in df.iterrows():
-
-        # --------------------------------------------
-        # Import only rows having Name
-        # --------------------------------------------
-
-        if is_empty(row.get("Name")):
-
-            report.skipped("Invoices")
-
-            continue
-
-        invoice = Invoice(
-
-            sales_id=None,
-
-            name=clean_text(
-                row.get("Name")
-            ),
-
-            doi=clean_date(
-                row.get("DOI")
-            ),
-
-            invoice_no=clean_text(
-                row.get("Invoice No.")
-            ),
-
-            gst_no=clean_text(
-                row.get("GST No.")
-            ),
-
-            product_sold=clean_text(
-                row.get("Product Sold")
-            ),
-
-            total_units=clean_int(
-                row.get("Total Units")
-            ),
-
-            price_of_units=clean_decimal(
-                row.get("Price of Units")
-            ),
-
-            first_year_cmc=clean_decimal(
-                row.get("1st Yr. CMC")
-            ),
-
-            installation=clean_decimal(
-                row.get("Installation")
-            ),
-
-            total_sensor=clean_int(
-                row.get("Total Sensor")
-            ),
-
-            sensor_cost=clean_decimal(
-                row.get("Sensor Cost")
-            ),
-
-            revenue=clean_decimal(
-                row.get("Revenue (₹)")
-            ),
-
-            total_revenue=clean_decimal(
-                row.get("Total Revenue")
-            ),
-
-            record_owner=RECORD_OWNER
-
-        )
-
-        # --------------------------------------------
-        # DUPLICATE CHECK
-        # --------------------------------------------
-
-        if invoice.invoice_no and invoice.invoice_no.strip():
-
-            existing = Invoice.query.filter_by(
-
-                invoice_no=invoice.invoice_no.strip(),
-
-                record_owner=invoice.record_owner
-
-            ).first()
-
-        else:
-
-            existing = Invoice.query.filter_by(
-
-                name=invoice.name,
-
-                doi=invoice.doi,
-
-                record_owner=invoice.record_owner
-
-            ).first()
-
-        if existing:
-
-            report.skipped("Invoices")
-
-            continue
-
-        invoices.append(invoice)
-
-        report.imported("Invoices")
-
-    preview_invoices(invoices)
-
-    return invoices
-
-# ==========================================================
-# IMPORT DRAWINGS
-# ==========================================================
-
-def import_drawings(df):
-
-    Drawing = get_model("Drawing")
-
-    df = clean_dataframe(df)
-
-    drawings = []
-
-    for _, row in df.iterrows():
-
-        # Import if Name OR Address exists
 
         if (
-            is_empty(row.get("Name"))
-            and
-            is_empty(row.get("Address"))
+            existing is None
+            and incoming["name"]
+            and incoming["contact_no"]
+            and incoming["project_type"]
         ):
+            # Fallback only when the exact reference is absent.
+            existing = model.query.filter(
+                model.name == incoming["name"],
+                model.contact_no == incoming["contact_no"],
+                model.record_owner ==
+                RECORD_OWNER,
+            ).first()
 
-            report.skipped("Drawings")
-
-            continue
-
-        drawing = Drawing(
-
-            visit_id=None,
-
-            name=clean_text(
-                row.get("Name")
-            ),
-
-            address=clean_text(
-                row.get("Address")
-            ),
-
-            iterations=clean_int(
-                row.get("No. of Iteration")
-            ),
-
-            moca=clean_text(
-                row.get("MODM")
-            ),
-
-            record_owner=RECORD_OWNER
-
+        finish_row(
+            SHEET_SALES,
+            row_no,
+            incoming,
+            existing,
+            model,
+            identity,
         )
 
-        # -----------------------------------------
-        # DUPLICATE CHECK
-        # -----------------------------------------
 
-        existing = Drawing.query.filter_by(
+# =========================================================
+# INVOICES
+# =========================================================
 
-            name=drawing.name,
+def import_invoices(df):
+    model = get_model("Invoice")
 
-            address=drawing.address,
+    for index, row in df.iterrows():
+        row_no = index + 2
 
-            record_owner=drawing.record_owner
-
-        ).first()
-
-        if existing:
-
-            report.skipped("Drawings")
-
+        if row_is_completely_empty(row):
+            stat(SHEET_INVOICE, "skipped")
             continue
-
-        drawings.append(drawing)
-
-        report.imported("Drawings")
-
-    preview_drawings(drawings)
-
-    return drawings
-
-# ==========================================================
-# IMPORT LEADS
-# ==========================================================
-
-def import_leads(df):
-
-    Lead = get_model("Lead")
-
-    df = clean_dataframe(df)
-
-    leads = []
-
-    for _, row in df.iterrows():
 
         if is_empty(row.get("Name")):
-
-            report.skipped("Leads")
-
+            stat(SHEET_INVOICE, "skipped")
             continue
 
-        location = combine_fields(
-            row.get("Address"),
-            row.get("Location")
+        incoming = {
+            "sales_id": None,
+            "name": clean_text(row.get("Name")),
+            "doi": clean_date(row.get("DOI")),
+            "invoice_no": clean_text(row.get("Invoice No.")),
+            "gst_no": clean_text(row.get("GST No.")),
+            "product_sold": clean_text(row.get("Product Sold")),
+            "total_units": clean_int(row.get("Total Units")),
+            "price_of_units": clean_decimal(
+                row.get("Price of Units")
+            ),
+            "first_year_cmc": clean_decimal(
+                row.get("1st Yr. CMC")
+            ),
+            "installation": clean_decimal(
+                row.get("Installation")
+            ),
+            "total_sensor": clean_int(
+                row.get("Total Sensor")
+            ),
+            "sensor_cost": clean_decimal(
+                row.get("Sensor Cost")
+            ),
+            "revenue": clean_decimal(
+                row.get("Revenue (₹)")
+            ),
+            "total_revenue": clean_decimal(
+                row.get("Total Revenue")
+            ),
+            "record_owner": RECORD_OWNER,
+        }
+
+        identity = safe_identity(
+            incoming["name"],
+            incoming["invoice_no"],
         )
 
-        lead = Lead(
+        if incoming["invoice_no"]:
+            existing = model.query.filter(
+                model.invoice_no ==
+                incoming["invoice_no"],
+                model.record_owner ==
+                RECORD_OWNER,
+            ).first()
 
-            name=clean_text(
-                row.get("Name")
-            ),
+        else:
+            existing = model.query.filter(
+                model.name == incoming["name"],
+                model.doi == incoming["doi"],
+                model.record_owner ==
+                RECORD_OWNER,
+            ).first()
 
-            reference=None,
-
-            location=location,
-
-            phone=clean_phone(
-                row.get("Contact")
-            ),
-
-            responses=clean_text(
-                row.get("Unnamed: 5")
-            ),
-
-            next_action=clean_text(
-                row.get("Unnamed: 6")
-            ),
-
-            date_of_1st_followup=None,
-
-            next_to_call=None,
-
-            recent=None,
-
-            record_owner=RECORD_OWNER
-
+        finish_row(
+            SHEET_INVOICE,
+            row_no,
+            incoming,
+            existing,
+            model,
+            identity,
         )
 
-        # -----------------------------------------
-        # DUPLICATE CHECK
-        # -----------------------------------------
 
-        existing = Lead.query.filter_by(
+# =========================================================
+# DRAWINGS
+# =========================================================
 
-            name=lead.name,
+def import_drawings(df):
+    model = get_model("Drawing")
 
-            phone=lead.phone,
+    for index, row in df.iterrows():
+        row_no = index + 2
 
-            record_owner=lead.record_owner
+        if row_is_completely_empty(row):
+            stat(SHEET_DRAWINGS, "skipped")
+            continue
 
+        name = clean_text(row.get("Name"))
+        address = clean_text(row.get("Address"))
+
+        if not name and not address:
+            stat(SHEET_DRAWINGS, "skipped")
+            continue
+
+        incoming = {
+            "visit_id": None,
+            "name": name,
+            "address": address,
+            "iterations": clean_int(
+                row.get("No. of Iteration")
+            ),
+            "moca": clean_text(row.get("MODM")),
+            "record_owner": RECORD_OWNER,
+        }
+
+        identity = safe_identity(
+            incoming["name"],
+            incoming["address"],
+        )
+
+        existing = model.query.filter(
+            model.name == incoming["name"],
+            model.address == incoming["address"],
+            model.record_owner ==
+            RECORD_OWNER,
         ).first()
 
-        if existing:
+        # If one of name/address is missing, use the other
+        # value as a fallback rather than creating duplicates.
+        if existing is None and incoming["name"]:
+            existing = model.query.filter(
+                model.name == incoming["name"],
+                model.record_owner ==
+                RECORD_OWNER,
+            ).first()
 
-            report.skipped("Leads")
+        finish_row(
+            SHEET_DRAWINGS,
+            row_no,
+            incoming,
+            existing,
+            model,
+            identity,
+        )
 
+
+# =========================================================
+# LEADS
+# =========================================================
+
+def import_leads(df):
+    model = get_model("Lead")
+
+    for index, row in df.iterrows():
+        row_no = index + 2
+
+        if row_is_completely_empty(row):
+            stat(SHEET_LEADS, "skipped")
             continue
 
-        leads.append(lead)
+        name = clean_text(row.get("Name"))
 
-        report.imported("Leads")
+        if not name:
+            stat(SHEET_LEADS, "skipped")
+            continue
 
-    preview_leads(leads)
+        # IMPORTANT:
+        # The column immediately after Contact in Aman.xlsx is
+        # Unnamed: 5. User specifically wants its values in
+        # the CRM's remarks/responses field.
+        remarks = clean_text(
+            row.get("Unnamed: 5")
+        )
 
-    return leads
+        # Address + Location are combined into the existing
+        # Lead.location field.
+        location_parts = []
 
-# ==========================================================
-# PROCESS SHEET
-# ==========================================================
+        location = clean_text(row.get("Location"))
+        address = clean_text(row.get("Address"))
 
-PREVIEW_ONLY = False
+        if location:
+            location_parts.append(location)
+
+        if address and address not in location_parts:
+            location_parts.append(address)
+
+        combined_location = (
+            ", ".join(location_parts)
+            if location_parts
+            else None
+        )
+
+        incoming = {
+            "name": name,
+            "reference": None,
+            "location": combined_location,
+            "phone": clean_phone(row.get("Contact")),
+            "responses": remarks,
+            "next_action": None,
+            "date_of_1st_followup": None,
+            "next_to_call": None,
+            "recent": None,
+            "record_owner": RECORD_OWNER,
+        }
+
+        identity = safe_identity(
+            incoming["name"],
+            incoming["phone"],
+        )
+
+        # Strong match when phone exists.
+        if incoming["phone"]:
+            existing = model.query.filter(
+                model.name == incoming["name"],
+                model.phone == incoming["phone"],
+                model.record_owner ==
+                RECORD_OWNER,
+            ).first()
+
+            # If the same named person has no phone in DB,
+            # use name as a fallback.
+            if existing is None:
+                existing = model.query.filter(
+                    model.name == incoming["name"],
+                    model.record_owner ==
+                    RECORD_OWNER,
+                ).first()
+
+        else:
+            existing = model.query.filter(
+                model.name == incoming["name"],
+                model.record_owner ==
+                RECORD_OWNER,
+            ).first()
+
+        finish_row(
+            SHEET_LEADS,
+            row_no,
+            incoming,
+            existing,
+            model,
+            identity,
+        )
 
 
-def process_sheet(sheet_name):
+# =========================================================
+# MEETINGS - Sheet9
+# =========================================================
 
-    print("\n")
-    print("=" * 70)
-    print(f"Processing : {sheet_name}")
-    print("=" * 70)
+def import_meetings(df):
+    model = get_model("Meeting")
 
-    sheet_key = sheet_name.strip()
+    for index, row in df.iterrows():
+        row_no = index + 2
 
-    if sheet_key in SKIP_SHEETS:
+        if row_is_completely_empty(row):
+            stat(SHEET_MEETINGS, "skipped")
+            continue
 
-        print("Skipped.\n")
+        company = clean_text(row.get("Company"))
+        name = clean_text(row.get("Name"))
+        contact = clean_phone(row.get("Contact"))
+        address = clean_text(row.get("Address"))
+        brief = clean_text(row.get("Breif"))
+        meeting_date = clean_date(row.get("Date"))
 
-        return
+        # A row with no meaningful meeting data is skipped.
+        if not any([
+            company,
+            name,
+            contact,
+            address,
+            brief,
+            meeting_date,
+        ]):
+            stat(SHEET_MEETINGS, "skipped")
+            continue
 
-    if sheet_key not in IMPORT_RULES:
+        incoming = {
+            "meeting_fixed_by": None,
+            "source": None,
+            "name": name,
+            "reference": None,
+            "firm_name": company,
+            "designation": clean_text(
+                row.get("Designation")
+            ),
+            "address": address,
+            "state": clean_text(row.get("State")),
+            "contact_no": contact,
+            "email": None,
+            "company_info_shared": None,
+            "meeting_fixed": None,
+            "date_of_meeting": meeting_date,
+            "mode_of_meeting": None,
+            "meeting_status": None,
+            "meeting_conducted_by": None,
+            "floor_plan_shared": None,
+            "site_visit": None,
+            "post_meeting_mail": None,
+            "date_of_last_followup": None,
+            "date_to_call_next": None,
+            "final_remarks": None,
+            "reschedule_date": None,
+            "reason_for_reschedule": None,
+            "remarks": brief,
+            "next_action": None,
+            "lead_id": None,
+            "record_owner": RECORD_OWNER,
+        }
 
-        print("No mapping found.\n")
+        identity = safe_identity(
+            company,
+            name,
+            contact,
+            meeting_date,
+        )
 
-        return
+        # Matching strategy:
+        # 1. Company + contact + date
+        # 2. Company + name + date
+        # 3. If date is missing, company + contact
+        # 4. If no company, name + contact + date
+        existing = None
 
-    rule = IMPORT_RULES[sheet_key]
+        if company and contact and meeting_date:
+            existing = model.query.filter(
+                model.firm_name == company,
+                model.contact_no == contact,
+                model.date_of_meeting == meeting_date,
+                model.record_owner ==
+                RECORD_OWNER,
+            ).first()
 
-    df = pd.read_excel(
-        excel,
-        sheet_name=sheet_name
-    )
+        if existing is None and company and name and meeting_date:
+            existing = model.query.filter(
+                model.firm_name == company,
+                model.name == name,
+                model.date_of_meeting == meeting_date,
+                model.record_owner ==
+                RECORD_OWNER,
+            ).first()
 
-    print(f"Rows    : {len(df)}")
-    print(f"Columns : {len(df.columns)}")
+        if existing is None and company and contact and not meeting_date:
+            existing = model.query.filter(
+                model.firm_name == company,
+                model.contact_no == contact,
+                model.record_owner ==
+                RECORD_OWNER,
+            ).first()
 
-    # -----------------------------------------------------
-    # VISITS
-    # -----------------------------------------------------
+        if existing is None and not company and name and contact:
+            existing = model.query.filter(
+                model.name == name,
+                model.contact_no == contact,
+                model.record_owner ==
+                RECORD_OWNER,
+            ).first()
 
-    if rule["table"] == "Visit":
-
-        visits = import_visits(df)
-
-        if PREVIEW_ONLY:
-
-            print("\nPreview Mode Enabled")
-            print("Nothing has been inserted into the database.\n")
-
-            return
-
-        try:
-
-            print("\nImporting Visits...")
-
-            for visit in visits:
-
-                db.session.add(visit)
-
-            db.session.commit()
-
-            print(f"\n{len(visits)} Visits Imported Successfully.\n")
-
-        except Exception as e:
-
-            db.session.rollback()
-
-            print("\nERROR OCCURRED\n")
-
-            traceback.print_exc()
-
-            report.error(
-                "Visits",
-                0,
-                str(e)
+        # If there is a very weak identity, don't risk updating
+        # an unrelated existing meeting.
+        if existing is None:
+            has_strong_identity = (
+                (company and contact)
+                or (company and name and meeting_date)
+                or (name and contact and meeting_date)
             )
 
+            if not has_strong_identity:
+                add_review(
+                    SHEET_MEETINGS,
+                    row_no,
+                    "Could not establish a strong matching key",
+                    identity,
+                )
+
+                # It is still safe to import as NEW if the row
+                # contains meaningful data, but we mark it for
+                # manual review in the report.
+                stat(SHEET_MEETINGS, "new")
+                db.session.add(
+                    add_new(model, incoming)
+                )
+                continue
+
+        finish_row(
+            SHEET_MEETINGS,
+            row_no,
+            incoming,
+            existing,
+            model,
+            identity,
+        )
+
+
+# =========================================================
+# SHEET PROCESSING
+# =========================================================
+
+def process_sheet(excel, sheet_name):
+    normalized = sheet_name.strip()
+
+    if normalized in SKIP_SHEETS:
+        print(f"Skipping: {sheet_name}")
         return
 
-    # -----------------------------------------------------
-    # SALES
-    # -----------------------------------------------------
-
-    if rule["table"] == "SalesPipeline":
-
-        
-
-        sales = import_sales(df)
-
-        if PREVIEW_ONLY:
-
-            print("\nPreview Mode Enabled")
-            print("Nothing has been inserted into the database.\n")
-
-            return
-
-        try:
-
-            print("\nImporting Sales...")
-
-            for sale in sales:
-
-                db.session.add(sale)
-
-            db.session.commit()
-
-            print(f"\n{len(sales)} Sales Imported Successfully.\n")
-
-        except Exception as e:
-
-            db.session.rollback()
-
-            print("\nERROR OCCURRED\n")
-
-            traceback.print_exc()
-
-            report.error(
-                "Sales",
-                0,
-                str(e)
-            )
-
+    if normalized == SHEET_VISITS:
+        df = read_sheet(excel, sheet_name)
+        print(f"\nProcessing Visits: {len(df)} rows")
+        import_visits(df)
         return
 
-    # -----------------------------------------------------
-    # INVOICES
-    # -----------------------------------------------------
-
-    if rule["table"] == "Invoice":
-
-        invoices = import_invoices(df)
-
-        if PREVIEW_ONLY:
-
-            print("\nPreview Mode Enabled")
-            print("Nothing has been inserted into the database.\n")
-
-            return
-
-        try:
-
-            print("\nImporting Invoices...")
-
-            for invoice in invoices:
-
-                db.session.add(invoice)
-
-            db.session.commit()
-
-            print(f"\n{len(invoices)} Invoices Imported Successfully.\n")
-
-        except Exception as e:
-
-            db.session.rollback()
-
-            print("\nERROR OCCURRED\n")
-
-            traceback.print_exc()
-
-            report.error(
-                "Invoices",
-                0,
-                str(e)
-            )
-
+    if normalized == SHEET_SALES:
+        df = read_sheet(excel, sheet_name)
+        print(f"\nProcessing Sales: {len(df)} rows")
+        import_sales(df)
         return
 
-    # -----------------------------------------------------
-    # DRAWINGS
-    # -----------------------------------------------------
-
-    if rule["table"] == "Drawing":
-
-        drawings = import_drawings(df)
-
-        if PREVIEW_ONLY:
-
-            print("\nPreview Mode Enabled")
-            print("Nothing has been inserted into the database.\n")
-
-            return
-
-        try:
-
-            print("\nImporting Drawings...")
-
-            for drawing in drawings:
-
-                db.session.add(drawing)
-
-            db.session.commit()
-
-            print(f"\n{len(drawings)} Drawings Imported Successfully.\n")
-
-        except Exception as e:
-
-            db.session.rollback()
-
-            print("\nERROR OCCURRED\n")
-
-            traceback.print_exc()
-
-            report.error(
-                "Drawings",
-                0,
-                str(e)
-            )
-
+    if normalized == SHEET_INVOICE:
+        df = read_sheet(excel, sheet_name)
+        print(f"\nProcessing Invoices: {len(df)} rows")
+        import_invoices(df)
         return
 
-    # -----------------------------------------------------
-    # LEADS
-    # -----------------------------------------------------
-
-    if rule["table"] == "Lead":
-
-        leads = import_leads(df)
-
-        if PREVIEW_ONLY:
-
-            print("\nPreview Mode Enabled")
-            print("Nothing has been inserted into the database.\n")
-
-            return
-
-        try:
-
-            print("\nImporting Leads...")
-
-            for lead in leads:
-
-                db.session.add(lead)
-
-            db.session.commit()
-
-            print(f"\n{len(leads)} Leads Imported Successfully.\n")
-
-        except Exception as e:
-
-            db.session.rollback()
-
-            print("\nERROR OCCURRED\n")
-
-            traceback.print_exc()
-
-            report.error(
-                "Leads",
-                0,
-                str(e)
-            )
-
+    if normalized == SHEET_DRAWINGS:
+        df = read_sheet(excel, sheet_name)
+        print(f"\nProcessing Drawings: {len(df)} rows")
+        import_drawings(df)
         return
 
-    print("Importer not written yet for this sheet.\n")
+    if normalized == SHEET_LEADS:
+        df = read_sheet(excel, sheet_name)
+        print(f"\nProcessing Leads: {len(df)} rows")
+        import_leads(df)
+        return
+
+    if normalized == SHEET_MEETINGS:
+        df = read_sheet(excel, sheet_name)
+        print(f"\nProcessing Sheet9 -> Meetings: {len(df)} rows")
+        import_meetings(df)
+        return
+
+    print(f"Not imported: {sheet_name}")
 
 
-# ==========================================================
+# =========================================================
 # MAIN
-# ==========================================================
+# =========================================================
 
 def main():
+    workbook_path = find_workbook()
+
+    excel = pd.ExcelFile(workbook_path)
+
+    print("=" * 75)
+    print("AMAN SINGH WORKBOOK IMPORTER")
+    print("=" * 75)
+    print("Workbook :", workbook_path)
+    print("Owner    :", RECORD_OWNER)
+    print("Preview  :", PREVIEW_ONLY)
+    print()
+    print("Sheets found:")
+    for sheet in excel.sheet_names:
+        print(" -", sheet)
 
     with app.app_context():
 
         for sheet in excel.sheet_names:
-
             try:
+                process_sheet(
+                    excel,
+                    sheet,
+                )
 
-                process_sheet(sheet)
+                if PREVIEW_ONLY:
+                    # Discard this sheet's staged changes.
+                    db.session.rollback()
 
-            except Exception as e:
+                else:
+                    # COMMIT_EVERY_SHEET behaviour.
+                    db.session.commit()
+
+                    print(
+                        f"Committed: {sheet}"
+                    )
+
+            except Exception as exc:
+                db.session.rollback()
 
                 traceback.print_exc()
 
-                report.error(
+                add_error(
                     sheet,
                     0,
-                    str(e)
+                    exc,
                 )
 
-        report.generate()
+                print(
+                    f"ERROR in {sheet}: {exc}"
+                )
+
+        if PREVIEW_ONLY:
+            print(
+                "\nPREVIEW MODE: "
+                "No database changes were committed."
+            )
+        else:
+            print(
+                "\nAll successfully processed sheets "
+                "were committed."
+            )
+
+    save_report()
 
 
 if __name__ == "__main__":
-
     main()
