@@ -854,6 +854,8 @@
 
                     <th>No. of Meetings</th>
 
+                    <th>Remarks</th>
+
                     <th class="mv-col-actions">Action</th>
 
                 </tr>
@@ -904,6 +906,11 @@
 
                     <td>
                         {{ meeting.history|length + 1 }}
+                    </td>
+
+                    <td>
+                        {{ meeting.remarks or '-' }}
+
                     </td>
 
                     <td>

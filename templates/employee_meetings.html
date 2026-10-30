@@ -197,6 +197,7 @@
                             <th>Meeting Date</th>
                             <th>Status</th>
                             <th>No. of Meetings</th>
+                            <th>Remarks</th>
                             <th class="mv-col-actions">Action</th>
 
                         </tr>
@@ -224,6 +225,10 @@
                             <td>{{ meeting.meeting_status }}</td>
 
                             <td>{{ meeting.history|length + 1 }}</td>
+
+                            <td>{{ meeting.remarks or '-' }}</td>
+
+
 
                             <td>
 
