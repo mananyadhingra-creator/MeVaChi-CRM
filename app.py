@@ -1,4 +1,4 @@
-from flask import Flask, flash, render_template, request, redirect, url_for, session, send_file, jsonify
+﻿from flask import Flask, flash, render_template, request, redirect, url_for, session, send_file, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta, date, UTC
 import os
@@ -8830,7 +8830,953 @@ def delete_drawing_file(file_id):
         )
     )
 
+@app.route('/add-proposal',
+            methods=['GET', 'POST'])
+def add_proposal():
 
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS',
+        'SALES'
+    ):
+
+        return redirect(
+            url_for('dashboard')
+        )
+
+    if request.method == 'POST':
+
+        meeting_id = (
+            int(request.form['meeting_id'])
+            if request.form.get('meeting_id')
+            else None
+        )
+
+        drawing_id = (
+            int(request.form['drawing_id'])
+            if request.form.get('drawing_id')
+            else None
+        )
+
+        reference_no = request.form.get('reference_no')
+
+        name = request.form.get('name')
+
+        phone_no_client = request.form.get('phone_no_client')
+
+        source = request.form.get('source')
+
+        type = request.form.get('type')
+
+        reference_source_details = request.form.get('reference_source_details')
+
+        phone_no_source = request.form.get('phone_no_source')
+
+        contact_person = request.form.get('contact_person')
+
+        phone_no_contact_person = request.form.get('phone_no_contact_person')
+
+        email = request.form.get('email')
+
+        site_address = request.form.get('site_address')
+
+        state = request.form.get('state')
+
+        total_area_sqft = (
+            Decimal(request.form['total_area_sqft'].strip())
+            if request.form.get('total_area_sqft', '').strip()
+            else None
+        )
+
+        no_of_mvd_units = (
+            int(request.form['no_of_mvd_units'])
+            if request.form.get('no_of_mvd_units')
+            else None
+        )
+        no_of_mvd_max_units = (
+            int(request.form['no_of_mvd_max_units'])
+            if request.form.get('no_of_mvd_max_units')
+            else None
+        )
+
+        total_no_of_units = (
+            int(request.form['total_no_of_units'])
+            if request.form.get('total_no_of_units')
+            else None
+        )
+
+        type_of_units = request.form.get('type_of_units')
+
+        product = request.form.get('product')
+
+        cost_total_per_unit = request.form.get('cost_total_per_unit')
+
+        no_of_monitors = (
+            int(request.form['no_of_monitors'])
+            if request.form.get('no_of_monitors')
+            else None
+        )
+
+        cmc = request.form.get('cmc')
+
+        area_covered=request.form.get('area_covered')
+
+        area_not_covered=request.form.get('area_not_covered')
+
+        per_unit_cost = (
+            Decimal(request.form['per_unit_cost'])
+            if request.form.get('per_unit_cost')
+            else None
+        )
+
+        per_unit_cost_max_unit = (
+            Decimal(request.form['per_unit_cost_max_unit'])
+            if request.form.get('per_unit_cost_max_unit')
+            else None
+        )
+
+        cmc_cost = (
+            Decimal(request.form['cmc_cost'])
+            if request.form.get('cmc_cost')
+            else None
+        )
+
+        monitor_cost = (
+            Decimal(request.form['monitor_cost'])
+            if request.form.get('monitor_cost')
+            else None
+        )
+
+        installation_cost = (
+            Decimal(request.form['installation_cost'])
+            if request.form.get('installation_cost')
+            else None
+        )
+    
+        total_amount = (
+            Decimal(request.form['total_amount'])
+            if request.form.get('total_amount')
+            else None
+        )
+
+        cmc_starting_period = request.form.get('cmc_starting_period')
+
+        discount = (
+            Decimal(request.form['discount'])
+            if request.form.get('discount')
+            else None
+        ) 
+
+        final_amount = (
+            Decimal(request.form['final_amount'])
+            if request.form.get('final_amount')
+            else None
+        )
+
+        proposal_prepared_by = request.form.get('proposal_prepared_by')
+
+        proposal_shared_by = request.form.get('proposal_shared_by')
+
+        status = request.form.get('status')
+
+        remarks = request.form.get('remarks')
+
+        date_of_proposal_sent = request.form.get('date_of_proposal_sent')
+        if date_of_proposal_sent:
+
+            date_of_proposal_sent = datetime.strptime(
+                date_of_proposal_sent,
+                '%Y-%m-%d'
+            ).date()
+
+        else:
+
+            date_of_proposal_sent = None
+
+        date_of_last_followup = request.form.get('date_of_last_followup')
+
+        if date_of_last_followup:
+
+            date_of_last_followup = datetime.strptime(
+                date_of_last_followup,
+                '%Y-%m-%d'
+            ).date()
+
+        else:
+
+            date_of_last_followup = None
+
+        next_to_call = request.form.get('next_to_call')
+
+        if next_to_call:
+
+            next_to_call = datetime.strptime(
+                next_to_call,
+                '%Y-%m-%d'
+            ).date()
+
+        else:
+
+            next_to_call = None
+
+        next_action = request.form.get(
+            'next_action'
+        )        
+
+        proposal = Proposal(
+
+            meeting_id=meeting_id,
+
+            drawing_id=drawing_id,
+
+            reference_no=reference_no,
+
+            name=name,
+
+            phone_no_client=phone_no_client,
+
+            source=source,
+
+            type=type,
+
+            reference_source_details=
+                reference_source_details,
+
+            phone_no_source=
+                phone_no_source,
+
+            contact_person=
+                contact_person,
+
+            phone_no_contact_person=
+                phone_no_contact_person,
+
+            email=email,
+
+            site_address=site_address,
+
+            state=state,
+
+            total_area_sqft=
+                total_area_sqft,
+
+            type_of_units=
+                type_of_units,
+
+            no_of_mvd_units=
+                no_of_mvd_units,
+
+            no_of_mvd_max_units=
+                no_of_mvd_max_units,
+
+            total_no_of_units=
+                total_no_of_units,
+
+            product=product,
+
+            cost_total_per_unit=
+                cost_total_per_unit,
+
+            no_of_monitors=
+                no_of_monitors,
+
+            cmc=cmc,
+
+            area_covered=area_covered,
+
+            area_not_covered=area_not_covered,
+
+            per_unit_cost=
+                per_unit_cost,
+
+            per_unit_cost_max_unit=
+                per_unit_cost_max_unit,
+
+            cmc_cost=cmc_cost,
+
+            monitor_cost=
+                monitor_cost,
+
+            installation_cost=
+                installation_cost,
+
+            total_amount=
+                total_amount,
+
+            cmc_starting_period=
+                cmc_starting_period,
+
+            discount=discount,
+
+            final_amount=
+                final_amount,
+
+            date_of_proposal_sent=
+                date_of_proposal_sent,
+
+            proposal_prepared_by=
+                proposal_prepared_by,
+
+            proposal_shared_by=
+                proposal_shared_by,
+
+            status=status,
+
+            date_of_last_followup=
+                date_of_last_followup,
+
+            next_to_call=
+                next_to_call,
+
+            next_action=next_action,
+
+            remarks=remarks,
+
+            
+            record_owner=session[
+                'username'
+            ]    
+        )
+
+        db.session.add(
+            proposal
+        )
+        db.session.flush()
+        proposal_files = request.files.getlist(
+            'proposal_files'
+        )
+
+        for file in proposal_files:
+
+            if file and file.filename:
+
+                filename = secure_filename(
+                    file.filename
+                )
+
+                relative_path = (
+                    'proposals/' +
+                    filename
+                )
+
+                file.save(
+
+                    os.path.join(
+
+                        app.config[
+                            'UPLOAD_FOLDER'
+                        ],
+
+                        relative_path
+
+                    )
+
+                )
+
+                new_file = ProposalFile(
+
+                    proposal_id=proposal.proposal_id,
+
+                    file_name=filename,
+
+                    file_path=relative_path,
+
+                    file_type=file.content_type
+
+                )
+
+                db.session.add(
+                    new_file
+                )  
+        log_activity(
+
+            'PROPOSAL',
+
+            proposal.proposal_id,
+
+            'CREATED'
+
+        )  
+        db.session.commit()
+
+        return redirect(
+            url_for(
+                'add_proposal'
+            )
+        )
+
+    search = request.args.get('search')
+
+    if session.get('role') == 'SALES':
+
+        base_query = Proposal.query.filter_by(
+
+            record_owner=session['username']
+
+        )
+
+    elif session.get('role') == 'COMMERCIALS':
+
+        commercial_users = User.query.filter_by(
+
+            role='COMMERCIALS'
+
+        ).all()
+
+        usernames = [
+
+            user.username
+
+            for user in commercial_users
+
+        ]
+
+        base_query = Proposal.query.filter(
+
+            Proposal.record_owner.in_(
+
+                usernames
+
+            )
+
+        )
+
+    else:
+
+        base_query = Proposal.query 
+    base_query = apply_export_filters(
+
+        query=base_query,
+
+        model=Proposal,
+
+        request=request,
+
+        date_field="next_to_call",
+
+        status_field="status",
+
+        search_fields=[
+
+            "reference_no",
+
+            "name",
+
+            "phone_no_client",
+
+            "source",
+
+            "type",
+
+            "reference_source_details",
+
+            "phone_no_source",
+
+            "contact_person",
+
+            "phone_no_contact_person",
+
+            "email",
+
+            "site_address",
+
+            "state",
+
+            "type_of_units",
+
+            "product",
+
+            "proposal_prepared_by",
+
+            "proposal_shared_by",
+
+            "remarks"
+
+        ]
+
+    )
+
+    all_proposals = base_query.order_by(
+
+        Proposal.proposal_id.desc()
+
+    ).all()
+    if session.get(
+        'role'
+    ) == 'SALES':
+
+        all_meetings = Meeting.query.filter_by(
+
+            record_owner=session[
+                'username'
+            ]
+
+        ).all()
+
+    elif session.get(
+        'role'
+    ) == 'COMMERCIALS':
+
+        commercial_users = User.query.filter_by(
+            role='COMMERCIALS'
+        ).all()
+
+        usernames = [
+            user.username
+            for user in commercial_users
+        ]
+
+        all_meetings = Meeting.query.filter(
+            Meeting.record_owner.in_(
+                usernames
+            )
+        ).all()
+
+    else:
+
+        all_meetings = Meeting.query.all()
+    if session.get(
+        'role'
+    ) == 'SALES':
+
+        all_drawings = Drawing.query.filter_by(
+
+            record_owner=session[
+                'username'
+            ]
+
+        ).all()
+
+    elif session.get(
+        'role'
+    ) == 'COMMERCIALS':
+
+        commercial_users = User.query.filter_by(
+            role='COMMERCIALS'
+        ).all()
+
+        usernames = [
+            user.username
+            for user in commercial_users
+        ]
+
+        all_drawings = Drawing.query.filter(
+            Drawing.record_owner.in_(
+                usernames
+            )
+        ).all()
+
+    else:
+
+        all_drawings = Drawing.query.all()
+    return render_template(
+
+        'add_proposal.html',
+
+        proposals=all_proposals,
+
+        meetings=all_meetings,
+
+        drawings=all_drawings,
+
+        admin_view=(
+
+            session.get('role')
+
+            == 'ADMIN'
+
+        ),
+
+        page_view='commercial',
+
+        clear_route='add_proposal'
+
+    )
+
+@app.route('/proposal/<int:proposal_id>')
+def proposal_details(proposal_id):
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS',
+        'SALES'
+    ):
+
+        return redirect(
+            url_for('dashboard')
+        )
+    proposal = Proposal.query.get_or_404(
+        proposal_id
+    )
+    if not can_view_record(
+
+        proposal.record_owner
+
+    ):
+
+        return redirect(
+            url_for(
+                'dashboard'
+            )
+        )
+    return render_template(
+        'proposal_details.html',
+        proposal=proposal
+    )
+
+@app.route(
+    '/edit-proposal/<int:proposal_id>',
+    methods=['GET', 'POST']
+)
+def edit_proposal(proposal_id):
+    if not has_access(
+        'ADMIN',
+        'COMMERCIALS',
+        'SALES'
+    ):
+
+        return redirect(
+            url_for('dashboard')
+        )
+    proposal = Proposal.query.get_or_404(
+        proposal_id
+    )
+    if not can_access_record(
+
+        proposal.record_owner
+
+    ):
+
+        return redirect(
+            url_for(
+                'dashboard'
+            )
+        )
+    if session.get(
+        'role'
+    ) == 'SALES':
+
+        all_meetings = Meeting.query.filter_by(
+
+            record_owner=session[
+                'username'
+            ]
+
+        ).all()
+
+    elif session.get(
+        'role'
+    ) == 'COMMERCIALS':
+
+        commercial_users = User.query.filter_by(
+            role='COMMERCIALS'
+        ).all()
+
+        usernames = [
+            user.username
+            for user in commercial_users
+        ]
+
+        all_meetings = Meeting.query.filter(
+            Meeting.record_owner.in_(
+                usernames
+            )
+        ).all()
+
+    else:
+
+        all_meetings = Meeting.query.all()
+    if session.get(
+        'role'
+    ) == 'SALES':
+
+        all_drawings = Drawing.query.filter_by(
+
+            record_owner=session[
+                'username'
+            ]
+
+        ).all()
+
+    elif session.get(
+        'role'
+    ) == 'COMMERCIALS':
+
+        commercial_users = User.query.filter_by(
+            role='COMMERCIALS'
+        ).all()
+
+        usernames = [
+            user.username
+            for user in commercial_users
+        ]
+
+        all_drawings = Drawing.query.filter(
+            Drawing.record_owner.in_(
+                usernames
+            )
+        ).all()
+
+    else:
+
+        all_drawings = Drawing.query.all()
+
+    if request.method == 'POST':
+        proposal.meeting_id = (
+            int(request.form['meeting_id'])
+            if request.form.get('meeting_id')
+            else None
+        )
+
+        proposal.drawing_id = (
+            int(request.form['drawing_id'])
+            if request.form.get('drawing_id')
+            else None
+        )
+
+        proposal.reference_no = request.form.get(
+            'reference_no'
+        )
+        proposal.name = request.form.get(
+            'name'
+        )
+        proposal.phone_no_client = request.form.get(
+            'phone_no_client'
+        )
+        proposal.source = request.form.get(
+            'source'
+        )
+        proposal.type = request.form.get(
+            'type'
+        )
+        proposal.reference_source_details = request.form.get(
+            'reference_source_details'
+        )
+        proposal.phone_no_source = request.form.get(
+            'phone_no_source'
+        )
+        proposal.contact_person = request.form.get(
+            'contact_person'
+        )
+        proposal.phone_no_contact_person = request.form.get(
+            'phone_no_contact_person'
+        )
+        proposal.email = request.form.get(
+            'email'
+        )
+        proposal.site_address = request.form.get(
+            'site_address'
+        )
+        proposal.state = request.form.get(
+            'state'
+        )
+        proposal.total_area_sqft = (
+            Decimal(request.form.get('total_area_sqft', '').strip())
+            if request.form.get('total_area_sqft', '').strip()
+            else None
+        )
+        proposal.type_of_units = request.form.get(
+            'type_of_units'
+        )
+        proposal.no_of_mvd_units = (
+            int(request.form['no_of_mvd_units'])
+            if request.form.get('no_of_mvd_units')
+            else None
+        )
+        proposal.no_of_mvd_max_units = (
+            int(request.form['no_of_mvd_max_units'])
+            if request.form.get('no_of_mvd_max_units')
+            else None
+        )
+
+        proposal.total_no_of_units = (
+            int(request.form['total_no_of_units'])
+            if request.form.get('total_no_of_units')
+            else None
+        )
+        proposal.product = request.form.get(
+            'product'
+        )
+        proposal.cost_total_per_unit = request.form.get(
+            'cost_total_per_unit'
+        ) 
+
+        proposal.no_of_monitors = (
+            int(request.form['no_of_monitors'])
+            if request.form.get('no_of_monitors')
+            else None
+        )
+        proposal.cmc = request.form.get(
+            'cmc'
+        )
+
+        proposal.area_covered = request.form.get('area_covered')
+
+        proposal.area_not_covered = request.form.get('area_not_covered')
+
+        proposal.per_unit_cost = (
+            Decimal(request.form['per_unit_cost'])
+            if request.form.get('per_unit_cost')
+            else None
+        )
+        proposal.per_unit_cost_max_unit = (
+            Decimal(request.form['per_unit_cost_max_unit'])
+            if request.form.get('per_unit_cost_max_unit')
+            else None
+        )
+        proposal.cmc_cost = (
+            Decimal(request.form['cmc_cost'])
+            if request.form.get('cmc_cost')
+            else None
+        )
+        proposal.monitor_cost = (
+            Decimal(request.form['monitor_cost'])
+            if request.form.get('monitor_cost')
+            else None
+        )
+        proposal.installation_cost = (
+            Decimal(request.form['installation_cost'])
+            if request.form.get('installation_cost')
+            else None
+        )
+        proposal.total_amount = (
+            Decimal(request.form['total_amount'])
+            if request.form.get('total_amount')
+            else None
+        )
+        proposal.cmc_starting_period = request.form.get(
+            'cmc_starting_period'
+        )
+        proposal.discount = (
+            Decimal(request.form['discount'])
+            if request.form.get('discount')
+            else None
+        )
+        proposal.final_amount = (
+            Decimal(request.form['final_amount'])
+            if request.form.get('final_amount')
+            else None
+        )
+        proposal.proposal_prepared_by = request.form.get(
+            'proposal_prepared_by'
+        )
+        proposal.proposal_shared_by = request.form.get(
+            'proposal_shared_by'
+        )
+        proposal.status = request.form.get(
+            'status'
+        )
+        proposal.remarks = request.form.get(
+            'remarks'
+        )
+        date_of_proposal_sent = request.form.get(
+            'date_of_proposal_sent'
+        )
+        if date_of_proposal_sent:
+
+            proposal.date_of_proposal_sent = datetime.strptime(
+                date_of_proposal_sent,
+                '%Y-%m-%d'
+            ).date()
+
+        else:
+
+            proposal.date_of_proposal_sent = None
+        date_of_last_followup = request.form.get(
+            'date_of_last_followup'
+        )
+        if date_of_last_followup:
+            proposal.date_of_last_followup = datetime.strptime(
+                date_of_last_followup,
+                '%Y-%m-%d'
+            ).date()
+
+        else:
+            proposal.date_of_last_followup = None
+        next_to_call = request.form.get(
+            'next_to_call'
+        )
+        if next_to_call:
+            proposal.next_to_call = datetime.strptime(
+                next_to_call,
+                '%Y-%m-%d'
+            ).date()
+        else:
+            proposal.next_to_call = None
+
+        proposal.next_action = request.form.get(
+            'next_action'
+        )
+
+        proposal_files = request.files.getlist(
+            'proposal_files'
+        )
+
+        for file in proposal_files:
+
+            if file and file.filename:
+
+                filename = secure_filename(
+                    file.filename
+                )
+
+                relative_path = (
+                    'proposals/' +
+                    filename
+                )
+
+                file.save(
+
+                    os.path.join(
+
+                        app.config[
+                            'UPLOAD_FOLDER'
+                        ],
+
+                        relative_path
+
+                    )
+
+                )
+
+                new_file = ProposalFile(
+
+                    proposal_id=
+                    proposal.proposal_id,
+
+                    file_name=filename,
+
+                    file_path=relative_path,
+
+                    file_type=file.content_type
+
+                )
+
+                db.session.add(
+                    new_file
+                )
+        db.session.flush()
+        log_activity(
+
+            'PROPOSAL',
+
+            proposal.proposal_id,
+
+            'UPDATED'
+
+        )          
+        db.session.commit()
+        return redirect(
+            url_for(
+                'add_proposal'
+            )
+        )
+    
+    return render_template(
+        'edit_proposal.html',
+        proposal=proposal,
+        meetings=all_meetings,
+        drawings=all_drawings
+    )
 
 @app.route(
     '/request-delete-proposal/<int:proposal_id>',
